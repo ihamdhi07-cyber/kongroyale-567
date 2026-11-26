@@ -18,11 +18,11 @@ const SPAWN_POINTS = [
   { id: 'stone-sentinel', x: 520, z: 215 },
   { id: 'bramble-stalker', x: -910, z: -130 },
   { id: 'stone-sentinel', x: 1650, z: -210 },
-  { id: 'elder-warden', x: 1720, z: -185 },
+  { id: 'mossback-colossus', x: 1695, z: -185 },
   { id: 'crystal-wisp', x: 130, z: -1730 },
   { id: 'crystal-wisp', x: 1740, z: -1790 },
   { id: 'stone-sentinel', x: 1540, z: 1450 },
-  { id: 'elder-warden', x: -1580, z: 1580 },
+  { id: 'elder-warden', x: -1585, z: 1585 },
 ];
 
 export class EnemyManager {
@@ -46,17 +46,18 @@ export class EnemyManager {
     let bodyMat;
     let radius = 0.85;
 
-    if (def.id === 'stone-sentinel' || def.id === 'elder-warden') {
-      const scale = def.id === 'elder-warden' ? 1.65 : 1.05;
+    if (def.id === 'stone-sentinel' || def.id === 'elder-warden' || def.id === 'mossback-colossus') {
+      const isBoss = def.category === 'boss';
+      const scale = def.id === 'elder-warden' ? 1.75 : def.id === 'mossback-colossus' ? 1.58 : 1.05;
       radius = 1.05 * scale;
       bodyMat = patchWatercolorMaterial(
-        new THREE.MeshStandardMaterial({ color: 0x828794, roughness: 0.86 }),
+        new THREE.MeshStandardMaterial({ color: def.id === 'mossback-colossus' ? 0x5c7558 : 0x828794, roughness: 0.86 }),
         { rimStrength: 0.3, inkEdge: 0.28 }
       );
       const coreMat = new THREE.MeshStandardMaterial({
-        color: def.id === 'elder-warden' ? 0xff7b42 : 0x5ee6f5,
-        emissive: def.id === 'elder-warden' ? 0xe03d14 : 0x249ec0,
-        emissiveIntensity: 1.2,
+        color: isBoss ? 0xff7b42 : 0x5ee6f5,
+        emissive: isBoss ? 0xe03d14 : 0x249ec0,
+        emissiveIntensity: 1.25,
       });
       const torso = new THREE.Mesh(new THREE.BoxGeometry(1.1 * scale, 1.35 * scale, 0.85 * scale), bodyMat);
       torso.position.y = 1.4 * scale;
@@ -218,7 +219,19 @@ export class EnemyManager {
     return false;
   }
 
-  update(dt, elapsed, playerPos, camera, combatSystem) {
+  /** Returns nearest boss enemy within 42m (immediately when close or provoked) for dramatic HUD Boss Health Bar */
+  getActiveBoss(playerPos) {
+    for (const e of this.enemies) {
+      if (!e.alive || e.def.category !== 'boss') continue;
+      const d = Math.hypot(e.mesh.position.x - playerPos.x, e.mesh.position.z - playerPos.z);
+      if (d <= 36 || (d <= 48 && (e.provoked || e.state === 'chase' || e.state === 'telegraph'))) {
+        return e;
+      }
+    }
+    return null;
+  }
+
+  update(dt, elapsed, playerPos, camera, combatSystem, playerStealth = false) {
     for (const e of this.enemies) {
       if (!e.alive) {
         e.respawnTimer -= dt;
@@ -255,7 +268,8 @@ export class EnemyManager {
       }
 
       const distHome = Math.hypot(e.mesh.position.x - e.homeX, e.mesh.position.z - e.homeZ);
-      const aggro = e.provoked ? Math.max(e.def.aggroRange, 18) : e.def.aggroRange;
+      const stealthMult = playerStealth ? 0.38 : 1.0;
+      const aggro = e.provoked ? Math.max(e.def.aggroRange, 18) : e.def.aggroRange * stealthMult;
       const attackReach = e.radius + 1.85;
 
       e.teleMat.opacity = 0;

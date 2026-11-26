@@ -168,6 +168,10 @@ export class SaveManager {
   loadSettings() {
     const defaults = {
       quality: null,
+      renderScale: 1.0,
+      shadowOverride: 'preset',
+      fov: 42,
+      invertY: false,
       masterVol: 0.75,
       musicVol: 0.55,
       sfxVol: 0.8,

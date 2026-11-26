@@ -72,10 +72,11 @@ export class WildlifeManager {
   }
 
   _spawnWildlife() {
-    // 10 Golden Forest Deer placed across meadows and glades near starting valley & heart tree approach
+    // 14 Peaceful Wildlife Herds placed across Valley, Emerald Wilds, Highland Reach & Forgotten Kingdom
     const deerSpots = [
       [-42, 330], [-78, 360], [-145, 250], [115, 425], [140, 290],
       [-210, 190], [-28, 445], [55, 260], [-420, 80], [290, 210],
+      [-920, -120], [-1070, -1210], [-1140, -1280], [1080, -90],
     ];
     for (const [x, z] of deerSpots) {
       const { group, legs } = this._buildDeer();
@@ -134,13 +135,16 @@ export class WildlifeManager {
       });
     }
 
-    // 8 Silver River Trout darting visibly along the Silver River near Crossroads bridge
+    // 12 Silver River & Azure Coast Trout darting visibly in clear shallows (harvestable!)
     const fishMat = new THREE.MeshStandardMaterial({ color: 0xb7e4f2, metalness: 0.35, roughness: 0.25 });
-    for (let i = 0; i < 8; i++) {
+    const fishCoords = [
+      [74, 335], [77, 345], [80, 355], [82, 365], [84, 375], [86, 385], [88, 395], [90, 405],
+      [1208, 1175], [1222, 1192], [1545, 1465], [1565, 1485],
+    ];
+    for (let i = 0; i < fishCoords.length; i++) {
       const m = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.68, 6), fishMat);
       m.rotation.x = Math.PI / 2;
-      const fx = 78 + (i - 4) * 3.5;
-      const fz = 335 + i * 10;
+      const [fx, fz] = fishCoords[i];
       m.position.set(fx, WORLD_CONFIG.SEA_LEVEL - 0.35, fz);
       this.root.add(m);
       this.fish.push({ mesh: m, cx: fx, cz: fz, phase: i * 0.9, caught: false });

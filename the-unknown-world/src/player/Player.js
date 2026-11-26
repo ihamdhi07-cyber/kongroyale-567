@@ -22,6 +22,9 @@ export class Player {
     this.stamina = 100;
     this.maxWarmth = 100;
     this.warmth = 100;
+    this.maxBreath = 100;
+    this.breath = 100;
+    this.warmthBonus = 10;
 
     this.attackPower = 16;
     this.heavyMultiplier = 1.85;
@@ -33,6 +36,9 @@ export class Player {
     this.state = 'idle';
     this.grounded = true;
     this.swimming = false;
+    this.diving = false;
+    this.sailing = false;
+    this.stealth = false;
     this.climbing = false;
     this.gliding = false;
     this.guarding = false;
@@ -264,7 +270,11 @@ export class Player {
 
   /** Visually updates staff & cloak colors when player crafts/equips upgraded gear */
   applyEquipmentVisuals(equipped) {
-    if (equipped?.weapon === 'runeblade-staff') {
+    if (equipped?.weapon === 'galeblade-staff') {
+      this.staffOrbMat.color.setHex(0xe8a8ff);
+      this.staffOrbMat.emissive.setHex(0xb858f2);
+      this.slashMat.color.setHex(0xf4c8ff);
+    } else if (equipped?.weapon === 'runeblade-staff') {
       this.staffOrbMat.color.setHex(0x88f7ff);
       this.staffOrbMat.emissive.setHex(0x28c7e8);
       this.slashMat.color.setHex(0x7af3ff);
@@ -273,7 +283,9 @@ export class Player {
       this.staffOrbMat.emissive.setHex(0xffa836);
       this.slashMat.color.setHex(0xffe994);
     }
-    if (equipped?.armor === 'windweaver-cloak') {
+    if (equipped?.armor === 'frostward-coat') {
+      this.cloakMat.color.setHex(0xd4e2ee);
+    } else if (equipped?.armor === 'windweaver-cloak') {
       this.cloakMat.color.setHex(0x4b87a8);
     } else {
       this.cloakMat.color.setHex(0x355078);

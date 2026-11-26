@@ -16,16 +16,18 @@ export class PlayerAnimation {
 
     // Determine primary animation state
     let state = 'idle';
-    if (p.hurtTimer > 0) state = 'hurt';
+    if (p.sailing) state = 'sail';
+    else if (p.hurtTimer > 0) state = 'hurt';
     else if (p.heavyTimer > 0) state = 'heavy';
     else if (p.attackTimer > 0) state = 'attack';
     else if (p.dodging) state = 'dodge';
     else if (p.gliding) state = 'glide';
-    else if (p.swimming) state = 'swim';
+    else if (p.swimming || p.diving) state = 'swim';
     else if (p.climbing) state = 'climb';
     else if (!p.grounded) state = p.velocity.y > 0.5 ? 'jump' : 'fall';
     else if (p.guarding) state = 'guard';
     else if (p.interactTimer > 0) state = 'interact';
+    else if (p.stealth) state = 'stealth';
     else if (p.horizontalSpeed > 6.2) state = 'run';
     else if (p.horizontalSpeed > 0.45) state = 'walk';
     p.state = state;
@@ -41,7 +43,23 @@ export class PlayerAnimation {
     let visualSpinX = 0;
     let scarfX = 0.35 + Math.min(0.9, p.horizontalSpeed * 0.08) + Math.sin(elapsed * 5.2) * 0.14;
 
-    if (state === 'idle') {
+    if (state === 'sail') {
+      hipsY = 0.62;
+      torsoX = 0.08;
+      lLegX = -1.1;
+      rLegX = -1.1;
+      lArmX = -0.55;
+      rArmX = -0.65;
+    } else if (state === 'stealth') {
+      const s = Math.sin(this.cycle * 0.7);
+      const moving = p.horizontalSpeed > 0.35 ? 1 : 0;
+      hipsY = 0.66;
+      torsoX = 0.44;
+      lLegX = s * 0.42 * moving;
+      rLegX = -s * 0.42 * moving;
+      lArmX = -0.35 - s * 0.25 * moving;
+      rArmX = -0.35 + s * 0.25 * moving;
+    } else if (state === 'idle') {
       hipsY = 0.88 + Math.sin(elapsed * 2.2) * 0.025;
       lArmX = Math.sin(elapsed * 1.8) * 0.05;
       rArmX = -0.15 + Math.cos(elapsed * 1.8) * 0.05;

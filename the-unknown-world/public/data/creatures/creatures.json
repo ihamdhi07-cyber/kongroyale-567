@@ -10,6 +10,7 @@
       "speed": 5.2,
       "aggroRange": 13,
       "xp": 35,
+      "gold": 14,
       "drops": [{ "itemId": "heartwood", "chance": 0.8 }, { "itemId": "moonpetal", "chance": 0.45 }]
     },
     {
@@ -22,6 +23,7 @@
       "speed": 3.8,
       "aggroRange": 15,
       "xp": 65,
+      "gold": 28,
       "drops": [{ "itemId": "ancient-core", "chance": 0.75 }, { "itemId": "crystal-shard", "chance": 0.5 }]
     },
     {
@@ -34,7 +36,8 @@
       "speed": 6.0,
       "aggroRange": 16,
       "xp": 55,
-      "drops": [{ "itemId": "crystal-shard", "chance": 0.9 }]
+      "gold": 24,
+      "drops": [{ "itemId": "crystal-shard", "chance": 0.9 }, { "itemId": "skyfeather", "chance": 0.35 }]
     },
     {
       "id": "moss-sprite",
@@ -46,19 +49,34 @@
       "speed": 5.8,
       "aggroRange": 0,
       "xp": 20,
+      "gold": 9,
       "drops": [{ "itemId": "sunberry", "chance": 0.85 }]
+    },
+    {
+      "id": "mossback-colossus",
+      "name": "Mossback Colossus",
+      "category": "boss",
+      "regions": ["forgotten-kingdom"],
+      "maxHp": 210,
+      "damage": 22,
+      "speed": 3.9,
+      "aggroRange": 20,
+      "xp": 190,
+      "gold": 95,
+      "drops": [{ "itemId": "aether-core", "chance": 1.0 }, { "itemId": "ancient-core", "chance": 1.0 }, { "itemId": "spirit-tonic", "chance": 1.0 }]
     },
     {
       "id": "elder-warden",
       "name": "Elder Stone Warden",
       "category": "boss",
-      "regions": ["forgotten-kingdom", "hidden-frontier"],
-      "maxHp": 220,
-      "damage": 24,
-      "speed": 4.1,
-      "aggroRange": 18,
-      "xp": 180,
-      "drops": [{ "itemId": "ancient-core", "chance": 1.0 }, { "itemId": "crystal-shard", "chance": 1.0 }, { "itemId": "spirit-tonic", "chance": 1.0 }]
+      "regions": ["hidden-frontier"],
+      "maxHp": 280,
+      "damage": 26,
+      "speed": 4.2,
+      "aggroRange": 22,
+      "xp": 260,
+      "gold": 140,
+      "drops": [{ "itemId": "aether-core", "chance": 1.0 }, { "itemId": "crystal-shard", "chance": 1.0 }, { "itemId": "spirit-tonic", "qty": 1, "chance": 1.0 }]
     }
   ]
 }

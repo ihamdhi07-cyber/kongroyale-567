@@ -1,5 +1,5 @@
-// Settings, Graphics Presets (Low/Medium/High/Ultra), Audio Mixer, Atmosphere Preview,
-// Mobile Touch Controls Toggle, and Persistent Multi-Slot IndexedDB Save / Load Manager.
+// Settings, Graphics Presets (Low/Medium/High/Ultra) + Manual Visual & Camera Fine-Tuning,
+// Audio Mixer, Atmosphere Preview, Touch Controls Toggle, and Persistent Multi-Slot IndexedDB Save / Load Manager.
 import { QUALITY_PRESETS } from '../core/Renderer.js';
 
 export class SettingsUI {
@@ -24,7 +24,7 @@ export class SettingsUI {
 
         <div class="settings-grid">
           <section class="settings-col">
-            <h3>Graphics &amp; Performance</h3>
+            <h3>Graphics Presets &amp; Manual Tuning</h3>
             <label class="field-row">
               <span>Graphics Preset</span>
               <select id="set-quality">
@@ -32,6 +32,26 @@ export class SettingsUI {
                   .map(([k, v]) => `<option value="${k}">${v.label}</option>`)
                   .join('')}
               </select>
+            </label>
+            <label class="field-row">
+              <span>Render Scale (<span id="lbl-rscale">100%</span>)</span>
+              <input type="range" id="set-rscale" min="0.5" max="1.5" step="0.1" />
+            </label>
+            <label class="field-row">
+              <span>Dynamic Shadows</span>
+              <select id="set-shadows">
+                <option value="preset">Match Preset</option>
+                <option value="on">Force On</option>
+                <option value="off">Off (Max FPS)</option>
+              </select>
+            </label>
+            <label class="field-row">
+              <span>Camera FOV (<span id="lbl-fov">42°</span>)</span>
+              <input type="range" id="set-fov" min="34" max="62" step="2" />
+            </label>
+            <label class="field-row">
+              <span>Invert Camera Pitch (Y)</span>
+              <input type="checkbox" id="set-inverty" />
             </label>
             <label class="field-row">
               <span>Weather Simulation</span>
@@ -67,7 +87,7 @@ export class SettingsUI {
 
           <section class="settings-col">
             <h3>Local Save Slots (IndexedDB)</h3>
-            <p class="map-hint">Save or restore your position across the 8×8 km world, inventory, skills, quests, puzzles, and fog-of-war discoveries.</p>
+            <p class="map-hint">Save or restore your position across the 8×8 km world, boats, sanctuaries, Sunshards, inventory, skills, quests, all 8 puzzles, and fog-of-war discoveries.</p>
             <div id="save-slot-list" class="save-slot-list"></div>
           </section>
         </div>
@@ -79,6 +99,18 @@ export class SettingsUI {
 
     const bind = (id, ev, fn) => this.el.querySelector(id).addEventListener(ev, fn);
     bind('#set-quality', 'change', (e) => this.game.setQuality(e.target.value));
+    bind('#set-rscale', 'input', (e) => {
+      const val = Number(e.target.value);
+      this.el.querySelector('#lbl-rscale').textContent = `${Math.round(val * 100)}%`;
+      this.game.setManualVisuals({ renderScale: val });
+    });
+    bind('#set-shadows', 'change', (e) => this.game.setManualVisuals({ shadowOverride: e.target.value }));
+    bind('#set-fov', 'input', (e) => {
+      const val = Number(e.target.value);
+      this.el.querySelector('#lbl-fov').textContent = `${val}°`;
+      this.game.setManualVisuals({ fov: val });
+    });
+    bind('#set-inverty', 'change', (e) => this.game.setManualVisuals({ invertY: e.target.checked }));
     bind('#set-weather', 'change', (e) => this.game.world.weather.setWeather(e.target.value));
     bind('#set-touch', 'change', (e) => this.game.setTouchMode(e.target.value));
     bind('#set-fps', 'change', (e) => this.game.setTelemetry(e.target.checked));
@@ -101,6 +133,12 @@ export class SettingsUI {
   async open() {
     const s = this.game.settings;
     this.el.querySelector('#set-quality').value = this.game.renderer.quality;
+    this.el.querySelector('#set-rscale').value = s.renderScale ?? 1.0;
+    this.el.querySelector('#lbl-rscale').textContent = `${Math.round((s.renderScale ?? 1.0) * 100)}%`;
+    this.el.querySelector('#set-shadows').value = s.shadowOverride || 'preset';
+    this.el.querySelector('#set-fov').value = s.fov ?? 42;
+    this.el.querySelector('#lbl-fov').textContent = `${s.fov ?? 42}°`;
+    this.el.querySelector('#set-inverty').checked = Boolean(s.invertY);
     this.el.querySelector('#set-touch').value = s.touchControls || 'auto';
     this.el.querySelector('#set-fps').checked = Boolean(s.showFps);
     this.el.querySelector('#vol-master').value = s.masterVol;

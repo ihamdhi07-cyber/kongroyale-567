@@ -149,7 +149,119 @@ const NPC_DEFS = [
         {
           label: 'What lies deeper in Emerald Wilds?',
           reply:
-            'Follow this mossy road northwest and you will see golden light filtering through the branches—The Ancient Heart Tree awaits, and far above the northern ridges sits Skywatch Observatory.',
+            'Follow this mossy road northwest past Timberwatch Outpost and you will find The Ancient Heart Tree—and far above the northern ridges sits Skywatch Observatory.',
+        },
+      ],
+    },
+  },
+  {
+    id: 'merchant-rowan',
+    name: 'Merchant Rowan',
+    role: 'Crossroads Caravan Trader',
+    robeColor: 0xa66f38,
+    hatColor: 0xe6c36a,
+    dayPos: [10, 388],
+    nightPos: [6, 383],
+    shop: [
+      { itemId: 'sunbaked-flatbread', price: 22 },
+      { itemId: 'berry-stew', price: 32 },
+      { itemId: 'spirit-tonic', price: 70 },
+      { itemId: 'crystal-shard', price: 45 },
+      { itemId: 'windweaver-cloak', price: 155 },
+    ],
+    dialogue: {
+      greeting:
+        'Sunshards spend sweetly at the Crossroads! Stock up on hearth flatbread, resonant crystals, or trade the rare forage you uncover across the wilds.',
+      options: [
+        {
+          label: 'Open Caravan Trading Post (Buy / Sell)',
+          openShop: true,
+          reply: 'Browse my wares or sell excess forage for Sunshards!',
+        },
+      ],
+    },
+  },
+  {
+    id: 'harbormaster-kael',
+    name: 'Harbormaster Kael',
+    role: 'Tidehaven Navigator',
+    robeColor: 0x2c6d8a,
+    hatColor: 0xf0d58a,
+    dayPos: [1186, 1166],
+    nightPos: [1180, 1162],
+    questId: 'sails-of-azure-coast',
+    shop: [
+      { itemId: 'grilled-trout', price: 38 },
+      { itemId: 'sea-glass', price: 28 },
+      { itemId: 'spirit-tonic', price: 68 },
+      { itemId: 'sunken-pearl', price: 78 },
+    ],
+    dialogue: {
+      greeting:
+        'Welcome to Tidehaven Harbor! A seaworthy wooden skiff is moored right off our pier—take the helm [E] and sail out toward The Drowned Archive whenever the wind calls.',
+      options: [
+        {
+          label: 'Accept Quest: Sails of the Azure Coast',
+          acceptQuest: 'sails-of-azure-coast',
+          reply:
+            'Fine spirit! Take the sailboat out to The Drowned Archive, dive beneath the turquoise shoals [hold C while swimming] to recover a Sunken Pearl, and explore the Archive Chamber!',
+        },
+        {
+          label: 'Trade Coastal Supplies (Buy / Sell)',
+          openShop: true,
+          reply: 'Fresh grilled catch and turquoise treasures straight from the bay.',
+        },
+      ],
+    },
+  },
+  {
+    id: 'alpine-guide-soren',
+    name: 'Alpine Guide Soren',
+    role: 'Frostcrest Mountaineer',
+    robeColor: 0x526e8c,
+    hatColor: 0xe6edf5,
+    dayPos: [-1096, -1236],
+    nightPos: [-1100, -1238],
+    questId: 'ascent-of-skywatch',
+    shop: [
+      { itemId: 'frost-elixir', price: 62 },
+      { itemId: 'frostward-coat', price: 175 },
+      { itemId: 'berry-stew', price: 34 },
+    ],
+    dialogue: {
+      greeting:
+        'Warm your hands by the Frostcrest fire, Wayfarer! The blizzards above this ridge bite fiercely unless you carry Emberbloom Elixir or a lined alpine coat.',
+      options: [
+        {
+          label: 'Accept Quest: Ascent of the Skywatch Peaks',
+          acceptQuest: 'ascent-of-skywatch',
+          reply:
+            'Gather 2 Highland Frostblooms along the snowline and scale the cliff trails up to The Skywatch Observatory. You can glide back across entire valleys from its summit!',
+        },
+        {
+          label: 'Trade Alpine Provisions (Buy / Sell)',
+          openShop: true,
+          reply: 'Warm coats and hearth elixirs—worth every Sunshard up here.',
+        },
+      ],
+    },
+  },
+  {
+    id: 'scholar-orin',
+    name: 'Scholar Orin',
+    role: 'Forgotten Kingdom Historian',
+    robeColor: 0x8f6b47,
+    hatColor: 0xd9c293,
+    dayPos: [1124, -106],
+    nightPos: [1120, -108],
+    dialogue: {
+      greeting:
+        'Be wary approaching The Silent Citadel just east of our tents. An ancient Mossback Colossus guards its courtyard—sneaking [Z] lets you slip past or strike first from the shadows.',
+      options: [
+        {
+          label: 'What lies beyond the Forgotten Kingdom?',
+          reply:
+            'Northward the earth splits into the glowing Hollow Depths and the floating isles of Shattered Expanse. Southwest lies the Hidden Frontier where the Elder Stone Warden guards The Unknown Gate.',
         },
       ],
     },

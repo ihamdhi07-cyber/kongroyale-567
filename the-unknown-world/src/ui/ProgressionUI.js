@@ -52,7 +52,9 @@ export class ProgressionUI {
       <div class="stat-pill highlight"><span>Skill Points</span><strong>${pr.skillPoints}</strong></div>
       <div class="stat-pill"><span>Attack / Def</span><strong>${p.attackPower} / ${p.defense}</strong></div>
       <div class="stat-pill"><span>Explored</span><strong>${this.game.exploration.getExplorationPercent()}%</strong></div>
-      <div class="stat-pill"><span>Puzzles Solved</span><strong>${pr.stats.puzzlesSolved} / 3</strong></div>
+      <div class="stat-pill"><span>Puzzles Solved</span><strong>${pr.stats.puzzlesSolved} / ${this.game.puzzles.puzzles.length}</strong></div>
+      <div class="stat-pill"><span>Sanctuaries</span><strong>${this.game.world.interiors.visited.size} / 3</strong></div>
+      <div class="stat-pill"><span>Unknown Gate</span><strong>${this.game.unknownGateAwakened ? 'Awakened ✦' : 'Sealed'}</strong></div>
     `;
 
     const sGrid = this.el.querySelector('#skill-grid');

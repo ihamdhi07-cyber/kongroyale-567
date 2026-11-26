@@ -1,10 +1,16 @@
 // Minimalist Painterly Adventure HUD:
-// Vital bars (Health, Stamina, Warmth), Regional Compass, Time & Weather, Tracked Quest,
-// Quick Corner Menu Icons, Contextual Interact Prompt, 2.5D Camera Presets, Discovery Banner & Toasts.
+// Vital bars (Health, Stamina, Warmth, Underwater Breath), Sunshards Purse, Stealth Indicator,
+// Boss Health Bar, Regional Compass (+ Custom Waypoint Bearing), Time & Weather, Tracked Quest,
+// Quick Corner Menu Icons, Contextual Interact Prompt, 2.5D Camera Presets + Photo Mode,
+// 3D-Projected Floating Damage Popups, Discovery Banner & Toasts.
+import * as THREE from 'three';
+
 export class HUD {
   constructor(game) {
     this.game = game;
     this._bannerTimer = 0;
+    this.photoMode = false;
+    this._projTmp = new THREE.Vector3();
     this._buildDOM();
   }
 
@@ -13,23 +19,36 @@ export class HUD {
     this.root.id = 'game-hud';
     this.root.className = 'hud-root hidden';
     this.root.innerHTML = `
-      <!-- Top Left: Wayfarer Vitals -->
-      <div class="hud-vitals">
-        <div class="hud-level-badge" id="hud-level">Lv.1</div>
-        <div class="hud-bars">
-          <div class="bar-row"><span class="bar-lbl">HP</span><div class="bar-track"><div class="bar-fill bar-hp" id="bar-hp"></div></div><span class="bar-val" id="val-hp">100</span></div>
-          <div class="bar-row"><span class="bar-lbl">SP</span><div class="bar-track"><div class="bar-fill bar-sp" id="bar-sp"></div></div><span class="bar-val" id="val-sp">100</span></div>
-          <div class="bar-row"><span class="bar-lbl">Warm</span><div class="bar-track"><div class="bar-fill bar-wm" id="bar-wm"></div></div><span class="bar-val" id="val-wm">100</span></div>
+      <!-- Top Left: Wayfarer Vitals & Status Pills -->
+      <div class="hud-left-stack">
+        <div class="hud-vitals">
+          <div class="hud-level-badge" id="hud-level">Lv.1</div>
+          <div class="hud-bars">
+            <div class="bar-row"><span class="bar-lbl">HP</span><div class="bar-track"><div class="bar-fill bar-hp" id="bar-hp"></div></div><span class="bar-val" id="val-hp">100</span></div>
+            <div class="bar-row"><span class="bar-lbl">SP</span><div class="bar-track"><div class="bar-fill bar-sp" id="bar-sp"></div></div><span class="bar-val" id="val-sp">100</span></div>
+            <div class="bar-row"><span class="bar-lbl">Warm</span><div class="bar-track"><div class="bar-fill bar-wm" id="bar-wm"></div></div><span class="bar-val" id="val-wm">100</span></div>
+            <div class="bar-row hidden" id="row-breath"><span class="bar-lbl">Air</span><div class="bar-track"><div class="bar-fill bar-air" id="bar-air"></div></div><span class="bar-val" id="val-air">100</span></div>
+          </div>
+        </div>
+        <div class="hud-status-row">
+          <span class="hud-gold-pill" id="hud-gold">60 ✦</span>
+          <span class="hud-stealth-pill hidden" id="hud-stealth">◉ Stealth · 1.75× Ambush</span>
         </div>
       </div>
 
-      <!-- Top Center: Region Compass & Atmospheric Clock -->
-      <div class="hud-compass-wrap">
-        <div class="hud-region-line">
-          <span class="hud-region-name" id="hud-region">Verdant Valley</span>
-          <span class="hud-meta-pill" id="hud-time">09:24 · Clear</span>
+      <!-- Top Center: Region Compass, Atmospheric Clock & Boss Bar -->
+      <div class="hud-center-stack">
+        <div class="hud-compass-wrap">
+          <div class="hud-region-line">
+            <span class="hud-region-name" id="hud-region">Verdant Valley</span>
+            <span class="hud-meta-pill" id="hud-time">09:24 · Clear</span>
+          </div>
+          <div class="hud-compass-bar" id="hud-compass">N · 0m, 332m</div>
         </div>
-        <div class="hud-compass-bar" id="hud-compass">N · 0m, 332m</div>
+        <div class="hud-boss-bar hidden" id="hud-boss-bar">
+          <div class="boss-name" id="boss-name">Elder Stone Warden</div>
+          <div class="bar-track boss-track"><div class="bar-fill bar-boss" id="bar-boss"></div></div>
+        </div>
       </div>
 
       <!-- Top Right: Navigation Buttons + Tracked Quest -->
@@ -58,10 +77,14 @@ export class HUD {
           <button class="cam-pill" data-cam="close" type="button" title="Close Adventure View">Close</button>
           <button class="cam-pill active" data-cam="default" type="button" title="Balanced 2.5D Adventure">2.5D</button>
           <button class="cam-pill" data-cam="isometric" type="button" title="High Isometric 2.5D">Iso</button>
+          <button class="cam-pill" id="btn-photo-mode" type="button" title="Toggle Photo Framing [V]">Photo</button>
           <button class="cam-pill" id="btn-cam-zoom-in" type="button" title="Zoom In">+</button>
           <button class="cam-pill" id="btn-cam-zoom-out" type="button" title="Zoom Out">−</button>
         </div>
       </div>
+
+      <!-- Floating Combat Damage Popups Layer -->
+      <div class="dmg-layer" id="dmg-layer"></div>
 
       <!-- Discovery Banner -->
       <div class="discovery-banner hidden" id="discovery-banner">
@@ -83,13 +106,21 @@ export class HUD {
     this.hpBar = this.root.querySelector('#bar-hp');
     this.spBar = this.root.querySelector('#bar-sp');
     this.wmBar = this.root.querySelector('#bar-wm');
+    this.airRow = this.root.querySelector('#row-breath');
+    this.airBar = this.root.querySelector('#bar-air');
     this.hpVal = this.root.querySelector('#val-hp');
     this.spVal = this.root.querySelector('#val-sp');
     this.wmVal = this.root.querySelector('#val-wm');
+    this.airVal = this.root.querySelector('#val-air');
     this.levelEl = this.root.querySelector('#hud-level');
+    this.goldEl = this.root.querySelector('#hud-gold');
+    this.stealthEl = this.root.querySelector('#hud-stealth');
     this.regionEl = this.root.querySelector('#hud-region');
     this.timeEl = this.root.querySelector('#hud-time');
     this.compassEl = this.root.querySelector('#hud-compass');
+    this.bossBarWrap = this.root.querySelector('#hud-boss-bar');
+    this.bossNameEl = this.root.querySelector('#boss-name');
+    this.bossFillEl = this.root.querySelector('#bar-boss');
     this.questBox = this.root.querySelector('#hud-quest-box');
     this.questTitle = this.root.querySelector('#hud-quest-title');
     this.questObj = this.root.querySelector('#hud-quest-obj');
@@ -100,6 +131,7 @@ export class HUD {
     this.bannerSub = this.root.querySelector('#discovery-sub');
     this.bannerTitle = this.root.querySelector('#discovery-title');
     this.toastStack = this.root.querySelector('#toast-stack');
+    this.dmgLayer = this.root.querySelector('#dmg-layer');
 
     for (const btn of this.root.querySelectorAll('.hud-icon-btn')) {
       btn.addEventListener('click', () => this.game.openModal(btn.dataset.modal));
@@ -111,6 +143,7 @@ export class HUD {
         this.game.cameraController.setPreset(pill.dataset.cam);
       });
     }
+    this.root.querySelector('#btn-photo-mode').addEventListener('click', () => this.togglePhotoMode());
     this.root.querySelector('#btn-cam-zoom-in').addEventListener('click', () => {
       this.game.cameraController.targetDistance = Math.max(8.5, this.game.cameraController.targetDistance - 4);
     });
@@ -121,6 +154,33 @@ export class HUD {
     this.root.querySelector('#dismiss-portrait').addEventListener('click', () => {
       this.root.querySelector('#portrait-hint').style.display = 'none';
     });
+  }
+
+  togglePhotoMode() {
+    this.photoMode = !this.photoMode;
+    this.root.classList.toggle('photo-mode', this.photoMode);
+    if (this.photoMode) {
+      this.game.cameraController.setPreset('photo');
+      this.showToast({ title: 'Photo Framing Active', text: 'Press [V] or Photo again to restore full HUD.' });
+    } else {
+      this.game.cameraController.setPreset('default');
+    }
+  }
+
+  spawnDamagePopup(worldPos, dmg, { isHeavy = false, isAmbush = false } = {}) {
+    if (!worldPos || !this.game.cameraController) return;
+    this._projTmp.copy(worldPos).project(this.game.cameraController.camera);
+    if (this._projTmp.z > 1) return;
+    const x = (this._projTmp.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-this._projTmp.y * 0.5 + 0.5) * window.innerHeight;
+
+    const el = document.createElement('div');
+    el.className = `dmg-pop ${isAmbush ? 'dmg-ambush' : isHeavy ? 'dmg-heavy' : ''}`;
+    el.textContent = isAmbush ? `AMBUSH ${dmg}!` : isHeavy ? `${dmg}!` : `${dmg}`;
+    el.style.left = `${Math.round(x)}px`;
+    el.style.top = `${Math.round(y)}px`;
+    this.dmgLayer.appendChild(el);
+    setTimeout(() => el.remove(), 850);
   }
 
   setVisible(show) {
@@ -158,20 +218,66 @@ export class HUD {
     this.spVal.textContent = Math.round(p.stamina);
     this.wmVal.textContent = Math.round(p.warmth);
     this.levelEl.textContent = `Lv.${this.game.progression.level}`;
+    this.goldEl.textContent = `${this.game.inventory.gold} ✦`;
 
-    this.regionEl.textContent = w.currentRegion?.name || 'Verdant Valley';
-    const weatherLabel = w.weather.weather.charAt(0).toUpperCase() + w.weather.weather.slice(1);
+    // Underwater breath bar
+    const showBreath = p.diving || p.breath < 99;
+    this.airRow.classList.toggle('hidden', !showBreath);
+    if (showBreath) {
+      this.airBar.style.width = `${Math.round((p.breath / p.maxBreath) * 100)}%`;
+      this.airVal.textContent = Math.round(p.breath);
+    }
+
+    // Stealth indicator
+    this.stealthEl.classList.toggle('hidden', !p.stealth);
+
+    // Region / Interior title + time & weather
+    const inside = w.interiors?.currentInterior;
+    this.regionEl.textContent = inside ? inside.name : w.currentRegion?.name || 'Verdant Valley';
+    const weatherLabel = inside ? 'Sanctuary' : w.weather.weather.charAt(0).toUpperCase() + w.weather.weather.slice(1);
     this.timeEl.textContent = `${w.weather.getTimeString()} · ${weatherLabel}`;
 
-    // Compass heading + coordinates in metres
+    // Compass heading + mode + Custom Waypoint Distance/Bearing
     const deg = (((-this.game.cameraController.yaw * 180) / Math.PI) % 360 + 360) % 360;
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const cardinal = dirs[Math.round(deg / 45) % 8];
     const px = Math.round(p.root.position.x);
     const pz = Math.round(p.root.position.z);
     const alt = Math.round(p.root.position.y);
-    const modeTag = p.gliding ? ' · Gliding' : p.swimming ? ' · Swimming' : p.climbing ? ' · Climbing' : '';
-    this.compassEl.textContent = `${cardinal} · ${px}m, ${pz}m · Elev ${alt}m${modeTag}`;
+    const modeTag = p.sailing
+      ? ' · Sailing'
+      : p.diving
+        ? ' · Diving'
+        : p.gliding
+          ? ' · Gliding'
+          : p.swimming
+            ? ' · Swimming'
+            : p.climbing
+              ? ' · Climbing'
+              : p.stealth
+                ? ' · Stealth'
+                : '';
+
+    let wpTag = '';
+    if (this.game.waypoint && !inside) {
+      const dx = this.game.waypoint.x - p.root.position.x;
+      const dz = this.game.waypoint.z - p.root.position.z;
+      const dist = Math.round(Math.hypot(dx, dz));
+      const ang = ((Math.atan2(dx, -dz) * 180) / Math.PI + 360) % 360;
+      const wpDir = dirs[Math.round(ang / 45) % 8];
+      wpTag = ` · ◎ Pin ${wpDir} ${dist}m`;
+    }
+    this.compassEl.textContent = `${cardinal} · ${px}m, ${pz}m · Elev ${alt}m${modeTag}${wpTag}`;
+
+    // Active Boss Health Bar
+    const boss = !inside ? this.game.enemies.getActiveBoss(p.root.position) : null;
+    if (boss) {
+      this.bossBarWrap.classList.remove('hidden');
+      this.bossNameEl.textContent = `${boss.def.name} (${Math.ceil(boss.hp)}/${boss.def.maxHp})`;
+      this.bossFillEl.style.width = `${Math.max(2, Math.round((boss.hp / boss.def.maxHp) * 100))}%`;
+    } else {
+      this.bossBarWrap.classList.add('hidden');
+    }
 
     // Active tracked quest summary
     const tracked = this.game.quests.getTrackedQuest();

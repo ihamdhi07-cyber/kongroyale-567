@@ -4,7 +4,7 @@
       "id": "echoes-of-the-gate",
       "type": "main",
       "title": "Echoes of the Unknown Gate",
-      "summary": "Uncover the ancient harmonic mystery linking the Crossroads, the Heart Tree, and the sealed Unknown Gate.",
+      "summary": "Uncover the ancient harmonic mystery linking the Crossroads, the Heart Tree, and the sealed Unknown Gate at the frontier.",
       "giver": "Elder Maren",
       "autoStart": true,
       "objectives": [
@@ -14,7 +14,20 @@
         { "id": "awaken-waystones", "text": "Attune 3 Regional Waystones across the realm", "target": 3, "event": "waystone:activate" },
         { "id": "reach-unknown-gate", "text": "Discover The Unknown Gate in the Hidden Frontier", "target": 1, "event": "landmark:discover:unknown-gate" }
       ],
-      "rewards": { "xp": 350, "items": [{ "itemId": "resonance-key", "qty": 1 }, { "itemId": "spirit-tonic", "qty": 2 }] }
+      "rewards": { "xp": 350, "gold": 120, "items": [{ "itemId": "resonance-key", "qty": 1 }, { "itemId": "spirit-tonic", "qty": 2 }] }
+    },
+    {
+      "id": "awakening-the-horizon",
+      "type": "main",
+      "title": "Awakening the Unknown Gate",
+      "summary": "Confront the Gatekeeper Automaton in the Hidden Frontier, claim its Aether Core, and awaken the monumental Unknown Gate.",
+      "giver": "Elder Maren",
+      "autoStart": false,
+      "objectives": [
+        { "id": "defeat-warden", "text": "Defeat the Elder Stone Warden guarding the frontier", "target": 1, "event": "enemy:defeat:elder-warden" },
+        { "id": "activate-gate", "text": "Awaken The Unknown Gate portal with the Resonance Key", "target": 1, "event": "gate:awaken" }
+      ],
+      "rewards": { "xp": 600, "gold": 250, "items": [{ "itemId": "galeblade-staff", "qty": 1 }] }
     },
     {
       "id": "herbs-of-the-canopy",
@@ -28,7 +41,7 @@
         { "id": "gather-moonpetal", "text": "Gather Silver Moonpetals from the forest edge (2)", "target": 2, "event": "item:gather:moonpetal" },
         { "id": "return-lyra", "text": "Report back to Herbalist Lyra", "target": 1, "event": "npc:talk:herbalist-lyra" }
       ],
-      "rewards": { "xp": 150, "items": [{ "itemId": "spirit-tonic", "qty": 2 }, { "itemId": "berry-stew", "qty": 2 }] }
+      "rewards": { "xp": 150, "gold": 55, "items": [{ "itemId": "spirit-tonic", "qty": 2 }, { "itemId": "berry-stew", "qty": 2 }] }
     },
     {
       "id": "forge-of-the-old-kingdom",
@@ -42,20 +55,60 @@
         { "id": "gather-crystal", "text": "Collect Resonant Crystal Shards (2)", "target": 2, "event": "item:gather:crystal-shard" },
         { "id": "craft-gear", "text": "Craft any item or meal via Inventory -> Crafting", "target": 1, "event": "craft:complete" }
       ],
-      "rewards": { "xp": 200, "items": [{ "itemId": "ancient-core", "qty": 1 }, { "itemId": "crystal-shard", "qty": 1 }] }
+      "rewards": { "xp": 200, "gold": 80, "items": [{ "itemId": "ancient-core", "qty": 1 }, { "itemId": "crystal-shard", "qty": 1 }] }
+    },
+    {
+      "id": "sails-of-azure-coast",
+      "type": "side",
+      "title": "Sails of the Azure Coast",
+      "summary": "Harbormaster Kael at Tidehaven Harbor challenges you to sail across Azure Coast and dive for a Sunken Pearl near the Drowned Archive.",
+      "giver": "Harbormaster Kael",
+      "autoStart": false,
+      "objectives": [
+        { "id": "board-skiff", "text": "Take the helm of a Sailboat on Azure Coast", "target": 1, "event": "boat:board" },
+        { "id": "discover-archive", "text": "Discover The Drowned Archive", "target": 1, "event": "landmark:discover:drowned-archive" },
+        { "id": "gather-pearl", "text": "Recover a Drowned Archive Pearl from the seabed", "target": 1, "event": "item:gather:sunken-pearl" }
+      ],
+      "rewards": { "xp": 260, "gold": 110, "items": [{ "itemId": "windweaver-cloak", "qty": 1 }] }
+    },
+    {
+      "id": "ascent-of-skywatch",
+      "type": "side",
+      "title": "Ascent of the Skywatch Peaks",
+      "summary": "Alpine Guide Soren at Frostcrest Basecamp asks you to gather Frostblooms and climb to the rotating Skywatch Observatory.",
+      "giver": "Alpine Guide Soren",
+      "autoStart": false,
+      "objectives": [
+        { "id": "gather-frostbloom", "text": "Harvest Highland Frostblooms (2)", "target": 2, "event": "item:gather:frostbloom" },
+        { "id": "discover-skywatch", "text": "Reach The Skywatch Observatory", "target": 1, "event": "landmark:discover:skywatch-observatory" }
+      ],
+      "rewards": { "xp": 240, "gold": 95, "items": [{ "itemId": "frostward-coat", "qty": 1 }, { "itemId": "frost-elixir", "qty": 2 }] }
     },
     {
       "id": "cartographers-horizon",
       "type": "discovery",
       "title": "The Cartographer's Horizon",
-      "summary": "Chart the diverse regions of the 8x8 km realm and uncover ancient landmarks hidden across the continent.",
+      "summary": "Chart the diverse regions of the 8x8 km realm and uncover ancient landmarks & environmental puzzles hidden across the continent.",
       "giver": "Cartographer Solen",
       "autoStart": true,
       "objectives": [
         { "id": "discover-landmarks", "text": "Discover 4 Major Regional Landmarks", "target": 4, "event": "landmark:discover" },
-        { "id": "solve-any-puzzle", "text": "Solve 2 Ancient Environmental Puzzles", "target": 2, "event": "puzzle:solve" }
+        { "id": "solve-any-puzzle", "text": "Solve 3 Ancient Environmental Puzzles", "target": 3, "event": "puzzle:solve" }
       ],
-      "rewards": { "xp": 280, "items": [{ "itemId": "windweaver-cloak", "qty": 1 }] }
+      "rewards": { "xp": 320, "gold": 130, "items": [{ "itemId": "windweaver-cloak", "qty": 1 }] }
+    },
+    {
+      "id": "secrets-of-the-sanctuaries",
+      "type": "hidden",
+      "title": "Secrets of the Hidden Sanctuaries",
+      "summary": "Venture inside ancient enclosed sanctuaries across the realm — Elder's Hall, the Crystal Vault, and the Drowned Archive Chamber.",
+      "giver": "World Discovery",
+      "autoStart": true,
+      "objectives": [
+        { "id": "enter-sanctuaries", "text": "Enter 2 Interior Sanctuaries or Halls", "target": 2, "event": "interior:enter" },
+        { "id": "defeat-boss", "text": "Vanquish a Legendary Regional Guardian Boss", "target": 1, "event": "boss:defeat" }
+      ],
+      "rewards": { "xp": 380, "gold": 160, "items": [{ "itemId": "aether-core", "qty": 1 }, { "itemId": "spirit-tonic", "qty": 2 }] }
     }
   ]
 }

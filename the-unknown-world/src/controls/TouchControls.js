@@ -12,6 +12,8 @@ export class TouchControls {
     this.sprint = false;
     this.jump = false;
     this.guard = false;
+    this.dive = false;
+    this.stealthToggle = false;
     this.attackPressed = false;
     this.heavyPressed = false;
     this.dodgePressed = false;
@@ -43,9 +45,10 @@ export class TouchControls {
       <div class="touch-actions">
         <button class="touch-btn touch-interact hidden" id="tbtn-interact" type="button">✦ Interact</button>
         <div class="touch-cluster">
-          <button class="touch-btn touch-sm" id="tbtn-guard" type="button">Shield</button>
+          <button class="touch-btn touch-sm" id="tbtn-stealth" type="button">Stealth</button>
           <button class="touch-btn touch-sm" id="tbtn-heavy" type="button">Heavy</button>
           <button class="touch-btn touch-sm" id="tbtn-dodge" type="button">Dodge</button>
+          <button class="touch-btn touch-sm" id="tbtn-guard" type="button">Shield</button>
           <button class="touch-btn touch-lg touch-attack" id="tbtn-attack" type="button">Strike</button>
           <button class="touch-btn touch-lg touch-jump" id="tbtn-jump" type="button">Jump / Glide</button>
         </div>
@@ -70,7 +73,8 @@ export class TouchControls {
 
     bindTap('#tbtn-attack', (d) => { if (d) this.attackPressed = true; });
     bindTap('#tbtn-heavy', (d) => { if (d) this.heavyPressed = true; });
-    bindTap('#tbtn-dodge', (d) => { if (d) this.dodgePressed = true; });
+    bindTap('#tbtn-dodge', (d) => { if (d) this.dodgePressed = true; this.dive = d; });
+    bindTap('#tbtn-stealth', (d) => { if (d) this.stealthToggle = true; });
     bindTap('#tbtn-jump', (d) => { this.jump = d; });
     bindTap('#tbtn-guard', (d) => { this.guard = d; });
     bindTap('#tbtn-interact', (d) => { if (d) this.interactPressed = true; });
@@ -186,6 +190,8 @@ export class TouchControls {
       sprint: this.sprint,
       jump: this.jump,
       guard: this.guard,
+      dive: this.dive,
+      stealthToggle: this.stealthToggle,
       attackPressed: this.attackPressed,
       heavyPressed: this.heavyPressed,
       dodgePressed: this.dodgePressed,
@@ -198,6 +204,7 @@ export class TouchControls {
     this.heavyPressed = false;
     this.dodgePressed = false;
     this.interactPressed = false;
+    this.stealthToggle = false;
     this.camYawDelta = 0;
     this.camPitchDelta = 0;
     this.camZoomDelta = 0;

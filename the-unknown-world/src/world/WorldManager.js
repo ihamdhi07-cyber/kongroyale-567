@@ -1,5 +1,5 @@
 // WorldManager coordinates TerrainManager, ArtTextures, ChunkManager, VegetationSystem,
-// WaterSystem, WeatherSystem, and LandmarkBuilder across the 8x8 km playable continent.
+// WaterSystem, WeatherSystem, LandmarkBuilder, ParticleSystem, BoatSystem & InteriorManager.
 import { ArtTextures } from './ArtTextures.js';
 import { WATERCOLOR_UNIFORMS } from './WatercolorShader.js';
 import { TerrainManager } from './TerrainManager.js';
@@ -8,10 +8,13 @@ import { ChunkManager } from './ChunkManager.js';
 import { WaterSystem } from './WaterSystem.js';
 import { WeatherSystem } from './WeatherSystem.js';
 import { LandmarkBuilder } from './LandmarkBuilder.js';
+import { ParticleSystem } from './ParticleSystem.js';
+import { BoatSystem } from './BoatSystem.js';
+import { InteriorManager } from './InteriorManager.js';
 import { WORLD_CONFIG } from './WorldSpec.js';
 
 export class WorldManager {
-  constructor(sceneManager, preset) {
+  constructor(sceneManager, preset, eventBus = null) {
     this.sceneManager = sceneManager;
     this.textures = new ArtTextures();
     WATERCOLOR_UNIFORMS.uWcPaperMap.value = this.textures.paperGrain;
@@ -22,6 +25,9 @@ export class WorldManager {
     this.water = new WaterSystem(sceneManager.scene);
     this.weather = new WeatherSystem(sceneManager);
     this.landmarks = new LandmarkBuilder(sceneManager.scene, this.terrain, this.textures);
+    this.particles = new ParticleSystem(sceneManager.scene);
+    this.boats = new BoatSystem(sceneManager.scene, this.terrain, this.textures, this.particles, eventBus);
+    this.interiors = new InteriorManager(sceneManager.scene, this.terrain, this.textures, eventBus);
 
     this.currentRegion = this.terrain.biomes.getRegionAt(WORLD_CONFIG.SPAWN_POS.x, WORLD_CONFIG.SPAWN_POS.z);
   }
@@ -37,6 +43,7 @@ export class WorldManager {
 
   /** Combined static obstacle colliders (chunk trees/boulders + landmark buildings/waystones) */
   getNearbyColliders(x, z, radius = 9) {
+    if (this.interiors.currentInterior) return [];
     const list = this.chunks.getNearbyColliders(x, z, radius);
     const r2 = (radius + 10) * (radius + 10);
     for (const c of this.landmarks.colliders) {
@@ -49,6 +56,7 @@ export class WorldManager {
 
   /** Checks if player is inside a Shattered Expanse thermal updraft column */
   getUpdraftLiftAt(pos) {
+    if (this.interiors.currentInterior) return 0;
     for (const u of this.landmarks.updrafts) {
       const d = Math.hypot(pos.x - u.x, pos.z - u.z);
       if (d <= u.radius && pos.y >= u.y - 2 && pos.y <= u.y + u.height) {
@@ -58,12 +66,28 @@ export class WorldManager {
     return 0;
   }
 
-  update(dt, elapsed, playerPos) {
-    this.currentRegion = this.terrain.biomes.getRegionAt(playerPos.x, playerPos.z);
-    this.chunks.update(playerPos);
+  update(dt, elapsed, playerPos, player = null, input = null) {
+    const inside = Boolean(this.interiors.currentInterior);
+    if (!inside) {
+      this.currentRegion = this.terrain.biomes.getRegionAt(playerPos.x, playerPos.z);
+      this.chunks.update(playerPos);
+    }
+
     const envState = this.weather.update(dt, elapsed, playerPos, this.currentRegion, playerPos.y);
+    if (inside) {
+      // Clear cozy indoor view without exterior distance fog
+      this.sceneManager.scene.fog.density = 0.00015;
+    } else if (player?.diving) {
+      // Lush underwater turquoise watercolor fog tint when diving beneath Azure Coast!
+      this.sceneManager.scene.fog.color.setHex(0x1f7688);
+      this.sceneManager.scene.fog.density = 0.022;
+    }
+
     this.water.update(dt, elapsed, playerPos, envState);
     this.landmarks.update(dt, elapsed);
+    this.interiors.update(dt, elapsed);
+    this.boats.update(dt, elapsed, player, input);
+    this.particles.update(dt);
     this.sceneManager.updateShadowAnchor(playerPos);
   }
 }

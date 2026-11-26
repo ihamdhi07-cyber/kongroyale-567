@@ -50,8 +50,9 @@ export class MapUI {
             <canvas id="world-map-canvas" width="560" height="560"></canvas>
           </div>
           <div class="map-sidebar">
-            <h3>Waystones &amp; Landmarks</h3>
-            <p class="map-hint">Click any attuned Waystone (✦) below or on the map to fast-travel across the 8×8 km continent.</p>
+            <h3>Waystones, Outposts &amp; Pins</h3>
+            <p class="map-hint">Click any attuned Waystone (✦) to fast-travel, or click anywhere else on the map to drop/clear a custom Compass Waypoint pin.</p>
+            <div class="map-waypoint-bar" id="map-waypoint-bar"></div>
             <div class="map-landmark-list" id="map-landmark-list"></div>
           </div>
         </div>
@@ -89,11 +90,27 @@ export class MapUI {
         }
       }
 
-      // Click anywhere inside the 8x8 km playable map while holding Shift lets dev/tester inspect coordinates
-      this.game.hud.showToast({
-        title: 'Map Coordinates',
-        text: `${Math.round(wx)}m E, ${Math.round(wz)}m S (${this.game.world.terrain.biomes.getRegionAt(wx, wz).name})`,
-      });
+      // Check click on existing custom waypoint pin to clear it
+      if (this.game.waypoint) {
+        const [wpx, wpy] = this._worldToCanvas(this.game.waypoint.x, this.game.waypoint.z);
+        if (Math.hypot(wpx - px, wpy - py) <= 16) {
+          this.game.setWaypoint(null);
+          this.render();
+          return;
+        }
+      }
+
+      // Drop custom waypoint pin anywhere inside the 8x8 km playable continent
+      if (Math.abs(wx) <= WORLD_CONFIG.PLAYABLE_HALF_M && Math.abs(wz) <= WORLD_CONFIG.PLAYABLE_HALF_M) {
+        const reg = this.game.world.terrain.biomes.getRegionAt(wx, wz);
+        this.game.setWaypoint({ x: Math.round(wx), z: Math.round(wz), regionName: reg.name });
+        this.render();
+      } else {
+        this.game.hud.showToast({
+          title: 'Outer Expansion Reserve',
+          text: `${Math.round(wx)}m E, ${Math.round(wz)}m S — charted inside the 15×15 km expansion blueprint.`,
+        });
+      }
     });
   }
 
@@ -294,6 +311,55 @@ export class MapUI {
           ctx.fillText(lm.name, lx, ly - 10);
         }
       }
+
+      // Moored Sailboats (navy diamond) & Solved/Active Puzzles
+      for (const b of this.game.world.boats?.boats || []) {
+        const [bx, by] = this._worldToCanvas(b.group.position.x, b.group.position.z);
+        ctx.fillStyle = '#235c88';
+        ctx.fillRect(bx - 4, by - 4, 8, 8);
+        ctx.strokeStyle = '#fff5dd';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(bx - 4, by - 4, 8, 8);
+      }
+
+      for (const pz of this.game.puzzles?.puzzles || []) {
+        const solved = this.game.puzzles.solved.has(pz.id);
+        const [zx, zy] = this._worldToCanvas(pz.cx, pz.cz);
+        ctx.beginPath();
+        ctx.arc(zx, zy, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle = solved ? '#62e082' : '#d89cf5';
+        ctx.fill();
+      }
+    }
+
+    // 6b. Custom Waypoint Pin
+    const wpBar = this.el.querySelector('#map-waypoint-bar');
+    if (this.game.waypoint) {
+      const [wx, wy] = this._worldToCanvas(this.game.waypoint.x, this.game.waypoint.z);
+      ctx.beginPath();
+      ctx.arc(wx, wy, 9, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff6b4a';
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(wx, wy, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffe082';
+      ctx.fill();
+
+      if (wpBar) {
+        wpBar.innerHTML = `
+          <div class="landmark-row attuned">
+            <div><div class="lm-name">◎ Pin: ${this.game.waypoint.regionName}</div><div class="lm-meta">${this.game.waypoint.x}m, ${this.game.waypoint.z}m</div></div>
+            <button class="btn-mini danger" id="clear-wp-btn" type="button">Clear</button>
+          </div>
+        `;
+        wpBar.querySelector('#clear-wp-btn').addEventListener('click', () => {
+          this.game.setWaypoint(null);
+          this.render();
+        });
+      }
+    } else if (wpBar) {
+      wpBar.innerHTML = '';
     }
 
     // 7. Player Marker Arrow

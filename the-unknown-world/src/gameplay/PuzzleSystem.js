@@ -27,6 +27,179 @@ export class PuzzleSystem {
     this._buildSingingObelisks();
     this._buildSunMirrorTerrace();
     this._buildPressureSealCairn();
+    this._buildRegionalPuzzles();
+  }
+
+  // ---- PUZZLES 4–8: Regional Mechanisms Across Emerald Wilds, Azure Coast, Forgotten Kingdom, Hollow Depths & Hidden Frontier ----
+  _buildRegionalPuzzles() {
+    // 4. Emerald Wilds — Canopy Wind Chimes (-945, -135)
+    this._buildCustomObelisks({
+      id: 'emerald-wind-chimes',
+      title: 'Canopy Wind Chimes',
+      cx: -945,
+      cz: -135,
+      reward: { xp: 110, gold: 45, items: [{ itemId: 'moonpetal', qty: 3 }, { itemId: 'spirit-tonic', qty: 1 }] },
+    });
+
+    // 5. Azure Coast — Tide-Lock Sluice Gate (1545, 1495) — Water Valve Mechanism!
+    const tcx = 1545, tcz = 1495;
+    const tcy = this.terrain.getHeight(tcx, tcz);
+    const tg = new THREE.Group();
+    tg.position.set(tcx, tcy, tcz);
+    const basin = new THREE.Mesh(
+      new THREE.CylinderGeometry(5.8, 6.4, 0.7, 14),
+      this.stoneMat
+    );
+    basin.position.y = 0.35;
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x3ecad0,
+      emissive: 0x165e6b,
+      emissiveIntensity: 0.45,
+      transparent: true,
+      opacity: 0.84,
+    });
+    const waterDisc = new THREE.Mesh(new THREE.CylinderGeometry(5.1, 5.1, 0.25, 14), waterMat);
+    waterDisc.position.y = 0.65;
+    tg.add(basin, waterDisc);
+
+    const valves = [];
+    const valveOffsets = [[-5.6, 0, 'West Tide Valve'], [0, -5.6, 'North Tide Valve'], [5.6, 0, 'East Tide Valve']];
+    for (let i = 0; i < valveOffsets.length; i++) {
+      const [vx, vz, vlabel] = valveOffsets[i];
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.55, 2.0, 8), this.stoneMat);
+      post.position.set(vx, 1.0, vz);
+      const wheelMat = new THREE.MeshStandardMaterial({ color: 0xc99c4e, emissive: 0x3d2a08, emissiveIntensity: 0.35 });
+      const wheel = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.12, 6, 14), wheelMat);
+      wheel.position.set(vx, 2.1, vz);
+      tg.add(post, wheel);
+      valves.push({ idx: i, wx: tcx + vx, wy: tcy, wz: tcz + vz, wheel, wheelMat, open: false, label: `Turn ${vlabel}` });
+    }
+    const tChest = this._createRewardChest(0, 0.75, 0);
+    tChest.visible = false;
+    tg.add(tChest);
+    this.root.add(tg);
+    this.puzzles.push({
+      id: 'azure-tide-sluice',
+      kind: 'sluice',
+      title: 'Tide-Lock Sluice Gate',
+      cx: tcx,
+      cz: tcz,
+      valves,
+      waterDisc,
+      chest: tChest,
+      reward: { xp: 130, gold: 60, items: [{ itemId: 'sunken-pearl', qty: 1 }, { itemId: 'sea-glass', qty: 2 }] },
+    });
+
+    // 6. Forgotten Kingdom — Citadel Pressure Seal (1690, -255)
+    this._buildCustomPressure({
+      id: 'citadel-pressure-seal',
+      title: 'Citadel Monolith Seal',
+      cx: 1690,
+      cz: -255,
+      reward: { xp: 140, gold: 70, items: [{ itemId: 'ancient-core', qty: 1 }, { itemId: 'spirit-tonic', qty: 1 }] },
+    });
+
+    // 7. Hollow Depths — Crystal Prism Relay (175, -1765)
+    this._buildCustomMirrors({
+      id: 'hollow-crystal-relay',
+      title: 'Hollow Crystal Prism Relay',
+      cx: 175,
+      cz: -1765,
+      reward: { xp: 150, gold: 75, items: [{ itemId: 'crystal-shard', qty: 3 }] },
+    });
+
+    // 8. Hidden Frontier — Frontier Resonance Triad (-1600, 1655)
+    this._buildCustomObelisks({
+      id: 'frontier-resonance-triad',
+      title: 'Frontier Resonance Triad',
+      cx: -1600,
+      cz: 1655,
+      reward: { xp: 180, gold: 95, items: [{ itemId: 'aether-core', qty: 1 }, { itemId: 'crystal-shard', qty: 2 }] },
+    });
+  }
+
+  _buildCustomObelisks({ id, title, cx, cz, reward }) {
+    const cy = this.terrain.getHeight(cx, cz);
+    const group = new THREE.Group();
+    group.position.set(cx, cy, cz);
+    const specs = [
+      { idx: 0, ox: -5.2, oz: 2.2, h: 2.4, note: 293.66, label: 'Chime Small Spire (Low Tone)' },
+      { idx: 1, ox: 0, oz: -4.6, h: 3.5, note: 369.99, label: 'Chime Medium Spire (Mid Tone)' },
+      { idx: 2, ox: 5.2, oz: 2.2, h: 4.6, note: 440.0, label: 'Chime Tall Spire (High Tone)' },
+    ];
+    const stones = [];
+    for (const s of specs) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.25, s.h, 1.25), this.stoneMat);
+      pillar.position.set(s.ox, s.h * 0.5, s.oz);
+      const runeMat = new THREE.MeshStandardMaterial({ color: 0x628098, emissive: 0x1c2b3c, emissiveIntensity: 0.3 });
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), runeMat);
+      gem.position.set(s.ox, s.h + 0.65, s.oz);
+      group.add(pillar, gem);
+      stones.push({ ...s, gem, runeMat, wx: cx + s.ox, wy: cy, wz: cz + s.oz });
+    }
+    const chest = this._createRewardChest(0, 0, 0);
+    chest.visible = false;
+    group.add(chest);
+    this.root.add(group);
+    this.puzzles.push({ id, kind: 'obelisks', title, cx, cz, stones, sequence: [], chest, reward });
+  }
+
+  _buildCustomMirrors({ id, title, cx, cz, reward }) {
+    const cy = this.terrain.getHeight(cx, cz);
+    const group = new THREE.Group();
+    group.position.set(cx, cy, cz);
+    const coreMat = new THREE.MeshStandardMaterial({ color: 0x5c7f99, emissive: 0x1c3a50, emissiveIntensity: 0.4 });
+    const core = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), coreMat);
+    core.position.y = 2.0;
+    group.add(core);
+    const mirrors = [];
+    const offsets = [[-6, 0, 0], [6, 0, Math.PI], [0, -6, Math.PI * 0.5]];
+    for (let i = 0; i < offsets.length; i++) {
+      const [ox, oz, targetYaw] = offsets[i];
+      const holder = new THREE.Group();
+      holder.position.set(ox, 0, oz);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.8, 1.6, 8), this.stoneMat);
+      base.position.y = 0.8;
+      const glass = new THREE.Mesh(
+        new THREE.BoxGeometry(0.25, 1.4, 1.3),
+        new THREE.MeshStandardMaterial({ color: 0x8ef5ff, emissive: 0x2ec8e8, emissiveIntensity: 0.7 })
+      );
+      glass.position.y = 2.1;
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11, 0.11, 6.2, 6),
+        new THREE.MeshBasicMaterial({ color: 0x7ef5ff, transparent: true, opacity: 0.55 })
+      );
+      beam.rotation.z = Math.PI / 2;
+      beam.position.set(3.1, 2.1, 0);
+      holder.add(base, glass, beam);
+      const stepAngles = [targetYaw, targetYaw + Math.PI * 0.5, targetYaw + Math.PI, targetYaw + Math.PI * 1.5];
+      const startStep = (i + 1) % 3 + 1;
+      holder.rotation.y = stepAngles[startStep % 4];
+      group.add(holder);
+      mirrors.push({ idx: i, holder, step: startStep % 4, targetStep: 0, stepAngles, wx: cx + ox, wy: cy, wz: cz + oz });
+    }
+    const chest = this._createRewardChest(0, 0, 3.2);
+    chest.visible = false;
+    group.add(chest);
+    this.root.add(group);
+    this.puzzles.push({ id, kind: 'mirrors', title, cx, cz, mirrors, coreMat, chest, reward });
+  }
+
+  _buildCustomPressure({ id, title, cx, cz, reward }) {
+    const cy = this.terrain.getHeight(cx, cz);
+    const group = new THREE.Group();
+    group.position.set(cx, cy, cz);
+    const sealMat = new THREE.MeshStandardMaterial({ color: 0x5aaad6, emissive: 0x1e5c82, emissiveIntensity: 0.6 });
+    const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 2.1, 0.2, 12), sealMat);
+    pad.position.y = 0.1;
+    const block = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.9, 1.8), this.stoneMat);
+    block.position.set(4.5, 0.95, 2.2);
+    block.castShadow = true;
+    const chest = this._createRewardChest(-4.2, 0, 0);
+    chest.visible = false;
+    group.add(pad, block, chest);
+    this.root.add(group);
+    this.puzzles.push({ id, kind: 'pressure', title, cx, cy, cz, block, sealMat, chest, reward });
   }
 
   // ---- PUZZLE 1: Singing Resonance Obelisks (-115, 305) ----
@@ -255,6 +428,22 @@ export class PuzzleSystem {
             radius: 3.6,
           });
         }
+      } else if (pz.kind === 'sluice') {
+        for (const v of pz.valves) {
+          if (v.open) continue;
+          out.push({
+            id: `pz_sluice_${pz.id}_${v.idx}`,
+            type: 'puzzle',
+            puzzleId: pz.id,
+            action: 'sluice',
+            idx: v.idx,
+            label: v.label,
+            x: v.wx,
+            y: v.wy,
+            z: v.wz,
+            radius: 3.6,
+          });
+        }
       } else if (pz.kind === 'pressure') {
         out.push({
           id: 'pz_pressure_block',
@@ -331,6 +520,29 @@ export class PuzzleSystem {
       return true;
     }
 
+    if (pz.kind === 'sluice') {
+      const v = pz.valves[target.idx];
+      if (!v || v.open) return false;
+      v.open = true;
+      v.wheel.rotation.z += Math.PI * 0.65;
+      v.wheelMat.color.setHex(0x6cf2ff);
+      v.wheelMat.emissive.setHex(0x28c7e8);
+      v.wheelMat.emissiveIntensity = 1.25;
+      this.events.emit('puzzle:note', { freq: 246.94 + target.idx * 75 });
+
+      const opened = pz.valves.filter((x) => x.open).length;
+      pz.waterDisc.position.y = Math.max(0.15, 0.65 - opened * 0.16);
+      if (opened === pz.valves.length) {
+        this._solve(pz);
+      } else {
+        this.events.emit('toast', {
+          title: 'Tide Basin Lowering',
+          text: `${opened}/${pz.valves.length} sluice valves opened — ancient vault emerging!`,
+        });
+      }
+      return true;
+    }
+
     if (pz.kind === 'pressure') {
       // Push monolith smoothly toward the glowing seal (or along player push vector)
       const toSealX = -pz.block.position.x;
@@ -363,6 +575,7 @@ export class PuzzleSystem {
         this.progression.addXP(pz.reward.xp, `Solved ${pz.title}`);
       }
       if (this.inventory) {
+        if (pz.reward.gold) this.inventory.addGold(pz.reward.gold);
         for (const item of pz.reward.items) {
           this.inventory.addItem(item.itemId, item.qty);
         }

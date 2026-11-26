@@ -16,7 +16,7 @@ export class InventoryUI {
         <div class="modal-header">
           <div>
             <div class="modal-eyebrow">WAYFARER SATCHEL &amp; HEARTH</div>
-            <h2 class="modal-title">Inventory &amp; Crafting</h2>
+            <h2 class="modal-title">Inventory &amp; Crafting <span id="inv-gold-pill" class="hud-meta-pill">60 ✦ Sunshards</span></h2>
           </div>
           <button class="modal-close" type="button">✕</button>
         </div>
@@ -30,7 +30,7 @@ export class InventoryUI {
             <button class="pill-btn" data-cat="equipment" type="button">Equipment</button>
             <button class="pill-btn" data-cat="consumable" type="button">Consumables</button>
             <button class="pill-btn" data-cat="material" type="button">Materials</button>
-            <button class="pill-btn" data-cat="quest" type="button">Relics</button>
+            <button class="pill-btn" data-cat="key" type="button">Relics</button>
           </div>
           <div class="item-grid" id="inv-item-grid"></div>
         </div>
@@ -70,6 +70,8 @@ export class InventoryUI {
   }
 
   render() {
+    const goldEl = this.el.querySelector('#inv-gold-pill');
+    if (goldEl) goldEl.textContent = `${this.game.inventory.gold} ✦ Sunshards`;
     const bagPane = this.el.querySelector('#inv-bag-pane');
     const craftPane = this.el.querySelector('#inv-craft-pane');
     bagPane.classList.toggle('hidden', this.activeTab !== 'bag');
@@ -94,12 +96,12 @@ export class InventoryUI {
             <p class="item-desc">${item.description}</p>
             <div class="item-actions">
               ${
-                item.category === 'equipment' && !item.isEquipped
+                (item.category === 'equipment' || item.category === 'weapon') && !item.isEquipped
                   ? `<button class="btn-mini" data-equip="${item.id}" type="button">Equip</button>`
                   : ''
               }
               ${
-                item.effects
+                item.category === 'consumable'
                   ? `<button class="btn-mini" data-use="${item.id}" type="button">Eat / Drink</button>`
                   : ''
               }

@@ -2,113 +2,232 @@
   "items": [
     {
       "id": "wayfarer-staff",
-      "name": "Wayfarer's Heartwood Staff",
-      "category": "equipment",
-      "slot": "weapon",
+      "name": "Wayfarer's Oak Staff",
+      "category": "weapon",
       "rarity": "common",
-      "stats": { "attack": 16, "heavyMultiplier": 1.85 },
-      "description": "A balanced traveler's staff carved from valley oak, inlaid with a warm lantern rune."
+      "slot": "weapon",
+      "attack": 16,
+      "value": 30,
+      "description": "A carved oak staff bound in brass rings. Reliable for sweeping away wild briars and ancient constructs."
     },
     {
       "id": "runeblade-staff",
-      "name": "Citadel Runeblade Staff",
-      "category": "equipment",
-      "slot": "weapon",
+      "name": "Runeblade Resonance Staff",
+      "category": "weapon",
       "rarity": "rare",
-      "stats": { "attack": 28, "heavyMultiplier": 2.15 },
-      "description": "Forged with resonant crystals and an ancient sentinel core; emits luminous cyan-gold arcs."
+      "slot": "weapon",
+      "attack": 28,
+      "value": 120,
+      "description": "Inlaid with Hollow Depths crystal shards that hum with luminous azure resonance on heavy strikes."
+    },
+    {
+      "id": "galeblade-staff",
+      "name": "Horizon Galeblade Staff",
+      "category": "weapon",
+      "rarity": "epic",
+      "slot": "weapon",
+      "attack": 42,
+      "value": 260,
+      "description": "Forged with Shattered Expanse skyfeathers and an Aether Core. Unleashes sweeping wind-arcs."
     },
     {
       "id": "traveler-cloak",
-      "name": "Wayfarer's Indigo Cloak",
+      "name": "Woven Traveler's Cloak",
       "category": "equipment",
-      "slot": "armor",
       "rarity": "common",
-      "stats": { "defense": 5, "maxStamina": 100 },
-      "description": "Weatherproof indigo wool cloak stitched for long marches over hills and forests."
+      "slot": "armor",
+      "defense": 4,
+      "warmthBonus": 10,
+      "value": 35,
+      "description": "Warm hooded cloak dyed with valley ochre. Grants modest protection against wind and claws."
     },
     {
       "id": "windweaver-cloak",
-      "name": "Windweaver's Sky Cloak",
+      "name": "Windweaver's Mantle",
       "category": "equipment",
+      "rarity": "rare",
       "slot": "armor",
-      "rarity": "epic",
-      "stats": { "defense": 14, "maxStamina": 135, "glideEfficiency": 0.6 },
-      "description": "Woven with moonpetal silk and shard-dust; catches thermals effortlessly while gliding."
+      "defense": 10,
+      "speedBonus": 0.14,
+      "warmthBonus": 20,
+      "value": 140,
+      "description": "Feather-light azure mantle blessed by the Shattered Expanse drafts. Boosts movement and defense."
+    },
+    {
+      "id": "frostward-coat",
+      "name": "Frostcrest Alpine Coat",
+      "category": "equipment",
+      "rarity": "rare",
+      "slot": "armor",
+      "defense": 14,
+      "warmthBonus": 55,
+      "value": 165,
+      "description": "Fur-lined highland expedition coat woven to endure the freezing snowstorms of Highland Reach."
     },
     {
       "id": "sunberry",
       "name": "Golden Sunberry",
-      "category": "material",
+      "category": "consumable",
       "rarity": "common",
-      "effects": { "heal": 12, "warmth": 10 },
-      "description": "Sweet amber berries found growing along sunlit meadows and forest clearings."
+      "heal": 16,
+      "stamina": 12,
+      "warmth": 8,
+      "value": 8,
+      "description": "Sweet amber berries harvested in Verdant Valley and Emerald Wilds."
+    },
+    {
+      "id": "river-trout",
+      "name": "Silver River Trout",
+      "category": "consumable",
+      "rarity": "common",
+      "heal": 22,
+      "stamina": 18,
+      "warmth": 10,
+      "value": 14,
+      "description": "Fresh shimmering trout caught along the clear shallows of the Silver River."
+    },
+    {
+      "id": "berry-stew",
+      "name": "Spiced Sunberry Stew",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "heal": 42,
+      "stamina": 35,
+      "warmth": 45,
+      "value": 28,
+      "description": "Hearty campfire stew that restores vitality and wards off Highland frost."
+    },
+    {
+      "id": "grilled-trout",
+      "name": "Herb-Seared River Trout",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "heal": 54,
+      "stamina": 50,
+      "warmth": 35,
+      "value": 36,
+      "description": "Golden hearth-grilled trout seasoned with wild moonpetal sprigs."
+    },
+    {
+      "id": "sunbaked-flatbread",
+      "name": "Honeyed Hearth Flatbread",
+      "category": "consumable",
+      "rarity": "common",
+      "heal": 28,
+      "stamina": 45,
+      "warmth": 30,
+      "value": 20,
+      "description": "Crisp Crossroads flatbread glazed with wildflower honey. Ideal for long climbs and gliding."
+    },
+    {
+      "id": "spirit-tonic",
+      "name": "Luminous Spirit Tonic",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 85,
+      "stamina": 90,
+      "warmth": 50,
+      "value": 65,
+      "description": "Distilled from Moonpetals and resonant crystal dust. Rapidly revives weary Wayfarers."
+    },
+    {
+      "id": "frost-elixir",
+      "name": "Emberbloom Warming Elixir",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 45,
+      "stamina": 60,
+      "warmth": 100,
+      "value": 58,
+      "description": "Radiant highland brew that completely restores warmth during alpine blizzards."
     },
     {
       "id": "moonpetal",
       "name": "Silver Moonpetal",
       "category": "material",
       "rarity": "uncommon",
-      "description": "Luminescent blossom native to the Emerald Wilds. Valued by herbalists and alchemists."
+      "value": 18,
+      "description": "A dew-lit flower blooming around the Emerald Wilds and ancient streams."
     },
     {
       "id": "heartwood",
       "name": "Ancient Heartwood",
       "category": "material",
       "rarity": "common",
-      "description": "Fragrant dense timber fallen from ancient valley and woodland trees."
+      "value": 12,
+      "description": "Dense, fragrant timber shed beneath giant forest canopies."
     },
     {
       "id": "crystal-shard",
       "name": "Resonant Crystal Shard",
       "category": "material",
       "rarity": "rare",
-      "description": "A humming prism shard harvested from Hollow Depths formations and floating monoliths."
+      "value": 35,
+      "description": "A glowing prism splinter humming softly from the Hollow Depths."
     },
     {
       "id": "ancient-core",
-      "name": "Guardian Sentinel Core",
+      "name": "Forgotten Sentinel Core",
       "category": "material",
       "rarity": "rare",
-      "description": "A warm bronze-and-azure core recovered from ancient Forgotten Kingdom guardians."
+      "value": 55,
+      "description": "A brass-and-stone mechanism salvaged from guardians of the Forgotten Kingdom."
     },
     {
-      "id": "river-trout",
-      "name": "Silver River Trout",
+      "id": "sea-glass",
+      "name": "Azure Sea Glass",
       "category": "material",
-      "rarity": "common",
-      "description": "Fresh catch from Verdant Valley streams and Azure Coast coves."
-    },
-    {
-      "id": "berry-stew",
-      "name": "Crossroads Berry Stew",
-      "category": "consumable",
-      "rarity": "common",
-      "effects": { "heal": 42, "stamina": 35, "warmth": 40 },
-      "description": "Steaming bowl of sunberries and herbs. Restores vitality and wards off highland chill."
-    },
-    {
-      "id": "hearty-roast",
-      "name": "Spiced Trout Roast",
-      "category": "consumable",
       "rarity": "uncommon",
-      "effects": { "heal": 65, "stamina": 50, "warmth": 60 },
-      "description": "Seared over glowing heartwood embers; keeps a traveler energized for miles."
+      "value": 22,
+      "description": "Wave-polished turquoise glass found along the beaches of Azure Coast."
     },
     {
-      "id": "spirit-tonic",
-      "name": "Moonpetal Spirit Tonic",
-      "category": "consumable",
+      "id": "sunken-pearl",
+      "name": "Drowned Archive Pearl",
+      "category": "material",
       "rarity": "rare",
-      "effects": { "heal": 95, "stamina": 90, "warmth": 30 },
-      "description": "A shimmering cerulean draught that rapidly mends wounds and refills stamina."
+      "value": 60,
+      "description": "Iridescent deep-water pearl recovered by diving into sunken ruins off Azure Coast."
+    },
+    {
+      "id": "frostbloom",
+      "name": "Highland Frostbloom",
+      "category": "material",
+      "rarity": "uncommon",
+      "value": 26,
+      "description": "Ice-rimmed starflower that thrives on the snowy ridges of Highland Reach."
+    },
+    {
+      "id": "skyfeather",
+      "name": "Updraft Skyfeather",
+      "category": "material",
+      "rarity": "rare",
+      "value": 48,
+      "description": "Weightless iridescent plume drifting through the thermal winds of Shattered Expanse."
+    },
+    {
+      "id": "aether-core",
+      "name": "Sovereign Aether Core",
+      "category": "material",
+      "rarity": "epic",
+      "value": 140,
+      "description": "Radiant ancient heart reclaimed from mighty guardian bosses across the realm."
     },
     {
       "id": "resonance-key",
-      "name": "Echoing Gate Sigil",
-      "category": "quest",
+      "name": "Key of the Unknown Gate",
+      "category": "key",
       "rarity": "epic",
-      "description": "An ancient harmonic sigil attuned to the sealed Unknown Gate in the Hidden Frontier."
+      "value": 0,
+      "description": "A harmonic bronze-and-crystal key attuned to the sealed Unknown Gate in the Hidden Frontier."
+    },
+    {
+      "id": "archive-tablet",
+      "name": "Sunken Archive Seal",
+      "category": "key",
+      "rarity": "rare",
+      "value": 0,
+      "description": "A salt-worn bronze tablet from the submerged halls of the Drowned Archive."
     }
   ],
   "recipes": [
@@ -124,13 +243,23 @@
       ]
     },
     {
-      "id": "craft-hearty-roast",
-      "resultId": "hearty-roast",
+      "id": "craft-grilled-trout",
+      "resultId": "grilled-trout",
       "resultQty": 1,
       "category": "cooking",
       "requiresCampfire": false,
       "ingredients": [
         { "itemId": "river-trout", "qty": 1 },
+        { "itemId": "moonpetal", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-flatbread",
+      "resultId": "sunbaked-flatbread",
+      "resultQty": 2,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
         { "itemId": "sunberry", "qty": 1 },
         { "itemId": "heartwood", "qty": 1 }
       ]
@@ -147,6 +276,17 @@
       ]
     },
     {
+      "id": "craft-frost-elixir",
+      "resultId": "frost-elixir",
+      "resultQty": 1,
+      "category": "alchemy",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "frostbloom", "qty": 2 },
+        { "itemId": "sunberry", "qty": 2 }
+      ]
+    },
+    {
       "id": "craft-runeblade-staff",
       "resultId": "runeblade-staff",
       "resultQty": 1,
@@ -159,6 +299,18 @@
       ]
     },
     {
+      "id": "craft-galeblade-staff",
+      "resultId": "galeblade-staff",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "skyfeather", "qty": 2 },
+        { "itemId": "crystal-shard", "qty": 2 },
+        { "itemId": "aether-core", "qty": 1 }
+      ]
+    },
+    {
       "id": "craft-windweaver-cloak",
       "resultId": "windweaver-cloak",
       "resultQty": 1,
@@ -166,7 +318,32 @@
       "requiresCampfire": false,
       "ingredients": [
         { "itemId": "moonpetal", "qty": 3 },
-        { "itemId": "crystal-shard", "qty": 2 }
+        { "itemId": "sea-glass", "qty": 2 },
+        { "itemId": "crystal-shard", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-frostward-coat",
+      "resultId": "frostward-coat",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "frostbloom", "qty": 2 },
+        { "itemId": "heartwood", "qty": 2 },
+        { "itemId": "sunken-pearl", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-resonance-key",
+      "resultId": "resonance-key",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "crystal-shard", "qty": 2 },
+        { "itemId": "ancient-core", "qty": 1 },
+        { "itemId": "sunken-pearl", "qty": 1 }
       ]
     }
   ]

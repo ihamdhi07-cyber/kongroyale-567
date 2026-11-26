@@ -13,6 +13,7 @@ export class KeyboardControls {
     this.heavyPressed = false;
     this.dodgePressed = false;
     this.interactPressed = false;
+    this.stealthToggle = false;
     this.guardHeld = false;
 
     this._dragging = false;
@@ -33,6 +34,8 @@ export class KeyboardControls {
         if (code === 'KeyJ') this.attackPressed = true;
         if (code === 'KeyK') this.heavyPressed = true;
         if (code === 'KeyC' || code === 'ControlLeft') this.dodgePressed = true;
+        if (code === 'KeyZ') this.stealthToggle = true;
+        if (code === 'KeyV') this.events.emit('camera:photoToggle');
         if (code === 'KeyM') this.events.emit('ui:toggle', 'map');
         if (code === 'KeyI') this.events.emit('ui:toggle', 'inventory');
         if (code === 'KeyT' || code === 'KeyU') this.events.emit('ui:toggle', 'quests');
@@ -123,6 +126,8 @@ export class KeyboardControls {
       sprint: this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'),
       jump: this.keys.has('Space'),
       guard: this.guardHeld || this.keys.has('KeyL'),
+      dive: this.keys.has('KeyC') || this.keys.has('ControlLeft'),
+      stealthToggle: this.stealthToggle,
       attackPressed: this.attackPressed,
       heavyPressed: this.heavyPressed,
       dodgePressed: this.dodgePressed,
@@ -139,6 +144,7 @@ export class KeyboardControls {
     this.heavyPressed = false;
     this.dodgePressed = false;
     this.interactPressed = false;
+    this.stealthToggle = false;
     return out;
   }
 }

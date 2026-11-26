@@ -88,6 +88,9 @@ export class QuestSystem {
       if (def.rewards.xp && this.progression) {
         this.progression.addXP(def.rewards.xp, `Quest: ${def.title}`);
       }
+      if (def.rewards.gold && this.inventory) {
+        this.inventory.addGold(def.rewards.gold, true);
+      }
       if (def.rewards.items && this.inventory) {
         for (const reward of def.rewards.items) {
           this.inventory.addItem(reward.itemId, reward.qty, true);
@@ -96,7 +99,14 @@ export class QuestSystem {
     }
     if (this.events) {
       this.events.emit('quest:completed', def);
-      this.events.emit('toast', { title: 'Quest Completed!', text: `${def.title} (+${def.rewards?.xp || 0} XP)` });
+      this.events.emit('toast', {
+        title: 'Quest Completed!',
+        text: `${def.title} (+${def.rewards?.xp || 0} XP${def.rewards?.gold ? `, +${def.rewards.gold} Sunshards` : ''})`,
+      });
+    }
+    // Seamlessly unlock the climax main quest when Echoes of the Gate finishes
+    if (questId === 'echoes-of-the-gate' && this.defs.has('awakening-the-horizon')) {
+      this.startQuest('awakening-the-horizon');
     }
   }
 

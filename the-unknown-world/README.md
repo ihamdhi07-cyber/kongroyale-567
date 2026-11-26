@@ -1,90 +1,59 @@
 # THE UNKNOWN WORLD
 
-A browser-based **2.5D Anime Watercolor & Gouache Open-World Exploration Adventure** built with **Vite**, **Three.js (WebGL2)**, modular **ES Modules**, custom **GLSL shaders**, procedural **Web Audio**, and **IndexedDB** persistent saves.
+A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anime Watercolor & Gouache 3D** (stylized PBR + cel-ink rim highlights + procedural painterly textures), built with **Three.js (WebGL2)** and **Vite** inside `/the-unknown-world` while keeping the surrounding Kong Royale codebase untouched.
 
-> Built in `/the-unknown-world` alongside the existing repository without modifying or reusing Kong Royale branding or assets.
+## World & Core Features
 
----
+- **Massive 8×8 km Playable Continent (inside a 15×15 km Expansion Architecture)**:
+  - Seamless deterministic chunk streaming (`128 m` chunks, multi-tier LOD, zero loading screens) across **8 organic blended regions**: *Verdant Valley*, *Emerald Wilds*, *Highland Reach*, *Azure Coast*, *Forgotten Kingdom*, *Hollow Depths*, *Shattered Expanse*, and *Hidden Frontier*.
+  - **8 Major Landmarks** with flat scenic pads, Stone Lore Tablets, and fast-travel Waystones — plus **4 Secondary Regional Outposts & Harbors**: *Tidehaven Harbor* (pier + Waystone), *Timberwatch Outpost*, *Frostcrest Basecamp* (Waystone + alpine fire), and *Ashen Caravan Camp*.
+- **Sailing & Underwater Exploration**:
+  - Board **3 interactive sailboats** moored in Azure Coast & Tidehaven Bay (`E`) with rudder steering, wind-billowing sails, and frothy water wake particles.
+  - Swim and **dive underwater** (`C` / `Ctrl`) with a HUD breath gauge, bubble trails, blue-teal underwater depth fog, and **5 glowing sunken seabed treasures** (pearls, bronze archive seals, sea glass).
+- **3 Enterable 3D Sanctuaries**:
+  - Seamless doorway transitions (`E`) into warm, lantern-lit 3D interior rooms with dedicated indoor 2.5D camera framing, lore charters, and treasure caches: *Crossroads Elder's Hall*, *The Crystal Vault*, and *The Drowned Archive Chamber*.
+- **8 Regional Environmental Puzzles**:
+  - Singing Obelisks, Sun-Mirror Light Relays, Pressure-Seal Monoliths, Canopy Wind Chimes, **Azure Coast Tide-Lock Sluice Gate** (3 water valves lowering the tidal basin), Citadel Monolith Seal, Hollow Crystal Prism Relay, and Frontier Resonance Triad.
+- **Stealth, Tactile Action Combat & 2 Guardian Bosses**:
+  - Light/Heavy combo strikes, directional dodge roll, shield guard, **Stealth Crouch (`Z`)** reducing enemy detection radius for **1.75× Ambush Strikes**, tactile hit-stop, camera shake, 3D impact particles, floating damage popups, and dramatic Boss Health Bars for **Mossback Colossus** (Forgotten Kingdom) and **Elder Stone Warden** (Hidden Frontier).
+- **Rich RPG Economy, Quests & Climax**:
+  - **24 items**, **10 cooking / alchemy / forging recipes**, **Sunshards** gold currency, **10 named regional NPCs** (including **3 interactive Buy/Sell Merchant Shops**), **8 quests** chaining into **Awakening the Unknown Gate** with an animated golden-aurora portal climax.
+- **Studio-Grade Controls, Map Pins, Photo Mode & Performance Tuning**:
+  - Adjustable 2.5D camera presets (`Close`, `2.5D`, `Iso`, plus **`Photo` framing mode `[V]`**), interactive World Map (`M`) with fast travel and **Custom Compass Waypoint Pins**, 4 Graphics Presets (`Low`–`Ultra`) **plus manual Render Scale, Shadow Override, FOV, and Invert-Y sliders**, full desktop + mobile touch controls, procedural Web Audio soundtrack/SFX, and persistent multi-slot IndexedDB saves.
 
-## World Scale & Structure
-
-- **Ultimate World Plan:** `15 × 15 km` (`225 km²`, coordinates `[-7500, +7500]` m)
-- **Initial Playable Realm:** `8 × 8 km` (`64 km²`, coordinates `[-4000, +4000]` m) seamlessly streamed in `128 × 128 m` chunks across 3 dynamic LOD tiers with anti-crack skirts and automatic GPU disposal
-- **Future Expansion Reserve:** `161 km²` mapped inside the World Map's `15×15 km Plan` overlay (`Northern Frostpeaks`, `Eastern Sunlit Archipelago`, `Southern Sunken Expanse`, `Western Whispering Wilds`)
-
-### The 8 Interconnected Regions
-1. **Verdant Valley** (`~8 km²`) — Sunlit meadows, Silver River, stone bridge, timber village · Landmark: **The Crossroads Settlement**
-2. **Emerald Wilds** (`~12 km²`) — Deep mossy woodland & ancient canopies · Landmark: **The Ancient Heart Tree**
-3. **Highland Reach** (`~10 km²`) — Alpine peaks, climbing cliffs & snowfall · Landmark: **The Skywatch Observatory**
-4. **Azure Coast** (`~8 km²`) — Turquoise coves, warm sand & tide pools · Landmark: **The Drowned Archive**
-5. **Forgotten Kingdom** (`~8 km²`) — Weathered sandstone arches & sentinel ruins · Landmark: **The Silent Citadel**
-6. **Hollow Depths** (`~6 km²`) — Glowing crystal chasms & bioluminescent caverns · Landmark: **The Crystal Cathedral**
-7. **Shattered Expanse** (`~6 km²`) — Surreal floating islands & gliding thermal updrafts · Landmark: **The Broken Horizon**
-8. **Hidden Frontier** (`~6 km²`) — Misty ancient borderlands & secrets · Landmark: **The Unknown Gate**
-
----
-
-## Visual Direction
-
-Blends **Anime Watercolor & Gouache 3D** (primary) with **Stylized PBR & Atmospheric Lighting**:
-- Custom Three.js `onBeforeCompile` **Watercolor & Gouache shader** (`src/world/WatercolorShader.js`): soft-stepped gouache lighting ramps, warm sunlight vs. cool periwinkle-violet shadow washes, cold-press watercolor paper grain, sunlit Fresnel rim glow, ink-wash shadow contours, sunlit leaf translucency, drifting valley cloud shadows, and vertex wind sway.
-- Procedural seamless Canvas2D **gouache brushwork albedo + Sobel normal maps** (`src/world/ArtTextures.js`).
-- Custom GLSL **animated watercolor ocean & river shader** (`src/world/WaterSystem.js`) with dancing Voronoi caustics, gouache foam crests, and Fresnel sky reflection.
-- Dynamic GLSL **3-stop sky dome, painted cumulus clouds, 24-hour day/night cycle, 5 weather states** (Clear, Clouds, Mist, Rain, Snow), plus sun-motes and dusk fireflies (`src/world/WeatherSystem.js`).
-- **4 Graphics Presets** (`Low`, `Medium`, `High`, `Ultra`) balancing DPR, shadow map resolution, chunk LOD radii, and instanced foliage density.
-
----
-
-## Controls
-
-### Desktop (Keyboard & Mouse)
-- **Move:** `WASD` or Arrow Keys
-- **Sprint:** `Shift`
-- **Jump / Mid-air Spirit Glider:** `Space` (tap again in mid-air to open/close Glider)
-- **Light Attack / Heavy Arcane Wave:** `Left Click` or `J` / `Right Click` or `K`
-- **Guard (Runic Shield) / Dodge Roll:** `F` / `C` or `Ctrl`
-- **Interact (Talk, Gather, Waystone, Puzzles, Campfire):** `E`
-- **Camera Orbit / Zoom:** Drag mouse (`Q`/`R` also rotate) · Mouse wheel zooms in/out
-- **Menus:** `M` World Map · `I` / `Tab` Inventory & Crafting · `L` Quests · `P` Character & Skills · `Esc` Pause
-
-### Mobile & Tablet (Touch)
-- **Left Virtual Thumbstick:** Smooth analog movement (outer ring auto-sprints)
-- **Touch Drag (Canvas):** Orbit and adjust 2.5D camera angle · **Pinch:** Zoom in/out
-- **Right Contextual Cluster:** `Jump / Glide`, `Attack`, `Heavy`, `Dodge`, `Guard`, plus dynamic `Interact` button when near objects/NPCs
-- **Orientation:** Landscape recommended on phones; a non-blocking rotate hint appears in portrait mode. Touch controls can be switched between `Auto`, `Always Show`, and `Always Hide` in **Settings**.
-
----
-
-## Local Development, Tests & Production Deployment
+## Quick Start
 
 ```bash
 cd the-unknown-world
 npm install
-
-# Start local dev server (binds 0.0.0.0:5173)
-npm run dev
-
-# Run automated Node test suite (world math, inventory/crafting, quests/progression, saves, 30-frame 3D sim)
-npm test
-
-# Build optimized production bundle for static hosting (outputs to dist/)
-npm run build
-
-# Preview production build locally
-npm run preview
+npm run dev      # Start Vite dev server on http://0.0.0.0:5173
+npm test         # Run all 13 automated Node simulation & system tests
+npm run build    # Build optimized production bundle to dist/
 ```
 
-### Static Hosting (Vercel / Netlify)
-- **Root Directory:** `the-unknown-world`
-- **Build Command:** `npm run build`
-- **Output Directory:** `dist`
-- All data JSON files and artwork use relative `./` paths with `base: './'` in `vite.config.js`, so deployments work cleanly both at domain root and subpath URLs.
+## Controls Reference
 
----
+| Action | Desktop | Mobile / Touch |
+|---|---|---|
+| Move / Steer Sailboat / Swim | `W A S D` / Arrow Keys | Left Virtual Joystick |
+| Jump / Spirit Glider (Double-Jump) | `Space` | Jump Button |
+| Sprint / Wall Climb | `Shift` | Sprint Toggle |
+| Stealth Crouch (1.75× Ambush) | `Z` | Stealth Button |
+| Dodge Roll / Underwater Dive | `C` or `Ctrl` | Dodge / Dive Button |
+| Interact / Sail / Enter Sanctuary / Trade | `E` | Contextual Action Prompt |
+| Light / Heavy Staff Attack | Left Click / `J` (`Shift`+Click Heavy) | Attack Button |
+| Shield Guard | Right Click / `K` | Guard Button |
+| Rotate & Zoom 2.5D Camera | Right-Drag / Scroll / `Q X R F` | Pinch / HUD Zoom & Presets |
+| Photo Framing Mode | `V` | HUD `Photo` Button |
+| Map · Bag/Craft · Quests · Skills · Pause | `M` · `I` · `T` · `P` · `Esc` | Top-Right HUD Buttons |
 
-## Project Documentation
-- `docs/REVERSE_ENGINEERING.md` — Full reverse-engineering report of the existing `kongroyale-567` repository
-- `docs/GDD_v1.0.md` — Complete Game Design Document & 15×15 km / 8×8 km World Design Plan
-- `docs/ARCHITECTURE.md` — Technical Architecture, streaming/LOD strategy, shader pipeline & data schemas
-- `docs/ASSET_MANIFEST.md` — Complete provenance manifest for generated art, procedural textures, 3D geometry & audio
-- `docs/CHECKLIST.md` — Honest Engineering Development Checklist with implementation status & test evidence
+## Project Structure
+
+- `public/data/` — Data-driven JSON catalogs (`regions`, `items` + `recipes`, `quests`, `creatures`)
+- `src/core/` — Engine loop, WebGL2 renderer & presets, scene lighting, asset loader, `Game` orchestrator
+- `src/world/` — Deterministic terrain/biomes, chunk streaming, landmarks/outposts, boats/seabed treasures, 3D sanctuaries, pooled 3D particles, watercolor shaders, water & 5-state weather
+- `src/player/`, `src/camera/`, `src/controls/` — Wayfarer movement/sailing/diving/stealth, adjustable 2.5D camera, keyboard/mouse & mobile touch input
+- `src/gameplay/`, `src/entities/` — Inventory/Sunshards economy, crafting, quests, progression, exploration, combat, 8 puzzles, 10 NPCs, wildlife, enemies & 2 bosses
+- `src/ui/`, `src/save/`, `src/audio/` — 8 UI screens, IndexedDB persistence, procedural Web Audio engine
+- `tests/` — 6 automated Node `--test` suites (`13/13` passing)
+- `docs/` — Reverse engineering notes, GDD, Architecture, Asset Manifest & honest Verification Checklist

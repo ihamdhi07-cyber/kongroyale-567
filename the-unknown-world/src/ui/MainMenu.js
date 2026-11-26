@@ -24,14 +24,14 @@ export class MainMenu {
         </div>
         <div class="controls-card hidden" id="title-controls-card">
           <div class="controls-grid">
-            <div><strong>WASD / Joystick</strong><span>Move &amp; Explore</span></div>
+            <div><strong>WASD / Joystick</strong><span>Move, Sail &amp; Swim</span></div>
             <div><strong>Space (×2 Air)</strong><span>Jump &amp; Spirit Glider</span></div>
-            <div><strong>Shift</strong><span>Sprint / Climb</span></div>
-            <div><strong>E / Tap Button</strong><span>Interact / Gather / Talk</span></div>
+            <div><strong>Shift · Z</strong><span>Sprint/Climb · Stealth Ambush</span></div>
+            <div><strong>E / Tap Button</strong><span>Interact / Sail / Enter Sanctuary / Trade</span></div>
             <div><strong>Left Click / J</strong><span>Staff Strike (Shift+Click: Heavy)</span></div>
-            <div><strong>Ctrl / C · R-Click</strong><span>Dodge Roll · Shield Guard</span></div>
-            <div><strong>R-Drag / Wheel / Q·X·R·F</strong><span>Adjust 2.5D Camera Angle &amp; Zoom</span></div>
-            <div><strong>M · I · T · P · Esc</strong><span>World Map · Bag · Quests · Skills · Menu</span></div>
+            <div><strong>Ctrl / C · R-Click</strong><span>Dodge / Underwater Dive · Shield Guard</span></div>
+            <div><strong>R-Drag / Wheel / V</strong><span>2.5D Camera Angle, Zoom &amp; Photo Mode</span></div>
+            <div><strong>M · I · T · P · Esc</strong><span>Map &amp; Waypoints · Bag · Quests · Skills · Menu</span></div>
           </div>
         </div>
         <div class="title-footer">

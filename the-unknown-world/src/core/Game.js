@@ -1,4 +1,7 @@
-// Main Game Orchestrator wiring every subsystem of THE UNKNOWN WORLD together cleanly.
+// Main Game Orchestrator wiring every subsystem of THE UNKNOWN WORLD cleanly:
+// 8x8 km streamed world (inside 15x15 km plan), Sailing & Underwater Diving, Enterable 3D Sanctuaries,
+// Stealth & Action Combat with VFX/Shake/Hit-Stop, 8 Regional Environmental Puzzles, 10 NPCs + Trading,
+// Boss Guardians, Unknown Gate Awakening Climax, Procedural Web Audio, and IndexedDB Persistence.
 import { EventBus } from './EventBus.js';
 import { GameLoop } from './GameLoop.js';
 import { Renderer } from './Renderer.js';
@@ -53,17 +56,19 @@ export class Game {
 
     this.started = false;
     this.activeModal = null;
+    this.waypoint = null;
+    this.unknownGateAwakened = false;
     this._autoSaveTimer = 90;
   }
 
   async init() {
     this.data = await this.assets.loadGameData();
 
-    // 1. World & Streaming Architecture
-    this.world = new WorldManager(this.sceneManager, this.renderer.preset);
+    // 1. World, Streaming, Boats, Sanctuaries & Particles
+    this.world = new WorldManager(this.sceneManager, this.renderer.preset, this.events);
     this.world.prime(WORLD_CONFIG.SPAWN_POS);
 
-    // 2. Protagonist, Camera & All-Device Controls
+    // 2. Protagonist, Adjustable 2.5D Camera & All-Device Controls
     this.player = new Player(this.sceneManager.scene);
     this.cameraController = new CameraController(this.world.terrain);
     this.playerController = new PlayerController(this.player, this.world, this.cameraController, this.events);
@@ -95,7 +100,9 @@ export class Game {
 
     this.inventory.applyStatsToPlayer(this.player, this.progression.getBonuses());
 
-    // Register dynamic interaction providers
+    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, River Fish)
+    this.interaction.registerProvider((pos) => this.world.interiors.getInteractables(pos));
+    this.interaction.registerProvider((pos) => this.world.boats.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.npcs.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.puzzles.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.wildlife.getInteractables(pos));
@@ -118,17 +125,14 @@ export class Game {
       this.cameraController.resize((window.innerWidth || 1280) / (window.innerHeight || 720));
     });
 
-    // Unlock Web Audio cleanly on first interaction
     const unlockAudio = () => this.audio.unlock();
     window.addEventListener('pointerdown', unlockAudio, { once: true });
     window.addEventListener('keydown', unlockAudio, { once: true });
 
-    // Start live 3D loop (softly orbits Crossroads Settlement behind Title Screen)
     this.loop = new GameLoop((dt, elapsed) => this._tick(dt, elapsed));
     this.loop.start();
     this.mainMenu.showTitle();
 
-    // Expose safe diagnostic hook for verification
     window.__tuw = {
       ready: true,
       worldConfig: WORLD_CONFIG,
@@ -137,6 +141,12 @@ export class Game {
   }
 
   _applySettings() {
+    this.renderer.setManualOverrides({
+      renderScale: this.settings.renderScale ?? 1.0,
+      shadows: this.settings.shadowOverride || 'preset',
+    });
+    this.cameraController.setFov(this.settings.fov ?? 42);
+    this.cameraController.invertY = Boolean(this.settings.invertY);
     this.audio.setMixer({
       master: this.settings.masterVol,
       music: this.settings.musicVol,
@@ -163,8 +173,24 @@ export class Game {
     this.events.on('player:step', ({ surface }) => this.audio.playFootstep(surface));
     this.events.on('player:jump', () => this.audio.playFootstep('grass'));
     this.events.on('combat:attack', ({ isHeavy }) => this.audio.playAttack(isHeavy));
-    this.events.on('combat:playerHit', ({ blocked }) => this.audio.playHit(blocked));
+    this.events.on('combat:hit', ({ pos, dmg, isHeavy, isAmbush, killed }) => {
+      this.world.particles.emitBurst(pos, {
+        count: killed ? 26 : isHeavy || isAmbush ? 18 : 11,
+        color: isAmbush ? 0xff9ef0 : isHeavy ? 0x7ef5ff : 0xffe28a,
+        speed: killed ? 7 : 5,
+        spreadY: 4,
+      });
+      this.cameraController.addShake(killed ? 0.42 : isHeavy || isAmbush ? 0.28 : 0.14);
+      this.hud.spawnDamagePopup(pos, dmg, { isHeavy, isAmbush });
+    });
+    this.events.on('combat:playerHit', ({ blocked }) => {
+      this.audio.playHit(blocked);
+      this.cameraController.addShake(blocked ? 0.14 : 0.34);
+    });
     this.events.on('puzzle:note', ({ freq }) => this.audio.playPuzzleNote(freq));
+    this.events.on('camera:photoToggle', () => {
+      if (this.started && !this.activeModal) this.hud.togglePhotoMode();
+    });
     this.events.on('player:respawn', () => {
       this.playerController.teleport(WORLD_CONFIG.SPAWN_POS.x, WORLD_CONFIG.SPAWN_POS.z);
     });
@@ -195,12 +221,37 @@ export class Game {
         this.world.chunks.markGathered(target.id);
       }
       this.inventory.addItem(target.itemId, 1);
+      this.world.particles.emitBurst(this.player.root.position, { count: 10, color: 0x9cf596, speed: 3.4, spreadY: 3.2 });
       const def = this.inventory.getDef(target.itemId);
       this.audio.playPickup();
       this.hud.showToast({ title: 'Gathered', text: `${def?.name || target.itemId} added to satchel` });
+    } else if (target.type === 'sunken-treasure') {
+      const tr = this.world.boats.collectTreasure(target.id);
+      if (tr) {
+        this.inventory.addItem(tr.itemId, 1);
+        this.progression.addXP(35, `Recovered ${tr.name}`);
+        this.audio.playDiscoveryFanfare();
+        this.hud.showToast({ title: 'Sunken Treasure Recovered!', text: `${tr.name} salvaged from the seabed!` });
+      }
+    } else if (target.type === 'boat-board') {
+      this.world.boats.boardBoat(target.boatId, this.player);
+      this.audio.playPickup();
+    } else if (target.type === 'boat-exit') {
+      this.world.boats.disembark(this.player);
+    } else if (target.type === 'interior-enter') {
+      this.world.interiors.enter(target.interiorId, this.player, this.cameraController);
+    } else if (target.type === 'interior-exit') {
+      this.world.interiors.exit(this.player, this.cameraController);
+    } else if (target.type === 'interior-chest') {
+      if (this.world.interiors.openChest(target.interiorId, this.inventory, this.progression)) {
+        this.audio.playDiscoveryFanfare();
+      }
+    } else if (target.type === 'gate-awaken') {
+      this._handleUnknownGateAltar();
     } else if (target.type === 'waystone') {
       const wasNew = this.exploration.attuneWaystone(target.landmarkId);
       this.world.landmarks.setWaystoneAttuned(target.landmarkId);
+      this.world.particles.emitBurst(this.player.root.position, { count: 24, color: 0x6cf4ff, speed: 5, spreadY: 6 });
       if (!wasNew) {
         this.openModal('map');
       }
@@ -214,6 +265,46 @@ export class Game {
       this.openModal('dialogue', target.npc);
     } else if (target.type === 'puzzle') {
       this.puzzles.handleInteract(target, this.player.root.position);
+    }
+  }
+
+  _handleUnknownGateAltar() {
+    if (this.unknownGateAwakened) {
+      this.openModal('gate-climax');
+      return;
+    }
+    const hasKey = this.inventory.getCount('resonance-key') > 0;
+    if (!hasKey) {
+      this.hud.showToast({
+        title: 'The Unknown Gate Remains Sealed',
+        text: 'Requires the Key of the Unknown Gate (complete "Echoes of the Unknown Gate" or forge it in Crafting!).',
+      });
+      return;
+    }
+    this.unknownGateAwakened = true;
+    this.world.landmarks.awakenUnknownGate();
+    this.world.particles.emitBurst(this.player.root.position, {
+      count: 60,
+      color: 0xffe88c,
+      speed: 9,
+      spreadY: 11,
+      life: 1.4,
+      gravity: 1.5,
+    });
+    this.cameraController.addShake(0.5);
+    this.progression.addXP(400, 'Awakened The Unknown Gate');
+    this.events.emit('gate:awaken');
+    this.audio.playDiscoveryFanfare();
+    this.saveToSlot('autosave', true);
+    this.openModal('gate-climax');
+  }
+
+  setWaypoint(wp) {
+    this.waypoint = wp;
+    if (wp) {
+      this.hud.showToast({ title: 'Compass Pin Placed', text: `Tracking ${wp.regionName} (${wp.x}m, ${wp.z}m)` });
+    } else {
+      this.hud.showToast({ title: 'Compass Pin Cleared', text: 'Custom waypoint removed.' });
     }
   }
 
@@ -264,6 +355,7 @@ export class Game {
     else if (name === 'dialogue') this.dialogueUI.openNpc(payload);
     else if (name === 'lore') this.dialogueUI.openLore(payload.title, payload.lore);
     else if (name === 'campfire') this.dialogueUI.openCampfire();
+    else if (name === 'gate-climax') this.dialogueUI.openGateClimax();
   }
 
   _hideModalPanels() {
@@ -300,6 +392,24 @@ export class Game {
     this.saveManager.saveSettings(this.settings);
   }
 
+  setManualVisuals({ renderScale, shadowOverride, fov, invertY } = {}) {
+    if (typeof renderScale === 'number') this.settings.renderScale = renderScale;
+    if (shadowOverride) this.settings.shadowOverride = shadowOverride;
+    if (typeof fov === 'number') {
+      this.settings.fov = fov;
+      this.cameraController.setFov(fov);
+    }
+    if (typeof invertY === 'boolean') {
+      this.settings.invertY = invertY;
+      this.cameraController.invertY = invertY;
+    }
+    this.renderer.setManualOverrides({
+      renderScale: this.settings.renderScale,
+      shadows: this.settings.shadowOverride,
+    });
+    this.saveManager.saveSettings(this.settings);
+  }
+
   setTouchMode(mode) {
     this.settings.touchControls = mode;
     this.saveManager.saveSettings(this.settings);
@@ -323,15 +433,21 @@ export class Game {
   }
 
   async saveToSlot(slotId, silent = false) {
+    const inside = this.world.interiors.currentInterior;
     const pos = this.player.root.position;
+    const saveX = inside ? inside.returnX : pos.x;
+    const saveZ = inside ? inside.returnZ : pos.z;
+
     const payload = {
       regionName: this.world.currentRegion?.name || 'Verdant Valley',
       explorationPct: this.exploration.getExplorationPercent(),
       timeOfDay: this.world.weather.timeOfDay,
+      unknownGateAwakened: this.unknownGateAwakened,
+      waypoint: this.waypoint,
       player: {
-        x: pos.x,
-        y: pos.y,
-        z: pos.z,
+        x: saveX,
+        y: inside ? this.world.terrain.getHeight(saveX, saveZ) : pos.y,
+        z: saveZ,
         hp: this.player.hp,
         stamina: this.player.stamina,
         warmth: this.player.warmth,
@@ -341,6 +457,8 @@ export class Game {
       quests: this.quests.getSnapshot(),
       exploration: this.exploration.getSnapshot(),
       puzzles: this.puzzles.getSnapshot(),
+      boats: this.world.boats.getSnapshot(),
+      interiors: this.world.interiors.getSnapshot(),
       gathered: [...this.world.chunks.collectedGatherables],
     };
     await this.saveManager.saveSlot(slotId, payload);
@@ -373,6 +491,13 @@ export class Game {
       this.world.landmarks.setWaystoneAttuned(wsId);
     }
     this.puzzles.loadSnapshot(data.puzzles);
+    this.world.boats.loadSnapshot(data.boats);
+    this.world.interiors.loadSnapshot(data.interiors);
+    this.waypoint = data.waypoint || null;
+    if (data.unknownGateAwakened) {
+      this.unknownGateAwakened = true;
+      this.world.landmarks.awakenUnknownGate();
+    }
     if (typeof data.timeOfDay === 'number') {
       this.world.weather.timeOfDay = data.timeOfDay;
     }
@@ -383,8 +508,16 @@ export class Game {
   }
 
   _tick(dt, elapsed) {
+    // Brief crisp hit-stop micro-freeze on heavy/ambush combat impacts
+    if (this.combat.hitStopTimer > 0) {
+      this.combat.hitStopTimer = Math.max(0, this.combat.hitStopTimer - dt);
+      this.renderer.render(this.sceneManager.scene, this.cameraController.camera);
+      return;
+    }
+
     const livePlaying = this.started && !this.activeModal;
     const input = this.input.sample(dt);
+    const inside = Boolean(this.world.interiors.currentInterior);
 
     if (livePlaying) {
       this.playerController.update(dt, input);
@@ -393,26 +526,28 @@ export class Game {
       if (input.interactPressed) {
         this.interaction.interact();
       }
-      this.exploration.update(this.player.root.position, this.cameraController);
-      this.enemies.update(dt, elapsed, this.player.root.position, this.cameraController.camera, this.combat);
+      if (!inside) {
+        this.exploration.update(this.player.root.position, this.cameraController);
+        this.enemies.update(dt, elapsed, this.player.root.position, this.cameraController.camera, this.combat, this.player.stealth);
+      }
 
-      // Periodic autosave every 90s while actively exploring
       this._autoSaveTimer -= dt;
       if (this._autoSaveTimer <= 0) {
         this._autoSaveTimer = 90;
         this.saveToSlot('autosave', true);
       }
     } else if (!this.started) {
-      // Gentle scenic camera orbit over Crossroads Settlement behind Title Screen
       input.camYawDelta = -dt * 0.1;
     }
 
     this.playerAnim.update(dt, elapsed);
     this.cameraController.update(dt, this.player.root.position, input);
-    this.world.update(dt, elapsed, this.player.root.position);
-    this.puzzles.update(dt, elapsed);
-    this.npcs.update(dt, elapsed, this.player.root.position, this.world.weather.timeOfDay);
-    this.wildlife.update(dt, elapsed, this.player.root.position, this.player.horizontalSpeed);
+    this.world.update(dt, elapsed, this.player.root.position, this.player, livePlaying ? input : null);
+    if (!inside) {
+      this.puzzles.update(dt, elapsed);
+      this.npcs.update(dt, elapsed, this.player.root.position, this.world.weather.timeOfDay);
+      this.wildlife.update(dt, elapsed, this.player.root.position, this.player.horizontalSpeed);
+    }
     this.audio.update(dt, this.world.currentRegion, this.world.weather.weather);
 
     if (this.started) {

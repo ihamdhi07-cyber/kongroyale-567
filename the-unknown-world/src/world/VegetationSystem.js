@@ -346,7 +346,19 @@ export class VegetationSystem {
           itemId = 'moonpetal';
           label = 'Silver Moonpetal Blossom';
           hex = 0x9ef0ff;
-        } else if ((reg.id === 'hollow-depths' || reg.id === 'shattered-expanse' || reg.id === 'highland-reach') && rng() > 0.35) {
+        } else if (reg.id === 'highland-reach' && rng() > 0.3) {
+          itemId = 'frostbloom';
+          label = 'Highland Frostbloom';
+          hex = 0xbbe8ff;
+        } else if (reg.id === 'azure-coast' && rng() > 0.3) {
+          itemId = 'sea-glass';
+          label = 'Azure Sea Glass';
+          hex = 0x5be5dc;
+        } else if (reg.id === 'shattered-expanse' && rng() > 0.35) {
+          itemId = 'skyfeather';
+          label = 'Updraft Skyfeather';
+          hex = 0xe9b0ff;
+        } else if (reg.id === 'hollow-depths' && rng() > 0.25) {
           itemId = 'crystal-shard';
           label = 'Resonant Crystal Cluster';
           hex = 0x62e5f5;

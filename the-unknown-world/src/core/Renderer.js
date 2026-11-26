@@ -66,6 +66,8 @@ export class Renderer {
     this.canvas = canvas;
     this.quality = initialQuality || detectDefaultQuality();
     this.preset = QUALITY_PRESETS[this.quality] || QUALITY_PRESETS.high;
+    this.renderScale = 1.0;
+    this.shadowOverride = 'preset';
     this.contextLost = false;
 
     this.webgl = new THREE.WebGLRenderer({
@@ -96,16 +98,34 @@ export class Renderer {
     const key = QUALITY_PRESETS[level] ? level : 'high';
     this.quality = key;
     this.preset = QUALITY_PRESETS[key];
-    this.webgl.shadowMap.enabled = this.preset.shadows;
-    this.webgl.shadowMap.needsUpdate = true;
+    this._syncShadows();
     this.resize();
     return this.preset;
+  }
+
+  setManualOverrides({ renderScale, shadows } = {}) {
+    if (typeof renderScale === 'number' && Number.isFinite(renderScale)) {
+      this.renderScale = Math.max(0.5, Math.min(1.5, renderScale));
+    }
+    if (shadows) {
+      this.shadowOverride = shadows;
+    }
+    this._syncShadows();
+    this.resize();
+  }
+
+  _syncShadows() {
+    const enable =
+      this.shadowOverride === 'off' ? false : this.shadowOverride === 'on' ? true : this.preset.shadows;
+    this.webgl.shadowMap.enabled = enable;
+    this.webgl.shadowMap.needsUpdate = true;
   }
 
   resize() {
     const w = window.innerWidth || 1280;
     const h = window.innerHeight || 720;
-    const dpr = Math.min(window.devicePixelRatio || 1, this.preset.maxDpr);
+    const baseDpr = Math.min(window.devicePixelRatio || 1, this.preset.maxDpr);
+    const dpr = Math.max(0.5, Math.min(2.25, baseDpr * this.renderScale));
     this.webgl.setPixelRatio(dpr);
     this.webgl.setSize(w, h, false);
   }

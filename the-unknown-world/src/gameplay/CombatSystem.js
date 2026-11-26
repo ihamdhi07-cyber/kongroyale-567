@@ -1,6 +1,7 @@
 // Modular Action Combat System:
-// Light Attack, Heavy Arcane Wave, Soft Aim-Assist Targeting, Shield Guard / Reflect,
-// Hit Detection, Enemy Damage & Loot Drops, and Safe Respawn at Crossroads Hearth.
+// Light Attack, Heavy Arcane Wave, 1.75x Stealth Ambush Strike, Soft Aim-Assist Targeting,
+// Shield Guard / Reflect, Hit Detection, Enemy Damage, Sunshard & Item Loot Drops,
+// Impact VFX/Shake Events, Boss Tracking, and Safe Respawn at Crossroads Hearth.
 import * as THREE from 'three';
 
 export class CombatSystem {
@@ -12,19 +13,22 @@ export class CombatSystem {
     this.events = eventBus;
     this.attackCooldown = 0;
     this.heavyCooldown = 0;
+    this.hitStopTimer = 0;
   }
 
   update(dt, input) {
+    if (this.hitStopTimer > 0) this.hitStopTimer = Math.max(0, this.hitStopTimer - dt);
     if (this.attackCooldown > 0) this.attackCooldown = Math.max(0, this.attackCooldown - dt);
     if (this.heavyCooldown > 0) this.heavyCooldown = Math.max(0, this.heavyCooldown - dt);
 
-    if (input.attackPressed && this.attackCooldown <= 0 && !this.player.swimming && !this.player.dodging) {
+    if (this.player.sailing || this.player.swimming || this.player.diving) return;
+
+    if (input.attackPressed && this.attackCooldown <= 0 && !this.player.dodging) {
       this._performAttack(false);
     } else if (
       input.heavyPressed &&
       this.heavyCooldown <= 0 &&
       this.player.stamina >= 22 &&
-      !this.player.swimming &&
       !this.player.dodging
     ) {
       this._performAttack(true);
@@ -33,6 +37,9 @@ export class CombatSystem {
 
   _performAttack(isHeavy) {
     const p = this.player;
+    const wasStealth = Boolean(p.stealth);
+    p.stealth = false;
+
     if (isHeavy) {
       p.stamina = Math.max(0, p.stamina - 22);
       p.heavyTimer = 0.58;
@@ -43,10 +50,10 @@ export class CombatSystem {
     }
 
     const pos = p.root.position;
-    const range = isHeavy ? 5.2 : 3.7;
-    const dmg = Math.round(p.attackPower * (isHeavy ? p.heavyMultiplier : 1.0));
+    const range = isHeavy ? 5.4 : 3.8;
+    const baseDmg = Math.round(p.attackPower * (isHeavy ? p.heavyMultiplier : 1.0));
 
-    // Soft lock-on: gently snap facing toward nearest enemy within 7m
+    // Soft lock-on toward nearest enemy within 7m
     const nearest = this.enemies.findNearestAlive(pos, 7.0);
     if (nearest) {
       p.facingYaw = Math.atan2(nearest.mesh.position.x - pos.x, nearest.mesh.position.z - pos.z);
@@ -64,65 +71,92 @@ export class CombatSystem {
 
       if (!isHeavy && dist > 0.5) {
         toE.normalize();
-        if (forward.dot(toE) < 0.12) continue; // Forward 165° sweep arc
+        if (forward.dot(toE) < 0.12) continue;
       }
+
+      // 1.75x Stealth Ambush bonus against unaware patrolling creatures!
+      const isAmbush = wasStealth && !enemy.provoked;
+      const dmg = isAmbush ? Math.round(baseDmg * 1.75) : baseDmg;
 
       const killed = this.enemies.damageEnemy(enemy, dmg, pos);
       hits++;
+      this.hitStopTimer = isHeavy || isAmbush ? 0.055 : 0.032;
+
+      this.events.emit('combat:hit', {
+        pos: enemy.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)),
+        dmg,
+        isHeavy,
+        isAmbush,
+        killed,
+      });
+
       if (killed) {
         if (this.progression) {
           this.progression.stats.enemiesDefeated++;
           this.progression.addXP(enemy.def.xp, `Defeated ${enemy.def.name}`);
         }
-        // Roll data-driven loot drops
+        if (enemy.def.gold && this.inventory) {
+          this.inventory.addGold(enemy.def.gold);
+        }
         for (const drop of enemy.def.drops || []) {
           if (Math.random() <= drop.chance) {
-            this.inventory.addItem(drop.itemId, 1);
+            this.inventory.addItem(drop.itemId, drop.qty || 1);
             const itemDef = this.inventory.getDef(drop.itemId);
             if (itemDef) {
               this.events.emit('toast', { title: 'Loot Acquired', text: `${itemDef.name} from ${enemy.def.name}` });
             }
           }
         }
+        this.events.emit('enemy:defeat', enemy.def);
         this.events.emit(`enemy:defeat:${enemy.def.id}`, enemy.def);
+        if (enemy.def.category === 'boss') {
+          this.events.emit('boss:defeat', enemy.def);
+          this.events.emit(`boss:defeat:${enemy.def.id}`, enemy.def);
+          this.events.emit('discovery:banner', { subtitle: 'Guardian Vanquished', title: enemy.def.name });
+        }
       }
     }
 
     this.events.emit('combat:attack', { isHeavy, hits });
   }
 
-  damagePlayer(rawDamage, sourcePos) {
+  damagePlayer(rawDamage, sourcePos = null) {
     const p = this.player;
-    if (p.invulnTimer > 0) return 0;
+    if (p.invulnTimer > 0) return false;
 
-    const mitigated = Math.max(2, Math.round(rawDamage - p.defense * 0.4));
-    const finalDmg = p.guarding ? Math.max(1, Math.round(mitigated * 0.25)) : mitigated;
-    p.hp = Math.max(0, p.hp - finalDmg);
+    let dmg = Math.max(2, rawDamage - Math.round(p.defense * 0.45));
+    let blocked = false;
+    if (p.guarding && p.stamina >= 10) {
+      dmg = Math.max(1, Math.round(dmg * 0.25));
+      p.stamina = Math.max(0, p.stamina - 14);
+      blocked = true;
+    }
+
+    p.hp = Math.max(0, p.hp - dmg);
     p.hurtTimer = 0.28;
-    p.invulnTimer = 0.55;
+    p.invulnTimer = 0.6;
+    p.stealth = false;
 
-    // Gentle knockback
     if (sourcePos) {
       const dx = p.root.position.x - sourcePos.x;
       const dz = p.root.position.z - sourcePos.z;
       const d = Math.hypot(dx, dz) || 1;
-      p.velocity.x += (dx / d) * (p.guarding ? 2.5 : 6.5);
-      p.velocity.z += (dz / d) * (p.guarding ? 2.5 : 6.5);
+      p.velocity.x += (dx / d) * 6;
+      p.velocity.z += (dz / d) * 6;
     }
 
-    this.events.emit('combat:playerHit', { damage: finalDmg, blocked: p.guarding });
+    this.events.emit('combat:playerHit', { dmg, blocked });
 
-    // Safe recovery at Crossroads Hearth if HP hits 0 (no frustrating permadeath!)
     if (p.hp <= 0) {
       p.hp = p.maxHp;
       p.stamina = p.maxStamina;
       p.warmth = p.maxWarmth;
       this.events.emit('player:respawn');
       this.events.emit('toast', {
-        title: 'Returned to Crossroads Hearth',
-        text: 'The spirit lantern guided you safely back to the village hearth.',
+        title: 'Returned to the Hearth',
+        text: 'Rested safely at The Crossroads Settlement. Your gear and discoveries remain intact.',
       });
     }
-    return finalDmg;
+    return true;
   }
 }

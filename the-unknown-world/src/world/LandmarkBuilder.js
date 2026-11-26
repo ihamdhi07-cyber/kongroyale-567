@@ -91,6 +91,8 @@ export class LandmarkBuilder {
       else if (lm.kind === 'crystal-cathedral') this._buildCrystalCathedral(group, lm, y);
       else if (lm.kind === 'floating-sanctuary') this._buildBrokenHorizon(group, lm, y);
       else if (lm.kind === 'unknown-gate') this._buildUnknownGate(group, lm, y);
+      else if (lm.kind === 'harbor') this._buildHarbor(group, lm, y);
+      else if (lm.kind === 'outpost') this._buildOutpost(group, lm, y);
       else if (lm.kind === 'shrine') this._buildShrineRuins(group, lm, y);
 
       if (lm.hasWaystone) {
@@ -530,8 +532,8 @@ export class LandmarkBuilder {
     }
   }
 
-  _buildUnknownGate(group) {
-    // Monumental ancient ringed threshold standing in Hidden Frontier
+  _buildUnknownGate(group, lm, baseY) {
+    // Monumental ancient ringed threshold standing in Hidden Frontier — awakenable climax!
     const ring = new THREE.Mesh(new THREE.TorusGeometry(13, 1.8, 10, 32), this.stoneMat);
     ring.position.y = 14;
     ring.castShadow = true;
@@ -542,19 +544,155 @@ export class LandmarkBuilder {
     const portalMat = new THREE.MeshBasicMaterial({
       color: 0x62e5f5,
       transparent: true,
-      opacity: 0.36,
+      opacity: 0.32,
       side: THREE.DoubleSide,
     });
     const portal = new THREE.Mesh(new THREE.CircleGeometry(10.2, 28), portalMat);
     portal.position.y = 14;
 
+    const auroraMat = new THREE.MeshBasicMaterial({
+      color: 0xffe488,
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide,
+    });
+    const aurora = new THREE.Mesh(new THREE.TorusGeometry(15.2, 0.9, 8, 32), auroraMat);
+    aurora.position.y = 14;
+
     const plinth = new THREE.Mesh(new THREE.CylinderGeometry(16, 18, 1.5, 16), this.darkStoneMat);
     plinth.position.y = 0.75;
 
-    group.add(plinth, ring, innerRune, portal);
+    // Awakening Pedestal in front of the Unknown Gate
+    const altar = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.2, 1.8, 8), this.darkStoneMat);
+    altar.position.set(0, 1.6, 11);
+    const altarOrb = new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), this.goldRuneMat);
+    altarOrb.position.set(0, 3.0, 11);
+
+    group.add(plinth, ring, innerRune, portal, aurora, altar, altarOrb);
+    this.unknownGateState = { awakened: false, portalMat, auroraMat, aurora, innerRune, altarOrb };
+
+    this.interactables.push({
+      id: 'unknown_gate_altar',
+      type: 'gate-awaken',
+      landmarkId: lm.id,
+      label: 'Awaken The Unknown Gate',
+      x: lm.x,
+      y: baseY + 1.5,
+      z: lm.z + 11,
+      radius: 4.5,
+    });
+
     this.animated.push((dt, t) => {
-      innerRune.rotation.z += dt * 0.4;
-      portalMat.opacity = 0.28 + Math.sin(t * 2.2) * 0.1;
+      const awakened = this.unknownGateState.awakened;
+      innerRune.rotation.z += dt * (awakened ? 1.65 : 0.4);
+      altarOrb.rotation.y += dt * (awakened ? 2.8 : 0.9);
+      altarOrb.position.y = 3.0 + Math.sin(t * 2.5) * 0.22;
+      if (awakened) {
+        portalMat.color.setHex(0xffe88c);
+        portalMat.opacity = 0.68 + Math.sin(t * 4.2) * 0.14;
+        auroraMat.opacity = 0.55 + Math.sin(t * 3.1) * 0.2;
+        aurora.rotation.z -= dt * 0.9;
+      } else {
+        portalMat.opacity = 0.26 + Math.sin(t * 2.2) * 0.08;
+      }
+    });
+  }
+
+  awakenUnknownGate() {
+    if (this.unknownGateState) {
+      this.unknownGateState.awakened = true;
+    }
+  }
+
+  _buildHarbor(group, lm, baseY) {
+    // Tidehaven Harbor: Timber lighthouse tower, boathouse cottage, wooden pier jutting into Azure Coast, & campfire hearth
+    const cottage = this._buildCottage(7.2, 3.6, 5.4, this.blueRoofMat);
+    cottage.position.set(-10, 0, -6);
+    cottage.rotation.y = 0.4;
+    group.add(cottage);
+    this.colliders.push({ x: lm.x - 10, z: lm.z - 6, r: 4.2 });
+
+    // Coastal Beacon Lighthouse
+    const tower = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 3.1, 14, 10), this.plasterMat);
+    tower.position.set(10, 7, -8);
+    tower.castShadow = true;
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(2.8, 3.2, 10), this.blueRoofMat);
+    cap.position.set(10, 15.6, -8);
+    const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 10), this.goldRuneMat);
+    beacon.position.set(10, 13.6, -8);
+    group.add(tower, cap, beacon);
+    this.colliders.push({ x: lm.x + 10, z: lm.z - 8, r: 3.3 });
+
+    // Wooden Harbor Pier extending toward moored skiff
+    const pier = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.55, 22), this.woodMat);
+    pier.position.set(14, 0.1, 10);
+    pier.rotation.y = 0.55;
+    pier.receiveShadow = true;
+    group.add(pier);
+
+    // Harbor Hearth Campfire
+    this._addHearthCampfire(group, lm, 0, 2, baseY, 'Tidehaven Harbor Hearth');
+  }
+
+  _buildOutpost(group, lm, baseY) {
+    // Regional Ranger Lookout / Alpine Stone Shelter / Caravan Camp with blazing Hearthfire
+    const isAlpine = lm.regionId === 'highland-reach';
+    const isCaravan = lm.regionId === 'forgotten-kingdom';
+
+    if (isCaravan) {
+      // Twin sunlit canvas expedition tents
+      for (const [tx, tz, rot] of [[-8, -5, 0.4], [8, -4, -0.5]]) {
+        const tent = new THREE.Mesh(new THREE.ConeGeometry(4.2, 3.8, 4), this.plasterMat);
+        tent.position.set(tx, 1.9, tz);
+        tent.rotation.y = rot;
+        tent.castShadow = true;
+        group.add(tent);
+        this.colliders.push({ x: lm.x + tx, z: lm.z + tz, r: 2.8 });
+      }
+    } else {
+      // Cozy Timber or Alpine Stone Lodge + Watchtower
+      const lodge = this._buildCottage(6.8, 3.5, 5.2, isAlpine ? this.blueRoofMat : this.roofMat);
+      lodge.position.set(-7, 0, -6);
+      lodge.rotation.y = 0.3;
+      group.add(lodge);
+      this.colliders.push({ x: lm.x - 7, z: lm.z - 6, r: 4.0 });
+
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 2.2, 9.5, 6), isAlpine ? this.stoneMat : this.woodMat);
+      tower.position.set(8, 4.75, -6);
+      tower.castShadow = true;
+      const top = new THREE.Mesh(new THREE.ConeGeometry(2.6, 2.8, 6), this.roofMat);
+      top.position.set(8, 10.6, -6);
+      group.add(tower, top);
+      this.colliders.push({ x: lm.x + 8, z: lm.z - 6, r: 2.4 });
+    }
+
+    this._addHearthCampfire(group, lm, 0, 2, baseY, `${lm.name} Hearth`);
+  }
+
+  _addHearthCampfire(group, lm, ox, oz, baseY, label) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.25, 6, 12), this.darkStoneMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.set(ox, 0.2, oz);
+    const flame = new THREE.Mesh(
+      new THREE.ConeGeometry(0.65, 1.45, 7),
+      new THREE.MeshBasicMaterial({ color: 0xffa638 })
+    );
+    flame.position.set(ox, 0.78, oz);
+    const glow = new THREE.PointLight(0xffb454, 2.4, 18);
+    glow.position.set(ox, 1.8, oz);
+    group.add(ring, flame, glow);
+
+    this.interactables.push({
+      id: `hearth_${lm.id}`,
+      type: 'campfire',
+      label: `Rest & Cook — ${label}`,
+      x: lm.x + ox,
+      y: baseY,
+      z: lm.z + oz,
+      radius: 3.6,
+    });
+    this.animated.push((dt, t) => {
+      flame.scale.setScalar(0.92 + Math.sin(t * 9 + ox) * 0.14);
     });
   }
 
