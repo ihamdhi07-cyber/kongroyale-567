@@ -5,6 +5,9 @@ export const AWARDS = Object.freeze({
   guardian: 40,
   puzzle: 60,
   river: 25,
+  mossbound_arch: 35,
+  quiet_ring: 35,
+  watchers_perch: 35,
 });
 export function validProgress(value) {
   return (

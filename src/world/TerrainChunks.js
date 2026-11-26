@@ -73,9 +73,10 @@ export function createChunkGeometry(cx, cz) {
   return geo;
 }
 export class TerrainChunks {
-  constructor(scene, physics) {
+  constructor(scene, physics, hooks = {}) {
     this.scene = scene;
     this.physics = physics;
+    this.hooks = hooks;
     this.chunks = new Map();
     this.center = "";
     this.material = new THREE.MeshStandardMaterial({
@@ -108,6 +109,7 @@ export class TerrainChunks {
       const mesh = new THREE.Mesh(geometry, this.material);
       mesh.receiveShadow = true;
       this.scene.add(mesh);
+      this.hooks.load?.(chunk);
       this.chunks.set(chunk.key, {
         mesh,
         collider: this.physics.addTerrain(geometry),
@@ -115,6 +117,7 @@ export class TerrainChunks {
     }
     for (const [id, chunk] of this.chunks) {
       if (keep.has(id)) continue;
+      this.hooks.unload?.(id);
       this.scene.remove(chunk.mesh);
       this.physics.removeTerrain(chunk.collider);
       chunk.mesh.geometry.dispose();
@@ -125,7 +128,8 @@ export class TerrainChunks {
     return true;
   }
   dispose() {
-    for (const chunk of this.chunks.values()) {
+    for (const [id, chunk] of this.chunks) {
+      this.hooks.unload?.(id);
       this.scene.remove(chunk.mesh);
       this.physics.removeTerrain(chunk.collider);
       chunk.mesh.geometry.dispose();

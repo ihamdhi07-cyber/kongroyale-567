@@ -1,12 +1,5 @@
 import * as THREE from "three";
-import {
-  heightAt,
-  clampWorld,
-  seeded,
-  riverCenter,
-  inRiver,
-  RIVER_LEVEL,
-} from "./world.js";
+import { heightAt, clampWorld, inRiver, RIVER_LEVEL } from "./world.js";
 import "./style.css";
 import { createPhysics } from "./physics.js";
 import { SaveManager } from "./save/SaveManager.js";
@@ -22,6 +15,9 @@ import { Progression } from "./gameplay/Progression.js";
 import { createEchoGrove } from "./world/EchoGrove.js";
 import { AudioManager } from "./audio/AudioManager.js";
 import { TerrainChunks } from "./world/TerrainChunks.js";
+import { VegetationChunks } from "./world/VegetationChunks.js";
+import { LANDMARKS, detectLandmarks } from "./gameplay/Landmarks.js";
+import { createLandmarks } from "./world/LandmarkSystem.js";
 import { RiverSystem } from "./world/RiverSystem.js";
 import { Survival, BUSHES, CAMP } from "./gameplay/Survival.js";
 import { createCampsite } from "./world/Campsite.js";
@@ -91,58 +87,14 @@ const physics = await createPhysics(null, {
   ...initial,
   y: initialY,
 });
-const terrain = new TerrainChunks(scene, physics);
+const vegetation = new VegetationChunks(scene, physics);
+const terrain = new TerrainChunks(scene, physics, {
+  load: (chunk) => vegetation.load(chunk),
+  unload: (key) => vegetation.unload(key),
+});
 terrain.update(initial.x, initial.z);
 const river = new RiverSystem(scene);
-const rand = seeded(481),
-  trunkMat = new THREE.MeshStandardMaterial({ color: "#756d52", roughness: 1 }),
-  leafMats = ["#557b62", "#668b6c", "#759676", "#496f5d"].map(
-    (color) => new THREE.MeshStandardMaterial({ color, roughness: 1 }),
-  ),
-  trunkGeo = new THREE.CylinderGeometry(0.25, 0.48, 1, 6),
-  crownGeo = new THREE.ConeGeometry(1, 1, 7),
-  treeCount = 460,
-  trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeCount),
-  crowns = leafMats.map((m) => new THREE.InstancedMesh(crownGeo, m, treeCount)),
-  counts = [0, 0, 0, 0],
-  dummy = new THREE.Object3D();
-for (let i = 0; i < treeCount; i++) {
-  let x = (rand() - 0.5) * 480,
-    z = (rand() - 0.5) * 480;
-  if (
-    Math.abs(x - 5 * Math.sin(z * 0.025)) < 9 ||
-    Math.hypot(x, z + 22) < 11 ||
-    PLANTS.some((p) => Math.hypot(x - p.x, z - p.z) < 4) ||
-    Math.hypot(x - GUIDE.x, z - GUIDE.z) < 4 ||
-    Math.hypot(x - GUARDIAN_HOME.x, z - GUARDIAN_HOME.z) < 8 ||
-    Math.hypot(x - TABLET.x, z - TABLET.z) < 12 ||
-    Math.hypot(x - CAMP.x, z - CAMP.z) < 5 ||
-    BUSHES.some((b) => Math.hypot(x - b.x, z - b.z) < 4)
-  )
-    x += 25;
-  if (Math.abs(x - riverCenter(z)) < 20) x = riverCenter(z) + 25;
-  const y = heightAt(x, z),
-    h = 5 + rand() * 7,
-    r = 2.2 + rand() * 2;
-  physics.addCylinder(x, y - 0.2, z, 0.48, h * 0.5 + 0.2);
-  dummy.position.set(x, y + h * 0.25, z);
-  dummy.scale.set(1, h * 0.5, 1);
-  dummy.rotation.set(0, rand() * 6, 0);
-  dummy.updateMatrix();
-  trunks.setMatrixAt(i, dummy.matrix);
-  const n = i % 4;
-  dummy.position.set(x, y + h * 0.7, z);
-  dummy.scale.set(r, h * 0.75, r);
-  dummy.updateMatrix();
-  crowns[n].setMatrixAt(counts[n]++, dummy.matrix);
-}
-trunks.castShadow = true;
-scene.add(trunks);
-crowns.forEach((m, i) => {
-  m.count = counts[i];
-  m.castShadow = true;
-  scene.add(m);
-});
+createLandmarks(scene, physics);
 // Procedural placeholder art, not final assets.
 const stone = new THREE.Group();
 stone.position.set(0, heightAt(0, -22), -22);
@@ -365,6 +317,13 @@ function renderMap() {
       cell.textContent = "✧";
     else if (i === cellAt(TABLET.x, TABLET.z) && puzzle.discovered)
       cell.textContent = "◇";
+    else if (
+      LANDMARKS.some(
+        (site) =>
+          progression.achievements.has(site.id) && cellAt(site.x, site.z) === i,
+      )
+    )
+      cell.textContent = "◆";
     map.append(cell);
   }
   $("#mapCount").textContent =
@@ -450,6 +409,12 @@ function renderJournal() {
     puzzle.stage === 3
       ? "Complete: the grove's secret has awakened."
       : `The tablet reads: Moon, then Sun, then Star. Sequence: ${puzzle.stage}/3.`;
+  const discoveries = LANDMARKS.filter((site) =>
+    progression.achievements.has(site.id),
+  );
+  $("#journalLocations").textContent = discoveries.length
+    ? discoveries.map((site) => site.name).join(" · ")
+    : "No additional landmarks recorded yet.";
   $("#journalXp").textContent = `${progression.xp} exploration XP`;
   $("#journalSkill").textContent = progression.swift
     ? "Unlocked: Fleetfoot — sprint speed increased."
@@ -1044,6 +1009,21 @@ function frame(now) {
       saveGame();
     }
     exploration.visit(state.x, state.z);
+    for (const site of detectLandmarks(
+      state.x,
+      state.z,
+      progression.achievements,
+    )) {
+      if (progression.award(site.id)) {
+        audio.play("puzzle");
+        notify(
+          "LOCATION DISCOVERED",
+          site.name,
+          `${site.description} +${site.xp} exploration XP.`,
+        );
+        saveGame();
+      }
+    }
     saveTimer += dt;
     if (saveTimer >= 10) {
       saveTimer = 0;
@@ -1114,6 +1094,7 @@ if (import.meta.env.DEV) {
       pitch: state.pitch,
       distance: state.distance,
       chunks: terrain.chunks.size,
+      vegetationChunks: vegetation.chunks.size,
       swimming: state.swimming,
     }),
   };

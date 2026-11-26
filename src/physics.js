@@ -36,7 +36,7 @@ export async function createPhysics(geometry, start) {
       world.removeCollider(terrainCollider, true);
     },
     addCylinder(x, y, z, radius, height) {
-      world.createCollider(
+      return world.createCollider(
         RAPIER.ColliderDesc.cylinder(height / 2, radius).setTranslation(
           x,
           y + height / 2,
