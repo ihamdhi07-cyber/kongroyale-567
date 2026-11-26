@@ -1,131 +1,60 @@
-# Kong Royale
+# THE UNKNOWN WORLD
 
-A 50-player banana battle royale that runs in your browser. Play it at [kongroyale.com](https://kongroyale.com).
+A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anime Watercolor & Gouache 3D** (stylized PBR + cel-ink rim highlights + sRGB-calibrated gouache terrain & foliage + procedural painterly textures), built with **Three.js (WebGL2)** and **Vite**.
 
-![The Kong Royale title screen](.github/assets/title.jpg)
+## World & Core Features
 
-You drop from the Banana Co. plane onto a jungle island, loot chests, and fight 49 other kongs while the storm closes
-in. Play solo or in trios; bots fill any empty seats.
+- **Massive 8×8 km Playable Continent (inside a 15×15 km Expansion Architecture)**:
+  - Seamless deterministic chunk streaming (`128 m` chunks, 3-tier LOD, zero loading screens) across **8 organic blended regions**: *Verdant Valley*, *Emerald Wilds*, *Highland Reach*, *Azure Coast*, *Forgotten Kingdom*, *Hollow Depths*, *Shattered Expanse*, and *Hidden Frontier*.
+  - **8 Major Landmarks** with flat scenic pads, Stone Lore Tablets, and fast-travel Waystones — plus **4 Secondary Regional Outposts & Harbors**: *Tidehaven Harbor* (pier + Waystone), *Timberwatch Outpost*, *Frostcrest Basecamp* (Waystone + alpine campfire), and *Ashen Caravan Camp*.
+  - **Rich Crossroads Village Hub**: cobblestone central plaza, sculpted wishing well fountain, glowing hearth campfire, wrought-iron street lanterns, colorful merchant market stalls, half-timbered cottages with chimneys & warm windows, spinning gouache windmill, village oaks, and split-rail fences.
+- **Sailing & Underwater Exploration**:
+  - Board **3 interactive sailboats** moored in Azure Coast & Tidehaven Bay (`E`) with rudder steering, billowing sails, and frothy water wake particles.
+  - Swim and **dive underwater** (`C` / `Ctrl`) with a HUD breath gauge, bubble trails, blue-teal underwater depth fog, and **5 glowing sunken seabed treasures** resting on the ocean floor.
+- **3 Enterable 3D Sanctuaries**:
+  - Seamless doorway transitions (`E`) into cozy, lantern-lit 3D interior rooms featuring woven rugs, bookshelves, wall sconces, dedicated indoor 2.5D camera framing, lore charters, and treasure caches: *Crossroads Elder's Hall*, *The Crystal Vault*, and *The Drowned Archive Chamber*.
+- **8 Regional Environmental Puzzles**:
+  - Singing Obelisks, Sun-Mirror Light Relays, Pressure-Seal Monoliths, Canopy Wind Chimes, **Azure Coast Tide-Lock Sluice Gate** (3 water valves), Citadel Monolith Seal, Hollow Crystal Prism Relay, and Frontier Resonance Triad.
+- **Stealth, Tactile Action Combat & 2 Guardian Bosses**:
+  - Light/Heavy combo strikes, directional dodge roll, shield guard, **Stealth Crouch (`Z`)** reducing enemy detection radius for **1.75× Ambush Strikes**, tactile hit-stop, camera shake, 3D impact particles, floating damage popups, and Boss Health Bars for **Mossback Colossus** and **Elder Stone Warden**.
+- **Rich RPG Economy, Quests & Climax**:
+  - **24 items**, **10 cooking / alchemy / forging recipes**, **Sunshards** gold currency, **10 named regional NPCs** (including **3 interactive Buy/Sell Merchant Shops**), **8 quests** chaining into **Awakening the Unknown Gate** with an animated golden-aurora portal climax.
+- **Studio-Grade Controls, Live Minimap, Map Pins, Photo Mode & Performance Tuning**:
+  - Live **Circular Watercolor Minimap**, adjustable 2.5D camera presets (`Close`, `2.5D`, `Iso`, **`Photo` `[V]`**), interactive World Map (`M`) with fast travel and **Custom Compass Waypoint Pins**, 4 Graphics Presets (`Low`–`Ultra`) **plus manual Render Scale, Shadow Override, FOV, and Invert-Y sliders**, full desktop + mobile touch controls, procedural Web Audio soundtrack/SFX, and persistent multi-slot IndexedDB saves.
 
-The client is built with [three.js](https://threejs.org). The multiplayer server is Node.js with WebSockets. Both run
-the same simulation code from `shared/`, and the server has the final say on every hit, pickup and storm tick.
+## Quick Start
 
-![Freefall over the island](.github/assets/gameplay.jpg)
-
-## Status
-
-- **Status:** playable and in active development (version 0.2.0).
-- **To play:** a desktop browser with WebGL2, a decent GPU, and a keyboard and mouse or a controller. There are no
-  touch controls, so phones and tablets don't work yet.
-- **Limits:** there are no accounts and the server saves nothing between matches. Lobbies live in one server
-  process's memory.
-
-## Run it
-
-You need [Node.js](https://nodejs.org) 22.12 or newer.
-
-```sh
-npm ci
-npm run dev
+```bash
+npm install
+npm run dev            # Start Vite dev server on http://0.0.0.0:5173
+npm test               # Run all 13 automated Node simulation & system tests
+npm run verify:browser # Run real headless Chromium WebGL2 visual E2E checks
+npm run build          # Build optimized production bundle to dist/
 ```
 
-Prefer [Bun](https://bun.sh)? `bun install --frozen-lockfile` works in place of `npm ci`: it reads `package-lock.json` and
-installs the same versions, and refuses to run if the lockfile is out of date. npm stays the source of truth, so add or
-update dependencies with npm. Run everything on Node: Bun isn't supported as the runtime, because the simulation gives
-different results under it.
+## Controls Reference
 
-Open <http://localhost:5317/> and press **Play**. That starts a match against 49 bots that runs entirely in your
-browser, so you don't need the server. Pick **Easy**, **Standard** or **Hard** bots on the title screen.
+| Action | Desktop | Mobile / Touch |
+|---|---|---|
+| Move / Steer Sailboat / Swim | `W A S D` / Arrow Keys | Left Virtual Joystick |
+| Jump / Spirit Glider (Double-Jump) | `Space` | Jump / Glide Button |
+| Sprint / Wall Climb | `Shift` | Sprint Toggle |
+| Stealth Crouch (1.75× Ambush) | `Z` | Stealth Button |
+| Dodge Roll / Underwater Dive | `C` or `Ctrl` | Dodge Button |
+| Interact / Sail / Enter Sanctuary / Trade | `E` | Contextual Action Prompt |
+| Light / Heavy Staff Attack | Left Click / `J` (`Shift`+Click Heavy) | Strike / Heavy Buttons |
+| Shield Guard | Right Click / `K` | Shield Button |
+| Rotate & Zoom 2.5D Camera | Right-Drag / Scroll / `Q X R F` | HUD Presets & Zoom |
+| Photo Framing Mode | `V` | HUD `Photo` Button |
+| Map · Bag/Craft · Quests · Skills · Pause | `M` · `I` · `T` · `P` · `Esc` | Top-Right HUD Buttons |
 
-Until you start the server (below), the terminal keeps complaining that it can't reach `/health` on port 3020. That's
-harmless: practice matches don't use the server.
+## Project Structure
 
-### Controls
-
-| Key | Action |
-|---|---|
-| WASD | Move |
-| Mouse | Look |
-| Left / right mouse | Fire / aim |
-| Space | Jump, leave the plane, pull the chute |
-| Left Shift / C | Sprint / crouch |
-| R | Reload |
-| E | Interact: pick up, open chests, get in vehicles |
-| 1-5 or mouse wheel | Switch weapon |
-| G | Throw a banana bomb |
-| Tab / M | Inventory / map |
-| Middle mouse or Z | Ping |
-| B | Push to talk (squad voice) |
-| Esc | Menu and settings |
-
-You can rebind every key in **Settings**. Controllers work too.
-
-### Firing range
-
-**Firing Range** on the title screen has every gun at every rarity, every heal and every ammo type, with targets from
-10 to 205 m. It uses the real match code for damage, falloff, spread and hit registration, so it's the quickest place
-to test a weapon change.
-
-### Online rooms
-
-To play with friends on your own machine, start the server in a second terminal:
-
-```sh
-KR_EVENT_MODE=0 npm run server
-```
-
-Then open **Friends** on the title screen to create a room or join one by its code. `KR_EVENT_MODE=0` lets players
-create their own rooms; see [HOSTING.md](HOSTING.md) for what it and the other settings do.
-
-## Project layout
-
-| Folder | What's in it |
-|---|---|
-| `client/src/` | The browser game: rendering, UI, audio, input and client prediction |
-| `client/src/world/` | The island you see: terrain, water, plants, sky, and one folder per location |
-| `shared/sim/` | The game rules, run by both server and browser: movement, weapons, loot, storm, bots, vehicles |
-| `shared/net/` | The network protocol and the loop that runs a match |
-| `shared/world/`, `shared/pois/` | The map: the terrain generator and the collision shapes of every location |
-| `server/` | The Node server: lobbies, the 60 Hz match loop, admin lobbies, bug reports, voice relay |
-| `public/assets/` | Models, textures, sounds and fonts the browser downloads |
-| `tools/` | Tests, benchmarks and the admin key tool |
-
-[ARCHITECTURE.md](ARCHITECTURE.md) explains how the pieces fit together.
-
-## Check your changes
-
-```sh
-npm run build   # build the game into dist/ (about 15 s)
-npm test        # types, movement, swimming, animation, path finding, network parity, a headless match, security
-```
-
-Run the build first: one of the tests uses the built admin pages. The tests need no GPU, network or database and take
-about two minutes. The same checks run on every pull request.
-
-## Run your own server
-
-```sh
-npm ci
-npm run build
-npm start
-```
-
-That serves the game and the multiplayer server on one port, 3020 by default. A build shows a simpler title screen
-with one Play button and no Solo / Trios, bot difficulty or Friends. Build with `VITE_KR_PLAYTEST=0 npm run build`
-for the full one. [HOSTING.md](HOSTING.md) lists every setting and explains how to run it safely on the internet.
-
-## Contribute
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md). Every change goes through a pull request, and the Kong Royale Committee of
-Truth and Prosperity reviews it before it can reach the live game. Using an AI coding agent? Point it at
-[AGENTS.md](AGENTS.md).
-
-Questions: [Discussions](https://github.com/MaximilianHansen/kongroyale/discussions). Ideas for the game: open an **Idea** issue.
-
-Found a security problem or a cheat? Don't open an issue. See [SECURITY.md](SECURITY.md).
-
-## Licence
-
-The code and the game's own art and audio are under the [MIT licence](LICENSE). A few files come from other people
-under their own licences; they're listed in [CREDITS.md](CREDITS.md). The MIT licence covers the code and files, not
-the **Kong Royale** name and logo: please don't use those for your own game or in a way that suggests it's official.
+- `public/data/` — Data-driven JSON catalogs (`regions`, `items` + `recipes`, `quests`, `creatures`)
+- `src/core/` — Engine loop, WebGL2 renderer & presets, scene lighting, asset loader, `Game` orchestrator
+- `src/world/` — Deterministic terrain/biomes, chunk streaming, sculpted 3D vegetation, landmarks/outposts, boats/seabed treasures, 3D sanctuaries, pooled 3D particles, watercolor shaders, water & 5-state weather
+- `src/player/`, `src/camera/`, `src/controls/` — Wayfarer movement/sailing/diving/stealth, adjustable 2.5D camera, keyboard/mouse & mobile touch input
+- `src/gameplay/`, `src/entities/` — Inventory/Sunshards economy, crafting, quests, progression, exploration, combat, 8 puzzles, 10 NPCs, wildlife, enemies & 2 bosses
+- `src/ui/`, `src/save/`, `src/audio/` — 8 UI screens + live minimap, IndexedDB persistence, procedural Web Audio engine
+- `tests/` — 6 Node `--test` suites (`13/13`) + real headless Chromium WebGL2 visual verification (`tests/e2e-browser.mjs`)
+- `docs/` — Architecture, GDD, Asset Manifest, Reverse-Engineering Notes & Verification Checklist
