@@ -22,7 +22,7 @@ export class Exploration {
   }
   snapshot(x, z) {
     return {
-      version: 1,
+      version: 2,
       position: { x, z },
       explored: [...this.explored],
       discoveries: [...this.discoveries],

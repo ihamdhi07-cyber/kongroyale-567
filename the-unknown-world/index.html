@@ -22,6 +22,7 @@
           </div>
         </div>
         <div class="top-right">
+          <button id="bagButton" aria-label="Open inventory">BAG</button>
           <button id="mapButton" aria-label="Open exploration map">MAP</button
           ><span>☼ &nbsp; EARLY MORNING</span
           ><button id="helpButton" aria-label="Show controls">?</button>
@@ -75,6 +76,31 @@
           ><button id="jumpTouch">↑<small>JUMP</small></button>
         </div>
       </div>
+      <div id="bagPanel" class="overlay" hidden>
+        <div
+          class="modal bag-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="bagTitle"
+        >
+          <div class="eyebrow centered">WHAT YOU CARRY</div>
+          <h2 id="bagTitle">Field <em>satchel.</em></h2>
+          <p>Materials gathered in the wild can be made into useful things.</p>
+          <div class="item-row">
+            <span>✿ &nbsp; Glowleaf <small>Material</small></span
+            ><strong id="leafCount">0</strong>
+          </div>
+          <div class="item-row">
+            <span
+              >✧ &nbsp; Wayfarer's light
+              <small>Equipment · a light for the waystone</small></span
+            ><strong id="lanternCount">—</strong>
+          </div>
+          <p id="craftInfo">Craft a wayfarer's light from 3 glowleaves.</p>
+          <button id="craftButton">CRAFT LIGHT · 3 GLOWLEAVES</button>
+          <button id="closeBag" class="secondary">RETURN TO THE WORLD</button>
+        </div>
+      </div>
       <div id="mapPanel" class="overlay" hidden>
         <div
           class="modal map-modal"
@@ -104,8 +130,8 @@
           <h2>The world is<br /><em>waiting.</em></h2>
           <p>
             Move with WASD or the joystick. Drag to rotate the camera, scroll or
-            tap zoom, jump with Space, and interact with E. Press M or tap Map
-            to see explored areas.
+            tap zoom, jump with Space, and interact with E. Hold Shift to
+            sprint. Press M for the map or I for the satchel.
           </p>
           <button id="start">BEGIN EXPLORING <span>↗</span></button>
           <button id="newGame" class="secondary" hidden>

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { indexedDB } from "fake-indexeddb";
 import { SaveManager, validateSave } from "../src/save/SaveManager.js";
 import { Exploration, cellAt } from "../src/gameplay/Exploration.js";
+import { Journey } from "../src/gameplay/Journey.js";
 
 test("exploration grid and discoveries survive IndexedDB round trip", async () => {
   const save = new SaveManager(indexedDB);
@@ -11,7 +12,10 @@ test("exploration grid and discoveries survive IndexedDB round trip", async () =
   exploration.visit(0, 9);
   exploration.visit(51, 9);
   exploration.discover("waystone");
-  const snapshot = exploration.snapshot(51, 9);
+  const snapshot = {
+    ...exploration.snapshot(51, 9),
+    journey: new Journey().snapshot(),
+  };
   await save.save(snapshot);
   assert.deepEqual(await save.load(), snapshot);
   assert.notEqual(cellAt(0, 9), cellAt(51, 9));
@@ -24,7 +28,15 @@ test("invalid, out-of-bounds and future saves are rejected", () => {
     explored: [0],
     discoveries: [],
   };
-  assert.throws(() => validateSave({ ...good, version: 2 }));
+  assert.throws(() => validateSave({ ...good, version: 3 }));
+  assert.equal(validateSave(good).version, 2);
+  assert.throws(() =>
+    validateSave({
+      ...good,
+      version: 2,
+      journey: { gathered: [], leaves: 3, lantern: false, restored: false },
+    }),
+  );
   assert.throws(() =>
     validateSave({ ...good, position: { x: Infinity, z: 0 } }),
   );

@@ -1,9 +1,10 @@
 // A single versioned local slot; failures are surfaced to the player, not swallowed.
-export const SAVE_VERSION = 1;
+import { validJourney } from "../gameplay/Journey.js";
+export const SAVE_VERSION = 2;
 export function validateSave(value) {
   if (
     !value ||
-    value.version !== SAVE_VERSION ||
+    ![1, SAVE_VERSION].includes(value.version) ||
     !value.position ||
     !Number.isFinite(value.position.x) ||
     !Number.isFinite(value.position.z) ||
@@ -14,10 +15,17 @@ export function validateSave(value) {
     !value.discoveries.every((x) => x === "waystone") ||
     !Array.isArray(value.explored) ||
     value.explored.length > 100 ||
-    !value.explored.every((x) => Number.isInteger(x) && x >= 0 && x < 100)
+    !value.explored.every((x) => Number.isInteger(x) && x >= 0 && x < 100) ||
+    (value.version === SAVE_VERSION && !validJourney(value.journey))
   ) {
     throw new Error("The save is invalid or from an unsupported version.");
   }
+  if (value.version === 1)
+    return {
+      ...value,
+      version: SAVE_VERSION,
+      journey: { gathered: [], leaves: 0, lantern: false, restored: false },
+    };
   return value;
 }
 export class SaveManager {

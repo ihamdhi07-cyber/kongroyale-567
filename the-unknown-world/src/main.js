@@ -4,6 +4,7 @@ import "./style.css";
 import { createPhysics } from "./physics.js";
 import { SaveManager } from "./save/SaveManager.js";
 import { Exploration, cellAt } from "./gameplay/Exploration.js";
+import { Journey, PLANTS } from "./gameplay/Journey.js";
 const $ = (s) => document.querySelector(s),
   canvas = $("#world");
 const saves = new SaveManager();
@@ -18,6 +19,7 @@ try {
   saveProblem = `Saving unavailable: ${error.message}`;
 }
 let exploration = new Exploration(saved?.explored, saved?.discoveries);
+let journey = new Journey(saved?.journey);
 const initial = saved?.position || { x: 0, z: 9 };
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -91,7 +93,11 @@ const rand = seeded(481),
 for (let i = 0; i < treeCount; i++) {
   let x = (rand() - 0.5) * 480,
     z = (rand() - 0.5) * 480;
-  if (Math.abs(x - 5 * Math.sin(z * 0.025)) < 9 || Math.hypot(x, z + 22) < 11)
+  if (
+    Math.abs(x - 5 * Math.sin(z * 0.025)) < 9 ||
+    Math.hypot(x, z + 22) < 11 ||
+    PLANTS.some((p) => Math.hypot(x - p.x, z - p.z) < 4)
+  )
     x += 25;
   const y = heightAt(x, z),
     h = 5 + rand() * 7,
@@ -160,6 +166,38 @@ const halo = new THREE.Mesh(
 halo.rotation.x = -Math.PI / 2;
 halo.position.y = 0.55;
 stone.add(halo);
+// Temporary procedural glowleaf plants; each is a unique, non-respawning resource.
+const plantMeshes = PLANTS.map((plant) => {
+  const group = new THREE.Group();
+  group.position.set(plant.x, heightAt(plant.x, plant.z), plant.z);
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.12, 1.2, 6),
+    new THREE.MeshStandardMaterial({ color: "#536f4e" }),
+  );
+  stem.position.y = 0.6;
+  group.add(stem);
+  const blossom = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.5),
+    new THREE.MeshStandardMaterial({
+      color: "#dbe99a",
+      emissive: "#91b951",
+      emissiveIntensity: 0.8,
+    }),
+  );
+  blossom.position.y = 1.4;
+  group.add(blossom);
+  group.visible = !journey.gathered.has(plant.id);
+  scene.add(group);
+  return group;
+});
+function syncJourneyVisuals() {
+  plantMeshes.forEach(
+    (mesh, i) => (mesh.visible = !journey.gathered.has(PLANTS[i].id)),
+  );
+  rune.material.emissiveIntensity = journey.restored ? 3 : 1.4;
+  halo.material.opacity = journey.restored ? 1 : 0.65;
+}
+syncJourneyVisuals();
 const player = new THREE.Group();
 scene.add(player);
 const mat = (color) =>
@@ -209,20 +247,35 @@ $("#start").firstChild.textContent = saved
   : "BEGIN EXPLORING ";
 $("#newGame").hidden = !saved && !saveProblem;
 function updateObjective() {
-  if (exploration.discoveries.has("waystone")) {
-    $(".objective strong").textContent = "The waystone discovered";
-    $(".objective p").textContent =
-      "Keep wandering. The world is yours to explore.";
+  const title = $(".objective strong"),
+    detail = $(".objective p");
+  if (journey.restored) {
+    title.textContent = "A light in the wilds";
+    detail.textContent =
+      "The waystone shines again. Your first journey is complete.";
+  } else if (!exploration.discoveries.has("waystone")) {
+    title.textContent = "Follow the golden light";
+    detail.textContent = "Find the old waystone in the clearing.";
+  } else if (journey.lantern) {
+    title.textContent = "Return to the waystone";
+    detail.textContent = "Use your wayfarer's light to restore its glow.";
+  } else if (journey.leaves >= 3) {
+    title.textContent = "Make a wayfarer's light";
+    detail.textContent =
+      "Open your bag and craft a light from three glowleaves.";
   } else {
-    $(".objective strong").textContent = "Follow the golden light";
-    $(".objective p").textContent = "Find the old waystone in the clearing.";
+    title.textContent = "Gather the glowleaves";
+    detail.textContent = `Find the luminous plants near the clearing · ${journey.leaves} / 3`;
   }
 }
 updateObjective();
 async function saveGame() {
   if (!saveAvailable) return;
   try {
-    await saves.save(exploration.snapshot(state.x, state.z));
+    await saves.save({
+      ...exploration.snapshot(state.x, state.z),
+      journey: journey.snapshot(),
+    });
     showSaveStatus("JOURNEY SAVED ON THIS DEVICE");
   } catch (error) {
     showSaveStatus(`Save failed: ${error.message}`);
@@ -248,7 +301,8 @@ function renderMap() {
     `${exploration.explored.size} / 100 areas explored`;
 }
 function toggleMap() {
-  if (!state.started && $("#mapPanel").hidden) return;
+  if ((!state.started || !$("#bagPanel").hidden) && $("#mapPanel").hidden)
+    return;
   $("#mapPanel").hidden = !$("#mapPanel").hidden;
   if (!$("#mapPanel").hidden) {
     renderMap();
@@ -258,6 +312,33 @@ function toggleMap() {
 }
 $("#mapButton").addEventListener("click", toggleMap);
 $("#closeMap").addEventListener("click", toggleMap);
+function renderBag() {
+  $("#leafCount").textContent = journey.leaves;
+  $("#lanternCount").textContent = journey.lantern ? "1" : "—";
+  $("#craftButton").disabled = journey.leaves < 3 || journey.lantern;
+  $("#craftInfo").textContent = journey.lantern
+    ? "Your light is ready to restore the waystone."
+    : "Craft a wayfarer's light from 3 glowleaves.";
+}
+function toggleBag() {
+  if ((!state.started || !$("#mapPanel").hidden) && $("#bagPanel").hidden)
+    return;
+  $("#bagPanel").hidden = !$("#bagPanel").hidden;
+  if (!$("#bagPanel").hidden) {
+    renderBag();
+    keys.clear();
+    resetJoy();
+  }
+}
+$("#bagButton").addEventListener("click", toggleBag);
+$("#closeBag").addEventListener("click", toggleBag);
+$("#craftButton").addEventListener("click", () => {
+  if (journey.craft()) {
+    renderBag();
+    updateObjective();
+    saveGame();
+  }
+});
 const keys = new Set();
 let jump = false,
   joystick = { x: 0, y: 0 };
@@ -270,22 +351,98 @@ window.addEventListener("keydown", (e) => {
     e.preventDefault();
   keys.add(e.code);
   if (e.code === "Space" && !e.repeat) jump = true;
-  if (e.code === "KeyE" && !e.repeat && state.started && $("#mapPanel").hidden)
+  if (
+    e.code === "KeyE" &&
+    !e.repeat &&
+    state.started &&
+    $("#mapPanel").hidden &&
+    $("#bagPanel").hidden
+  )
     interact();
   if (e.code === "KeyM" && !e.repeat) toggleMap();
+  if (e.code === "KeyI" && !e.repeat) toggleBag();
 });
 window.addEventListener("keyup", (e) => keys.delete(e.code));
 window.addEventListener("blur", () => keys.clear());
-function interact() {
-  if (Math.hypot(state.x - stone.position.x, state.z - stone.position.z) < 5) {
-    exploration.discover("waystone");
-    saveGame();
-    $("#notice").hidden = false;
-    $("#notice").innerHTML =
-      "<small>DISCOVERY RECORDED</small><strong>The Waystone</strong><p>Someone walked this path before you.</p>";
-    setTimeout(() => ($("#notice").hidden = true), 5000);
-    updateObjective();
+let noticeTimer;
+function notify(label, title, description) {
+  const notice = $("#notice");
+  notice.replaceChildren();
+  for (const [tag, text] of [
+    ["small", label],
+    ["strong", title],
+    ["p", description],
+  ]) {
+    const element = document.createElement(tag);
+    element.textContent = text;
+    notice.append(element);
   }
+  notice.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => (notice.hidden = true), 5000);
+}
+function nearestInteraction() {
+  let nearest = null,
+    distance = 5;
+  const stoneDistance = Math.hypot(
+    state.x - stone.position.x,
+    state.z - stone.position.z,
+  );
+  if (stoneDistance < distance) {
+    nearest = { type: "stone" };
+    distance = stoneDistance;
+  }
+  PLANTS.forEach((plant) => {
+    if (journey.gathered.has(plant.id)) return;
+    const d = Math.hypot(state.x - plant.x, state.z - plant.z);
+    if (d < Math.min(distance, 3)) {
+      nearest = { type: "plant", id: plant.id };
+      distance = d;
+    }
+  });
+  return nearest;
+}
+function interact() {
+  if (!state.started || !$("#mapPanel").hidden || !$("#bagPanel").hidden)
+    return;
+  const target = nearestInteraction();
+  if (!target) return;
+  if (target.type === "plant") {
+    if (!journey.gather(target.id)) return;
+    notify(
+      "MATERIAL GATHERED",
+      "Glowleaf",
+      "A little of the forest's light, held in your hands.",
+    );
+  } else if (!exploration.discoveries.has("waystone")) {
+    exploration.discover("waystone");
+    notify(
+      "DISCOVERY RECORDED",
+      "The Waystone",
+      "Its inscription asks for a light made from three glowleaves.",
+    );
+  } else if (journey.restore()) {
+    notify(
+      "JOURNEY COMPLETE",
+      "A light in the wilds",
+      "The waystone glows once more. Someone may follow its light home.",
+    );
+  } else if (!journey.restored) {
+    notify(
+      "THE WAYSTONE",
+      "A faded inscription",
+      "Gather three glowleaves and craft a light in your bag.",
+    );
+  } else {
+    notify(
+      "THE WAYSTONE",
+      "A light in the wilds",
+      "The light will guide the next traveler.",
+    );
+  }
+  syncJourneyVisuals();
+  updateObjective();
+  saveGame();
 }
 $("#zoomTouch").addEventListener("click", () => {
   state.distance = state.distance > 15 ? 10 : 26;
@@ -360,6 +517,8 @@ $("#newGame").onclick = () => {
   state.y = heightAt(0, 9);
   physics.teleport(state.x, state.y, state.z);
   exploration = new Exploration();
+  journey = new Journey();
+  syncJourneyVisuals();
   // Explicit confirmation allows recovery from an invalid save, but not an unavailable database.
   if (saves.db) saveAvailable = true;
   updateObjective();
@@ -388,7 +547,7 @@ function frame(now) {
   const dt = Math.min((now - previous) / 1000, 0.05);
   previous = now;
   elapsed += dt;
-  if (state.started && $("#mapPanel").hidden) {
+  if (state.started && $("#mapPanel").hidden && $("#bagPanel").hidden) {
     let x =
         (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
         (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0) +
@@ -455,8 +614,14 @@ function frame(now) {
   sun.position.set(state.x - 45, state.y + 80, state.z + 35);
   sun.target.position.copy(player.position);
   rune.rotation.y += dt;
-  $("#prompt").hidden =
-    !state.started || Math.hypot(state.x, state.z + 22) >= 5;
+  const near =
+    state.started && $("#mapPanel").hidden && $("#bagPanel").hidden
+      ? nearestInteraction()
+      : null;
+  $("#prompt").hidden = !near;
+  if (near)
+    $("#prompt").innerHTML =
+      `<kbd>E</kbd> &nbsp; ${near.type === "plant" ? "Gather glowleaf" : "Examine waystone"}`;
   renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);
