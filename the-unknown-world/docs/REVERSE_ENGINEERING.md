@@ -25,4 +25,4 @@ Keep the existing game intact, its Vite/Three knowledge, meter coordinate conven
 
 ## Strengths and weaknesses
 
-Existing mature real-time simulation, tools, tests and performance work are valuable; deterministic multiplayer constraints and battle-royale art/game rules are not the intended adventure architecture. The new prototype has a small, independent build but lacks streaming, durable state, a physics engine and modular systems. Its terrain collision is a height sample, not a complete physics solution.
+Existing mature real-time simulation, tools, tests and performance work are valuable; deterministic multiplayer constraints and battle-royale art/game rules are not the intended adventure architecture. The new prototype has an independent build and uses Rapier for kinematic player and static collider queries. It has basic local persistence but lacks streaming, general-purpose dynamic object gameplay and complete modular systems.
