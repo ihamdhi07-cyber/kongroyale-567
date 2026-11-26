@@ -22,6 +22,7 @@
           </div>
         </div>
         <div class="top-right">
+          <button id="journalButton" aria-label="Open journal">LOG</button>
           <button id="settingsButton" aria-label="Open settings">⚙</button>
           <button id="bagButton" aria-label="Open inventory">BAG</button>
           <button id="mapButton" aria-label="Open exploration map">MAP</button
@@ -69,6 +70,9 @@
           <span id="enemyValue">100</span>
         </div>
       </div>
+      <div id="swimIndicator" class="swim-indicator" hidden>
+        ✧ &nbsp; SWIMMING
+      </div>
       <div id="prompt" class="prompt" hidden>
         <kbd>E</kbd> &nbsp; Examine waystone
       </div>
@@ -91,6 +95,9 @@
       </div>
       <div class="touch" id="touch">
         <div id="joystick" class="joystick"><div id="stick"></div></div>
+        <button id="sprintTouch" class="sprint-touch">
+          ⇧<small>HOLD RUN</small>
+        </button>
         <div class="combat-touch">
           <button id="lightTouch">✧<small>LIGHT</small></button
           ><button id="heavyTouch">✦<small>HEAVY</small></button
@@ -102,6 +109,30 @@
             ⊕<small>ZOOM</small></button
           ><button id="interactTouch">✧<small>INTERACT</small></button
           ><button id="jumpTouch">↑<small>JUMP</small></button>
+        </div>
+      </div>
+      <div id="journalPanel" class="overlay" hidden>
+        <div
+          class="modal journal-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="journalTitle"
+        >
+          <div class="eyebrow centered">YOUR JOURNEY SO FAR</div>
+          <h2 id="journalTitle">Field <em>journal.</em></h2>
+          <div class="journal-entry">
+            <small>DISCOVERY QUEST</small><strong>A light in the wilds</strong>
+            <p id="journalWaystone"></p>
+          </div>
+          <div id="journalGrove" class="journal-entry" hidden>
+            <small>ENVIRONMENTAL PUZZLE</small><strong>The Echo Grove</strong>
+            <p id="journalPuzzle"></p>
+          </div>
+          <div class="journal-entry">
+            <small>EXPLORATION PROGRESS</small><strong id="journalXp"></strong>
+            <p id="journalSkill"></p>
+          </div>
+          <button id="closeJournal">RETURN TO THE WORLD</button>
         </div>
       </div>
       <div id="settingsPanel" class="overlay" hidden>
@@ -130,6 +161,28 @@
               <option value="rain">Rain</option>
             </select></label
           >
+          <label class="setting-row" for="masterVolume"
+            >Master volume
+            <input id="masterVolume" type="range" min="0" max="1" step="0.05"
+          /></label>
+          <label class="setting-row" for="musicVolume"
+            >Music volume
+            <input id="musicVolume" type="range" min="0" max="1" step="0.05"
+          /></label>
+          <label class="setting-row" for="effectsVolume"
+            >Effects volume
+            <input id="effectsVolume" type="range" min="0" max="1" step="0.05"
+          /></label>
+          <label class="setting-row" for="ambienceVolume"
+            >Ambience volume
+            <input id="ambienceVolume" type="range" min="0" max="1" step="0.05"
+          /></label>
+          <label class="setting-row" for="muteAudio"
+            >Mute all <input id="muteAudio" type="checkbox"
+          /></label>
+          <p id="audioStatus" role="status">
+            Audio begins after you start exploring.
+          </p>
           <p>
             Quality controls pixel ratio, shadows and rain density. No adaptive
             performance claims are made.
@@ -157,6 +210,19 @@
               <small>Equipment · a light for the waystone</small></span
             ><strong id="lanternCount">—</strong>
           </div>
+          <div class="item-row">
+            <span
+              >● &nbsp; Wild berries
+              <small>Material · cook two at the camp</small></span
+            ><strong id="berryCount">0</strong>
+          </div>
+          <div class="item-row">
+            <span
+              >◉ &nbsp; Berry meal
+              <small>Consumable · restores 35 health</small></span
+            ><strong id="mealCount">0</strong>
+          </div>
+          <button id="eatButton" class="secondary">EAT BERRY MEAL</button>
           <p id="craftInfo">Craft a wayfarer's light from 3 glowleaves.</p>
           <button id="craftButton">CRAFT LIGHT · 3 GLOWLEAVES</button>
           <button id="closeBag" class="secondary">RETURN TO THE WORLD</button>
@@ -192,8 +258,9 @@
           <p>
             Move with WASD or the joystick. Drag to rotate the camera, scroll or
             tap zoom, jump with Space, and interact with E. Hold Shift to
-            sprint. Press M for the map or I for the satchel. F / G attack, Q
-            dodges and holding R blocks. The stone guardian can be avoided.
+            sprint. Press M for the map, I for the satchel or J for the journal.
+            F / G attack, Q dodges and holding R blocks. The stone guardian can
+            be avoided.
           </p>
           <button id="start">BEGIN EXPLORING <span>↗</span></button>
           <button id="newGame" class="secondary" hidden>
@@ -201,7 +268,7 @@
           </button>
           <p id="saveStatus" role="status"></p>
           <div class="modal-footer">
-            A PLAYABLE EARLY PROTOTYPE <b>✦</b> SOUND OFF
+            A PLAYABLE EARLY PROTOTYPE <b>✦</b> SOUND STARTS ON PLAY
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 # Credits and asset manifest
 
-The current game visuals are procedural temporary geometry authored in this project; no external art, audio, or fonts are included. They are not finished production assets.
+The current game visuals are procedural temporary geometry authored in this project; no external art, audio files, or fonts are included. The simple music drone, wind and effects are generated in code and are temporary. They are not finished production assets.
 
 Runtime libraries: Three.js (MIT), Rapier 3D compat (Apache-2.0). See their package licenses in `node_modules` after installation. Development tools include Vite and fake-indexeddb, with their own package licenses.
 

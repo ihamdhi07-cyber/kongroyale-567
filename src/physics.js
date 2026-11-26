@@ -47,9 +47,18 @@ export async function createPhysics(geometry, start) {
     sync() {
       world.step();
     },
-    move(dx, dz, dt, wantsJump) {
-      if (wantsJump && grounded) verticalVelocity = 8;
-      verticalVelocity -= 20 * dt;
+    move(dx, dz, dt, wantsJump, swimFeetY = null) {
+      const swimming = swimFeetY !== null;
+      if (swimming) {
+        // Buoyancy gently converges on the waterline while preserving collision against banks.
+        verticalVelocity = Math.max(
+          -3,
+          Math.min(3, (swimFeetY - (body.translation().y - PLAYER_CENTER)) * 5),
+        );
+      } else {
+        if (wantsJump && grounded) verticalVelocity = 8;
+        verticalVelocity -= 20 * dt;
+      }
       controller.computeColliderMovement(collider, {
         x: dx,
         y: verticalVelocity * dt,

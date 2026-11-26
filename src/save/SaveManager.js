@@ -2,11 +2,15 @@
 import { validJourney } from "../gameplay/Journey.js";
 import { DEFAULT_ENVIRONMENT, validEnvironment } from "../world/Environment.js";
 import { DEFAULT_COMBAT, validCombat } from "../gameplay/CombatSystem.js";
-export const SAVE_VERSION = 4;
+import { validPuzzle } from "../gameplay/EchoPuzzle.js";
+import { validProgress } from "../gameplay/Progression.js";
+import { DEFAULT_AUDIO, validAudio } from "../audio/AudioManager.js";
+import { validSurvival } from "../gameplay/Survival.js";
+export const SAVE_VERSION = 7;
 export function validateSave(value) {
   if (
     !value ||
-    ![1, 2, 3, SAVE_VERSION].includes(value.version) ||
+    ![1, 2, 3, 4, 5, 6, SAVE_VERSION].includes(value.version) ||
     !value.position ||
     !Number.isFinite(value.position.x) ||
     !Number.isFinite(value.position.z) ||
@@ -20,7 +24,14 @@ export function validateSave(value) {
     !value.explored.every((x) => Number.isInteger(x) && x >= 0 && x < 100) ||
     (value.version >= 2 && !validJourney(value.journey)) ||
     (value.version >= 3 && !validEnvironment(value.environment)) ||
-    (value.version === SAVE_VERSION && !validCombat(value.combat))
+    (value.version >= 4 && !validCombat(value.combat)) ||
+    (value.version >= 5 &&
+      (!validPuzzle(value.puzzle) ||
+        !validProgress(value.progress) ||
+        (value.puzzle.stage === 3) !==
+          value.progress.achievements.includes("puzzle"))) ||
+    (value.version >= 6 && !validAudio(value.audio)) ||
+    (value.version === SAVE_VERSION && !validSurvival(value.survival))
   ) {
     throw new Error("The save is invalid or from an unsupported version.");
   }
@@ -34,7 +45,25 @@ export function validateSave(value) {
           : value.journey,
       environment:
         value.version < 3 ? { ...DEFAULT_ENVIRONMENT } : value.environment,
-      combat: { ...DEFAULT_COMBAT },
+      combat: value.version < 4 ? { ...DEFAULT_COMBAT } : value.combat,
+      puzzle:
+        value.version < 5 ? { discovered: false, stage: 0 } : value.puzzle,
+      audio: value.version < 6 ? { ...DEFAULT_AUDIO } : value.audio,
+      survival: { picked: [], berries: 0, meals: 0 },
+      progress:
+        value.version >= 5
+          ? value.progress
+          : {
+              achievements: [
+                ...(value.discoveries.includes("waystone") ? ["waystone"] : []),
+                ...(value.version >= 2 && value.journey.restored
+                  ? ["restored"]
+                  : []),
+                ...(value.version >= 4 && value.combat.guardianHealth === 0
+                  ? ["guardian"]
+                  : []),
+              ],
+            },
     };
   return value;
 }

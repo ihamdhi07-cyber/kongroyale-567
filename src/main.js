@@ -1,5 +1,12 @@
 import * as THREE from "three";
-import { heightAt, clampWorld, seeded } from "./world.js";
+import {
+  heightAt,
+  clampWorld,
+  seeded,
+  riverCenter,
+  inRiver,
+  RIVER_LEVEL,
+} from "./world.js";
 import "./style.css";
 import { createPhysics } from "./physics.js";
 import { SaveManager } from "./save/SaveManager.js";
@@ -10,7 +17,14 @@ import { Wildlife } from "./world/Wildlife.js";
 import { createGuide, guideMessage, GUIDE } from "./world/Guide.js";
 import { CombatSystem, GUARDIAN_HOME } from "./gameplay/CombatSystem.js";
 import { createGuardian } from "./world/Guardian.js";
+import { EchoPuzzle, TABLET, SWITCHES } from "./gameplay/EchoPuzzle.js";
+import { Progression } from "./gameplay/Progression.js";
+import { createEchoGrove } from "./world/EchoGrove.js";
+import { AudioManager } from "./audio/AudioManager.js";
 import { TerrainChunks } from "./world/TerrainChunks.js";
+import { RiverSystem } from "./world/RiverSystem.js";
+import { Survival, BUSHES, CAMP } from "./gameplay/Survival.js";
+import { createCampsite } from "./world/Campsite.js";
 const $ = (s) => document.querySelector(s),
   canvas = $("#world");
 const saves = new SaveManager();
@@ -27,7 +41,14 @@ try {
 let exploration = new Exploration(saved?.explored, saved?.discoveries);
 let journey = new Journey(saved?.journey);
 let combat = new CombatSystem(saved?.combat);
+let puzzle = new EchoPuzzle(saved?.puzzle);
+let progression = new Progression(saved?.progress);
+let survival = new Survival(saved?.survival);
+const audio = new AudioManager(saved?.audio);
 const initial = saved?.position || { x: 0, z: 9 };
+const initialY = inRiver(initial.x, initial.z)
+  ? RIVER_LEVEL - 1.1
+  : heightAt(initial.x, initial.z);
 const renderer = new THREE.WebGLRenderer({
   canvas,
   antialias: true,
@@ -68,10 +89,11 @@ const environment = new Environment(
 );
 const physics = await createPhysics(null, {
   ...initial,
-  y: heightAt(initial.x, initial.z),
+  y: initialY,
 });
 const terrain = new TerrainChunks(scene, physics);
 terrain.update(initial.x, initial.z);
+const river = new RiverSystem(scene);
 const rand = seeded(481),
   trunkMat = new THREE.MeshStandardMaterial({ color: "#756d52", roughness: 1 }),
   leafMats = ["#557b62", "#668b6c", "#759676", "#496f5d"].map(
@@ -92,9 +114,13 @@ for (let i = 0; i < treeCount; i++) {
     Math.hypot(x, z + 22) < 11 ||
     PLANTS.some((p) => Math.hypot(x - p.x, z - p.z) < 4) ||
     Math.hypot(x - GUIDE.x, z - GUIDE.z) < 4 ||
-    Math.hypot(x - GUARDIAN_HOME.x, z - GUARDIAN_HOME.z) < 8
+    Math.hypot(x - GUARDIAN_HOME.x, z - GUARDIAN_HOME.z) < 8 ||
+    Math.hypot(x - TABLET.x, z - TABLET.z) < 12 ||
+    Math.hypot(x - CAMP.x, z - CAMP.z) < 5 ||
+    BUSHES.some((b) => Math.hypot(x - b.x, z - b.z) < 4)
   )
     x += 25;
+  if (Math.abs(x - riverCenter(z)) < 20) x = riverCenter(z) + 25;
   const y = heightAt(x, z),
     h = 5 + rand() * 7,
     r = 2.2 + rand() * 2;
@@ -197,6 +223,10 @@ syncJourneyVisuals();
 const wildlife = new Wildlife(scene);
 const guide = createGuide(scene);
 const guardian = createGuardian(scene);
+const grove = createEchoGrove(scene);
+const campsite = createCampsite(scene);
+campsite.update(survival, 0);
+grove.update(puzzle.stage);
 const player = new THREE.Group();
 scene.add(player);
 const mat = (color) =>
@@ -244,7 +274,8 @@ player.add(bladePivot);
 const state = {
   x: initial.x,
   z: initial.z,
-  y: heightAt(initial.x, initial.z),
+  y: initialY,
+  swimming: false,
   yaw: 0,
   pitch: 0.58,
   distance: 22,
@@ -304,6 +335,10 @@ async function saveGame() {
       journey: journey.snapshot(),
       environment: environment.snapshot(),
       combat: combat.snapshot(),
+      puzzle: puzzle.snapshot(),
+      progress: progression.snapshot(),
+      audio: audio.snapshot(),
+      survival: survival.snapshot(),
     });
     if (sequence === saveSequence)
       showSaveStatus("JOURNEY SAVED ON THIS DEVICE");
@@ -328,6 +363,8 @@ function renderMap() {
       cell.classList.add("current");
     } else if (i === cellAt(0, -22) && exploration.discoveries.has("waystone"))
       cell.textContent = "✧";
+    else if (i === cellAt(TABLET.x, TABLET.z) && puzzle.discovered)
+      cell.textContent = "◇";
     map.append(cell);
   }
   $("#mapCount").textContent =
@@ -335,7 +372,10 @@ function renderMap() {
 }
 function toggleMap() {
   if (
-    (!state.started || !$("#bagPanel").hidden || !$("#settingsPanel").hidden) &&
+    (!state.started ||
+      !$("#bagPanel").hidden ||
+      !$("#settingsPanel").hidden ||
+      !$("#journalPanel").hidden) &&
     $("#mapPanel").hidden
   )
     return;
@@ -350,6 +390,9 @@ $("#mapButton").addEventListener("click", toggleMap);
 $("#closeMap").addEventListener("click", toggleMap);
 function renderBag() {
   $("#leafCount").textContent = journey.leaves;
+  $("#berryCount").textContent = survival.berries;
+  $("#mealCount").textContent = survival.meals;
+  $("#eatButton").disabled = survival.meals === 0 || combat.health >= 100;
   $("#lanternCount").textContent = journey.lantern ? "1" : "—";
   $("#craftButton").disabled = journey.leaves < 3 || journey.lantern;
   $("#craftInfo").textContent = journey.lantern
@@ -358,7 +401,10 @@ function renderBag() {
 }
 function toggleBag() {
   if (
-    (!state.started || !$("#mapPanel").hidden || !$("#settingsPanel").hidden) &&
+    (!state.started ||
+      !$("#mapPanel").hidden ||
+      !$("#settingsPanel").hidden ||
+      !$("#journalPanel").hidden) &&
     $("#bagPanel").hidden
   )
     return;
@@ -373,7 +419,10 @@ $("#bagButton").addEventListener("click", toggleBag);
 $("#closeBag").addEventListener("click", toggleBag);
 function toggleSettings() {
   if (
-    (!state.started || !$("#mapPanel").hidden || !$("#bagPanel").hidden) &&
+    (!state.started ||
+      !$("#mapPanel").hidden ||
+      !$("#bagPanel").hidden ||
+      !$("#journalPanel").hidden) &&
     $("#settingsPanel").hidden
   )
     return;
@@ -381,10 +430,49 @@ function toggleSettings() {
   if (!$("#settingsPanel").hidden) {
     $("#qualitySelect").value = environment.quality;
     $("#weatherSelect").value = environment.weather;
+    for (const key of ["master", "music", "effects", "ambience"])
+      $("#" + key + "Volume").value = audio.settings[key];
+    $("#muteAudio").checked = audio.settings.muted;
     keys.clear();
     resetJoy();
   }
 }
+function renderJournal() {
+  $("#journalWaystone").textContent = journey.restored
+    ? "Complete: the waystone shines again."
+    : !exploration.discoveries.has("waystone")
+      ? "Follow the path to the golden light."
+      : journey.lantern
+        ? "Return to the waystone with your light."
+        : `Gather glowleaves and craft a light (${journey.leaves}/3).`;
+  $("#journalGrove").hidden = !puzzle.discovered;
+  $("#journalPuzzle").textContent =
+    puzzle.stage === 3
+      ? "Complete: the grove's secret has awakened."
+      : `The tablet reads: Moon, then Sun, then Star. Sequence: ${puzzle.stage}/3.`;
+  $("#journalXp").textContent = `${progression.xp} exploration XP`;
+  $("#journalSkill").textContent = progression.swift
+    ? "Unlocked: Fleetfoot — sprint speed increased."
+    : "Discoveries grant XP. Hidden places may hold new abilities.";
+}
+function toggleJournal() {
+  if (
+    (!state.started ||
+      !$("#mapPanel").hidden ||
+      !$("#bagPanel").hidden ||
+      !$("#settingsPanel").hidden) &&
+    $("#journalPanel").hidden
+  )
+    return;
+  $("#journalPanel").hidden = !$("#journalPanel").hidden;
+  if (!$("#journalPanel").hidden) {
+    renderJournal();
+    keys.clear();
+    resetJoy();
+  }
+}
+$("#journalButton").addEventListener("click", toggleJournal);
+$("#closeJournal").addEventListener("click", toggleJournal);
 $("#settingsButton").addEventListener("click", toggleSettings);
 $("#closeSettings").addEventListener("click", toggleSettings);
 $("#qualitySelect").addEventListener("change", (event) => {
@@ -397,6 +485,39 @@ $("#weatherSelect").addEventListener("change", (event) => {
   environment.weather = event.target.value;
   saveGame();
 });
+for (const key of ["master", "music", "effects", "ambience"]) {
+  const slider = $("#" + key + "Volume");
+  slider.addEventListener("input", () => {
+    audio.settings[key] = Number(slider.value);
+    audio.apply();
+  });
+  slider.addEventListener("change", saveGame);
+}
+$("#muteAudio").addEventListener("change", (event) => {
+  audio.settings.muted = event.target.checked;
+  audio.apply();
+  saveGame();
+});
+function startAudio() {
+  audio
+    .start()
+    .then(
+      () => ($("#audioStatus").textContent = "Synthesized audio is active."),
+    )
+    .catch(
+      (error) =>
+        ($("#audioStatus").textContent = `Audio unavailable: ${error.message}`),
+    );
+}
+$("#eatButton").addEventListener("click", () => {
+  const health = survival.eat(combat.health);
+  if (health !== null) {
+    combat.health = health;
+    audio.play("gather");
+    renderBag();
+    saveGame();
+  }
+});
 $("#craftButton").addEventListener("click", () => {
   if (journey.craft()) {
     renderBag();
@@ -408,6 +529,7 @@ const keys = new Set();
 let jump = false,
   joystick = { x: 0, y: 0 },
   touchBlock = false,
+  touchSprint = false,
   dodgeX = 0,
   dodgeZ = 0;
 function gameRunning() {
@@ -415,14 +537,17 @@ function gameRunning() {
     state.started &&
     $("#mapPanel").hidden &&
     $("#bagPanel").hidden &&
-    $("#settingsPanel").hidden
+    $("#settingsPanel").hidden &&
+    $("#journalPanel").hidden
   );
 }
 function attack(type) {
   if (!gameRunning()) return;
   const result = combat.attack(type, state, player.rotation.y);
   if (!result) return;
+  audio.play("hit");
   if (result.hit) {
+    if (result.defeated) progression.award("guardian");
     notify(
       "GUARDIAN",
       result.defeated ? "The guardian falls" : "A strike lands",
@@ -474,6 +599,7 @@ window.addEventListener("keydown", (e) => {
     interact();
   if (e.code === "KeyM" && !e.repeat) toggleMap();
   if (e.code === "KeyI" && !e.repeat) toggleBag();
+  if (e.code === "KeyJ" && !e.repeat) toggleJournal();
   if (e.code === "KeyF" && !e.repeat) attack("light");
   if (e.code === "KeyG" && !e.repeat) attack("heavy");
   if (e.code === "KeyQ" && !e.repeat) dodge();
@@ -482,6 +608,7 @@ window.addEventListener("keyup", (e) => keys.delete(e.code));
 window.addEventListener("blur", () => {
   keys.clear();
   touchBlock = false;
+  touchSprint = false;
 });
 let noticeTimer;
 function notify(label, title, description) {
@@ -516,6 +643,31 @@ function nearestInteraction() {
     nearest = { type: "guide" };
     distance = guideDistance;
   }
+  const campDistance = Math.hypot(state.x - CAMP.x, state.z - CAMP.z);
+  if (campDistance < Math.min(distance, 2.6)) {
+    nearest = { type: "camp" };
+    distance = campDistance;
+  }
+  BUSHES.forEach((bush) => {
+    if (survival.picked.has(bush.id)) return;
+    const d = Math.hypot(state.x - bush.x, state.z - bush.z);
+    if (d < Math.min(distance, 2.3)) {
+      nearest = { type: "berry", id: bush.id };
+      distance = d;
+    }
+  });
+  const tabletDistance = Math.hypot(state.x - TABLET.x, state.z - TABLET.z);
+  if (tabletDistance < Math.min(distance, 2.6)) {
+    nearest = { type: "tablet" };
+    distance = tabletDistance;
+  }
+  SWITCHES.forEach((point) => {
+    const d = Math.hypot(state.x - point.x, state.z - point.z);
+    if (d < Math.min(distance, 2.3)) {
+      nearest = { type: "switch", id: point.id };
+      distance = d;
+    }
+  });
   PLANTS.forEach((plant) => {
     if (journey.gathered.has(plant.id)) return;
     const d = Math.hypot(state.x - plant.x, state.z - plant.z);
@@ -531,12 +683,79 @@ function interact() {
     !state.started ||
     !$("#mapPanel").hidden ||
     !$("#bagPanel").hidden ||
-    !$("#settingsPanel").hidden
+    !$("#settingsPanel").hidden ||
+    !$("#journalPanel").hidden
   )
     return;
   const target = nearestInteraction();
   if (!target) return;
-  if (target.type === "guide") {
+  if (target.type === "berry") {
+    if (!survival.gather(target.id)) return;
+    audio.play("gather");
+    notify(
+      "MATERIAL GATHERED",
+      "Wild berries",
+      `Two berries can be cooked at the camp. You carry ${survival.berries}.`,
+    );
+  } else if (target.type === "camp") {
+    const cooked = survival.cook();
+    const rested = combat.health < 100;
+    combat.health = 100;
+    combat.stamina = 100;
+    audio.play("gather");
+    notify(
+      "THE CAMPFIRE",
+      cooked ? "A warm meal" : "A moment of rest",
+      cooked
+        ? "You cooked a berry meal and rested. Eat it from your satchel when hurt."
+        : rested
+          ? "You rest and recover your health and stamina."
+          : "You rest by the fire. Bring two berries to cook a meal.",
+    );
+  } else if (target.type === "tablet") {
+    puzzle.read();
+    audio.play("puzzle");
+    notify(
+      "ANCIENT INSCRIPTION",
+      "The Echo Grove",
+      "When night yields to dawn, follow the sky: Moon, then Sun, then Star.",
+    );
+  } else if (target.type === "switch") {
+    const result = puzzle.press(target.id);
+    audio.play("puzzle");
+    if (result === "locked")
+      notify(
+        "SILENT STONE",
+        "An unread pattern",
+        "Find and read the nearby inscription first.",
+      );
+    else if (result === "reset")
+      notify(
+        "THE GROVE FALLS QUIET",
+        "The pattern resets",
+        "Return to the inscription and listen to the order.",
+      );
+    else if (result === "solved") {
+      progression.award("puzzle");
+      notify(
+        "DISCOVERY COMPLETE",
+        "Fleetfoot awakened",
+        "The grove grants you a faster sprint. Open your journal to review it.",
+      );
+    } else if (result === "complete")
+      notify(
+        "THE ECHO GROVE",
+        "The stones are awake",
+        "The pattern still shines in the clearing.",
+      );
+    else
+      notify(
+        "A STONE AWAKENS",
+        target.id.toUpperCase(),
+        `The pattern holds: ${puzzle.stage} of 3.`,
+      );
+    grove.update(puzzle.stage);
+  } else if (target.type === "guide") {
     guide.rotation.y = Math.atan2(state.x - GUIDE.x, state.z - GUIDE.z);
     notify(
       "TRAVELER",
@@ -549,6 +768,7 @@ function interact() {
     );
   } else if (target.type === "plant") {
     if (!journey.gather(target.id)) return;
+    audio.play("gather");
     notify(
       "MATERIAL GATHERED",
       "Glowleaf",
@@ -556,12 +776,14 @@ function interact() {
     );
   } else if (!exploration.discoveries.has("waystone")) {
     exploration.discover("waystone");
+    progression.award("waystone");
     notify(
       "DISCOVERY RECORDED",
       "The Waystone",
       "Its inscription asks for a light made from three glowleaves.",
     );
   } else if (journey.restore()) {
+    progression.award("restored");
     notify(
       "JOURNEY COMPLETE",
       "A light in the wilds",
@@ -581,9 +803,19 @@ function interact() {
     );
   }
   syncJourneyVisuals();
+  campsite.update(survival, 0);
   updateObjective();
   saveGame();
 }
+$("#sprintTouch").addEventListener("pointerdown", (event) => {
+  touchSprint = true;
+  event.currentTarget.setPointerCapture(event.pointerId);
+});
+$("#sprintTouch").addEventListener("pointerup", () => (touchSprint = false));
+$("#sprintTouch").addEventListener(
+  "pointercancel",
+  () => (touchSprint = false),
+);
 $("#lightTouch").addEventListener("click", () => attack("light"));
 $("#heavyTouch").addEventListener("click", () => attack("heavy"));
 $("#dodgeTouch").addEventListener("click", dodge);
@@ -651,11 +883,13 @@ joy.addEventListener("pointermove", (e) => {
 function resetJoy() {
   joystick = { x: 0, y: 0 };
   touchBlock = false;
+  touchSprint = false;
   stick.style.transform = "";
 }
 joy.addEventListener("pointerup", resetJoy);
 joy.addEventListener("pointercancel", resetJoy);
 $("#start").onclick = () => {
+  startAudio();
   state.started = true;
   exploration.visit(state.x, state.z);
   saveGame();
@@ -664,6 +898,7 @@ $("#start").onclick = () => {
 $("#newGame").onclick = () => {
   if (!confirm("Start a new journey? This replaces the save on this device."))
     return;
+  startAudio();
   state.x = 0;
   state.z = 9;
   state.y = heightAt(0, 9);
@@ -672,6 +907,11 @@ $("#newGame").onclick = () => {
   exploration = new Exploration();
   journey = new Journey();
   combat = new CombatSystem();
+  puzzle = new EchoPuzzle();
+  progression = new Progression();
+  survival = new Survival();
+  campsite.update(survival, 0);
+  grove.update(0);
   environment.time = DEFAULT_ENVIRONMENT.time;
   syncJourneyVisuals();
   // Explicit confirmation allows recovery from an invalid save, but not an unavailable database.
@@ -694,7 +934,8 @@ window.addEventListener("resize", resize);
 resize();
 let previous = performance.now(),
   elapsed = 0,
-  saveTimer = 0;
+  saveTimer = 0,
+  stepTimer = 0;
 const target = new THREE.Vector3(),
   desired = new THREE.Vector3();
 function frame(now) {
@@ -714,6 +955,8 @@ function frame(now) {
         joystick.y;
     let moveX = 0,
       moveZ = 0;
+    const swimming =
+      river.contains(state.x, state.z) && state.y < RIVER_LEVEL + 1.3;
     const l = Math.hypot(x, z);
     if (l > 0.05) {
       x /= Math.max(1, l);
@@ -722,7 +965,13 @@ function frame(now) {
         c = Math.cos(state.yaw),
         wx = x * c + z * s,
         wz = -x * s + z * c;
-      const speed = keys.has("ShiftLeft") || keys.has("ShiftRight") ? 12 : 8;
+      const speed = swimming
+        ? 4.5
+        : keys.has("ShiftLeft") || keys.has("ShiftRight") || touchSprint
+          ? progression.swift
+            ? 14
+            : 12
+          : 8;
       moveX = clampWorld(state.x + wx * speed * dt) - state.x;
       moveZ = clampWorld(state.z + wz * speed * dt) - state.z;
       player.rotation.y = Math.atan2(wx, wz);
@@ -732,13 +981,43 @@ function frame(now) {
       left.rotation.x *= 0.8;
       right.rotation.x *= 0.8;
     }
-    if (combat.dodgeTime > 0) {
+    if (combat.dodgeTime > 0 && !swimming) {
       moveX = clampWorld(state.x + dodgeX * 14 * dt) - state.x;
       moveZ = clampWorld(state.z + dodgeZ * 14 * dt) - state.z;
     }
     terrain.update(state.x, state.z);
-    const next = physics.move(moveX, moveZ, dt, jump);
+    const oldX = state.x,
+      oldZ = state.z;
+    if (jump) audio.play("jump");
+    const next = physics.move(
+      moveX,
+      moveZ,
+      dt,
+      jump,
+      swimming ? RIVER_LEVEL - 1.1 : null,
+    );
+    if (swimming && !state.swimming) {
+      audio.play("splash");
+      if (progression.award("river")) {
+        notify(
+          "DISCOVERY",
+          "The wandering river",
+          "A cool current cuts through the wilds. +25 exploration XP.",
+        );
+        saveGame();
+      }
+    }
+    state.swimming = swimming;
     jump = false;
+    stepTimer -= dt;
+    if (
+      next.grounded &&
+      Math.hypot(next.x - oldX, next.z - oldZ) > 0.015 &&
+      stepTimer <= 0
+    ) {
+      audio.play("step");
+      stepTimer = 0.42;
+    }
     state.x = next.x;
     state.y = next.y;
     state.z = next.z;
@@ -756,6 +1035,7 @@ function frame(now) {
       );
       saveGame();
     } else if (event?.type === "hurt") {
+      audio.play("hurt");
       notify(
         "DAMAGE",
         "The guardian strikes",
@@ -771,6 +1051,7 @@ function frame(now) {
     }
   }
   player.position.set(state.x, state.y, state.z);
+  $("#swimIndicator").hidden = !state.started || !state.swimming;
   bladePivot.rotation.z =
     combat.attackTime > 0 ? -1.2 : combat.blocking ? -0.65 : 0.2;
   target.set(state.x, state.y + 1.7, state.z);
@@ -797,7 +1078,11 @@ function frame(now) {
   camera.lookAt(target);
   $("#timeOfDay").textContent =
     `${environment.weather === "rain" ? "☂" : "☼"}  ${environment.update(dt, state, running)}`;
-  if (running) wildlife.update(dt, state);
+  if (running) {
+    wildlife.update(dt, state);
+    river.update(dt);
+    campsite.update(survival, elapsed);
+  }
   guardian.update(combat, state);
   $("#healthFill").style.width = `${combat.health}%`;
   $("#healthValue").textContent = Math.ceil(combat.health);
@@ -813,7 +1098,7 @@ function frame(now) {
   $("#prompt").hidden = !near;
   if (near)
     $("#prompt").innerHTML =
-      `<kbd>E</kbd> &nbsp; ${near.type === "plant" ? "Gather glowleaf" : near.type === "guide" ? "Talk to Mira" : "Examine waystone"}`;
+      `<kbd>E</kbd> &nbsp; ${near.type === "plant" ? "Gather glowleaf" : near.type === "guide" ? "Talk to Mira" : near.type === "camp" ? "Rest or cook" : near.type === "berry" ? "Gather berries" : near.type === "tablet" ? "Read inscription" : near.type === "switch" ? `Touch ${near.id} stone` : "Examine waystone"}`;
   renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);
@@ -829,6 +1114,7 @@ if (import.meta.env.DEV) {
       pitch: state.pitch,
       distance: state.distance,
       chunks: terrain.chunks.size,
+      swimming: state.swimming,
     }),
   };
 }

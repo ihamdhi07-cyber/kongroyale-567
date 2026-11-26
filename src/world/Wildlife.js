@@ -1,6 +1,6 @@
 // Passive procedural grazers wander near their home and flee the player; not final art or AI.
 import * as THREE from "three";
-import { heightAt, seeded } from "../world.js";
+import { heightAt, seeded, inRiver } from "../world.js";
 export function stepCreature(animal, player, dt) {
   const dx = animal.x - player.x,
     dz = animal.z - player.z;
@@ -18,6 +18,8 @@ export function stepCreature(animal, player, dt) {
     else animal.heading += dt * 0.18;
   }
   const speed = animal.fleeing ? 5 : 0.65;
+  const previousX = animal.x,
+    previousZ = animal.z;
   animal.x = Math.max(
     -245,
     Math.min(245, animal.x + Math.sin(animal.heading) * speed * dt),
@@ -26,6 +28,11 @@ export function stepCreature(animal, player, dt) {
     -245,
     Math.min(245, animal.z + Math.cos(animal.heading) * speed * dt),
   );
+  if (inRiver(animal.x, animal.z)) {
+    animal.x = previousX;
+    animal.z = previousZ;
+    animal.heading += Math.PI;
+  }
 }
 export class Wildlife {
   constructor(scene) {
