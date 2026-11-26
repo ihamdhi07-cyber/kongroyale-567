@@ -2,7 +2,7 @@
 // Boat Wake Foam, Underwater Bubbles, and Puzzle / Unknown Gate Awakening Bursts).
 import * as THREE from 'three';
 
-const MAX_PARTICLES = 420;
+const MAX_PARTICLES = 560;
 
 export class ParticleSystem {
   constructor(scene, spriteMap = null) {
@@ -41,7 +41,21 @@ export class ParticleSystem {
     this._tmpColor = new THREE.Color();
   }
 
-  emitBurst(origin, { count = 14, color = 0xffe08a, speed = 5, spreadY = 3.5, life = 0.65, gravity = 9 } = {}) {
+  emitBurst(origin, optsOrColor = {}, countArg, speedArg, lifeArg) {
+    let count = 14;
+    let color = 0xffe08a;
+    let speed = 5;
+    let spreadY = 3.5;
+    let life = 0.65;
+    let gravity = 9;
+    if (typeof optsOrColor === 'number') {
+      color = optsOrColor;
+      if (typeof countArg === 'number') count = countArg;
+      if (typeof speedArg === 'number') speed = speedArg;
+      if (typeof lifeArg === 'number') life = lifeArg;
+    } else if (optsOrColor && typeof optsOrColor === 'object') {
+      ({ count = 14, color = 0xffe08a, speed = 5, spreadY = 3.5, life = 0.65, gravity = 9 } = optsOrColor);
+    }
     this._tmpColor.setHex(color);
     for (let i = 0; i < count; i++) {
       const idx = this.cursor;

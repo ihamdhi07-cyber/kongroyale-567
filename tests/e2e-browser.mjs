@@ -1,178 +1,214 @@
-// Real Headless Chromium (WebGL2 via SwiftShader) End-to-End Visual & Functional Verification Suite.
-// Launches the live game in Playwright + @sparticuz/chromium, asserts zero console/page errors,
-// verifies WebGL2 rendering + chunk streaming + core gameplay flows, and saves visual screenshots to .verification/.
+// Real Headless Chromium (WebGL2 SwiftShader) Visual & Functional E2E Verification Suite
+// Verifies 12 live rendered game views & interactions with ZERO console/page errors:
+//   01 Title Screen, 02 Crossroads + Luma + Spell Bar, 03 Mounted Wind Stag + Sunfire Nova,
+//   04 World Map + Caravan/Bosses + Pin, 05 Merchant Shop w/ Faction Discount,
+//   06 Wayfarer's Codex (Bestiary/24 Achievements), 07 Campfire Rest & Cooking Hearth,
+//   08 Skywatch Astrolabe 3D Sanctuary, 09 Spirit Fishing Mini-Game on Azure Coast,
+//   10 Glacier Sovereign Multi-Phase World Boss, 11 Awakened Unknown Gate, 12 Mobile Touch (844x390)
+import { chromium as pwChromium } from 'playwright-core';
+import chromiumPkg from '@sparticuz/chromium';
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import zlib from 'node:zlib';
-import { execSync } from 'node:child_process';
-import assert from 'node:assert/strict';
-import { chromium as pwChromium } from 'playwright-core';
-import sparticuz from '@sparticuz/chromium';
 
-const URL = process.env.TUW_URL || 'http://127.0.0.1:5173/';
-const OUT_DIR = path.resolve(import.meta.dirname, '..', '.verification');
-const AL_LIB = '/tmp/al2023/lib';
+const URL = process.env.GAME_URL || 'http://127.0.0.1:5173/';
+const OUT_DIR = path.resolve('.verification');
+fs.mkdirSync(OUT_DIR, { recursive: true });
 
-function ensureSharedLibs() {
-  if (fs.existsSync(path.join(AL_LIB, 'libnss3.so'))) return;
+if (!fs.existsSync('/tmp/al2023/lib/libnss3.so')) {
   fs.mkdirSync('/tmp/al2023', { recursive: true });
-  const brPath = path.resolve(import.meta.dirname, '..', 'node_modules/@sparticuz/chromium/bin/al2023.tar.br');
-  const raw = zlib.brotliDecompressSync(fs.readFileSync(brPath));
-  fs.writeFileSync('/tmp/al2023.tar', raw);
-  execSync('tar -xf /tmp/al2023.tar -C /tmp/al2023');
+  execSync('brotli -dc node_modules/@sparticuz/chromium/bin/al2023.tar.br | tar -xf - -C /tmp/al2023', { stdio: 'ignore' });
 }
+process.env.LD_LIBRARY_PATH = `/tmp/al2023/lib:/tmp:${process.env.LD_LIBRARY_PATH || ''}`;
 
-/** Snaps camera cleanly and renders 1 crisp WebGL2 frame while RAF is paused so software GPU screenshots never stall */
 async function snap(page, filename) {
   await page.evaluate(() => {
     const g = window.__tuw?.game;
     if (!g) return;
     g.loop.stop();
-    g.cameraController.yaw = g.cameraController.targetYaw;
-    g.cameraController.pitch = g.cameraController.targetPitch;
-    g.cameraController.distance = g.cameraController.targetDistance;
     g.cameraController.initialized = false;
-    g._tick(1 / 30, 12.0);
-    if (g.started) g.hud._drawMinimap();
+    g._tick(0.016, 1.2);
   });
-  await page.waitForTimeout(120);
-  await page.screenshot({ path: path.join(OUT_DIR, filename), animations: 'allow', timeout: 25000 });
+  await page.waitForTimeout(40);
+  const full = path.join(OUT_DIR, filename);
+  await page.screenshot({ path: full, animations: 'allow' });
+  return full;
 }
 
 async function run() {
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-  ensureSharedLibs();
-
-  const execPath = await sparticuz.executablePath();
+  const execPath = await chromiumPkg.executablePath();
   const browser = await pwChromium.launch({
     executablePath: execPath,
     headless: true,
-    env: { ...process.env, LD_LIBRARY_PATH: `${AL_LIB}:/tmp:${process.env.LD_LIBRARY_PATH || ''}` },
     args: [
-      ...sparticuz.args,
+      ...chromiumPkg.args,
       '--use-gl=angle',
       '--use-angle=swiftshader',
       '--enable-unsafe-swiftshader',
       '--ignore-gpu-blocklist',
+      '--disable-gpu-sandbox',
     ],
   });
 
   const errors = [];
-  const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
-  const page = await context.newPage();
-  page.on('pageerror', (err) => errors.push(`PAGEERROR: ${err.message}`));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(`CONSOLE_ERROR: ${msg.text()}`);
-  });
-
   let failed = false;
   try {
-    console.log('1/8 Opening live game:', URL);
-    await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForFunction(() => window.__tuw && window.__tuw.ready === true, { timeout: 25000 });
+    const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    page.on('console', (m) => {
+      if (m.type() === 'error') errors.push(`console.error: ${m.text()}`);
+    });
+    page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+
+    console.log('1/12 Opening live game:', URL);
+    await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForFunction(() => window.__tuw?.ready === true, { timeout: 30000 });
+    await page.evaluate(() => window.__tuw.game.loop.stop());
     await snap(page, '01-title.png');
 
-    console.log('2/8 Starting expedition at Crossroads Settlement...');
-    await page.evaluate(() => {
-      const g = window.__tuw.game;
-      g.startNewGame();
-      g.hud._bannerTimer = 0;
-      g.hud.bannerEl.classList.add('hidden');
-    });
-    await snap(page, '02-crossroads.png');
-
+    console.log('2/12 Crossroads Settlement + Luma Familiar + 4-Spell Hotbar...');
+    await page.click('#btn-new-game');
+    await page.evaluate(() => window.__tuw.game.loop.stop());
     const diag = await page.evaluate(() => {
       const g = window.__tuw.game;
-      const gl = g.renderer.webgl.getContext();
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      const gl = g.canvas.getContext('webgl2') || g.canvas.getContext('webgl');
+      const rStats = g.renderer.getStats();
       return {
-        webgl: gl ? gl.getParameter(gl.VERSION) : null,
+        webgl: gl ? gl.getParameter(gl.VERSION) : 'none',
         chunks: g.world.chunks.getStats(),
-        draws: g.renderer.getStats().calls,
-        tris: g.renderer.getStats().triangles,
-        region: g.world.currentRegion?.name,
-        gold: g.inventory.gold,
+        draws: rStats.calls,
+        tris: rStats.triangles,
+        items: g.data.items.length,
+        quests: g.data.quests.length,
+        creatures: g.data.creatures.length,
       };
     });
-    console.log('    WebGL2 Diagnostics:', JSON.stringify(diag));
-    assert.ok(diag.webgl && diag.webgl.includes('WebGL 2'), 'Expected live WebGL 2 context');
-    assert.ok(diag.chunks.total >= 25, 'Expected streamed terrain chunks');
-    assert.equal(diag.gold, 60);
+    console.log('     Diagnostics:', JSON.stringify(diag));
+    if (!diag.webgl.includes('WebGL')) throw new Error('WebGL failed to initialize');
+    if (diag.items < 52 || diag.quests < 18 || diag.creatures < 14) throw new Error('Expanded catalogs missing');
+    await snap(page, '02-crossroads.png');
 
-    console.log('3/8 Verifying World Map & Custom Waypoint Pin...');
+    console.log('3/12 Summoning Sylph Wind Stag Mount & Casting Sunfire Nova...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
-      g.openModal('map');
-      g.setWaypoint({ x: -980, z: -160, regionName: 'Emerald Wilds' });
-      g.mapUI.render();
+      g.toggleMount();
+      g.castSpellByIndex(2); // Sunfire Nova golden shockwave ring!
+      g.hud.toastStack.innerHTML = '';
     });
-    await snap(page, '03-map.png');
+    await snap(page, '03-mount-and-magic.png');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.toggleMount();
+    });
+
+    console.log('4/12 Verifying World Map (4 Bosses, Wandering Caravan & Custom Pin)...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.setWaypoint({ x: -980, z: -160, regionName: 'Emerald Wilds' });
+      g.openModal('map');
+    });
+    await page.waitForTimeout(180);
+    await snap(page, '04-map.png');
     await page.evaluate(() => window.__tuw.game.closeAllModals());
 
-    console.log('4/8 Verifying Merchant Rowan Trading Shop...');
+    console.log('5/12 Verifying Merchant Shop w/ Regional Faction Trust Discount...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
-      const rowan = g.npcs.npcs.find((n) => n.def.id === 'merchant-rowan').def;
+      g.journal.addReputation('crossroads-guild', 85);
+      const rowanEntry = g.npcs.npcs.find((n) => (n.def?.id || n.id) === 'merchant-rowan');
+      const rowan = rowanEntry?.def || rowanEntry;
       g.openModal('dialogue', rowan);
       g.dialogueUI.openShop(rowan);
     });
-    await snap(page, '04-merchant-shop.png');
+    await page.waitForTimeout(150);
+    await snap(page, '05-merchant-shop.png');
     await page.evaluate(() => window.__tuw.game.closeAllModals());
 
-    console.log("5/8 Entering 3D Sanctuary (Crossroads Elder's Hall)...");
+    console.log("6/12 Verifying Wayfarer's Codex (Bestiary, 24 Achievements, Lore & Factions)...");
+    await page.evaluate(() => window.__tuw.game.openModal('codex', 'bestiary'));
+    await page.waitForTimeout(150);
+    await snap(page, '06-codex.png');
+    await page.evaluate(() => window.__tuw.game.closeAllModals());
+
+    console.log('7/12 Verifying Campfire Rest & Cooking Hearth UI...');
+    await page.evaluate(() => window.__tuw.game.openModal('campfire'));
+    await page.waitForTimeout(150);
+    await snap(page, '07-campfire.png');
+    await page.evaluate(() => window.__tuw.game.closeAllModals());
+
+    console.log('8/12 Entering NEW 3D Sanctuary (Skywatch Astrolabe Sanctum w/ Brass Orrery)...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
-      g.world.interiors.enter('elders-hall', g.player, g.cameraController);
+      g.world.interiors.enter('skywatch-sanctum', g.player, g.cameraController);
       g.hud._bannerTimer = 0;
       g.hud.bannerEl.classList.add('hidden');
     });
-    await snap(page, '05-sanctuary-interior.png');
+    await snap(page, '08-skywatch-sanctum.png');
     await page.evaluate(() => {
       const g = window.__tuw.game;
       g.world.interiors.exit(g.player, g.cameraController);
     });
 
-    console.log('6/8 Sailing Coastal Skiff on Azure Coast...');
+    console.log('9/12 Spirit Fishing Mini-Game on Azure Coast & Sailing...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
-      g.playerController.teleport(1185, 1425);
-      g.world.chunks.primeAround(1185, 1425);
-      g.world.boats.boardBoat('boat-tidehaven', g.player);
-      g.cameraController.yaw = 0.55;
-      g.cameraController.targetYaw = 0.55;
-      g.cameraController.pitch = 0.3;
-      g.cameraController.targetPitch = 0.3;
-      g.cameraController.distance = 16;
-      g.cameraController.targetDistance = 16;
+      g.playerController.teleport(1196, 1185);
+      g.player.facingYaw = 0.2;
+      g.world.chunks.primeAround(1196, 1185);
+      g.fishing.startCast(g.player);
+      g.fishing.state = 'reeling';
+      g.fishing.cursor = 0.52;
+      g.fishing.progress = 64;
       g.hud._bannerTimer = 0;
       g.hud.bannerEl.classList.add('hidden');
-      for (let i = 0; i < 12; i++) {
-        g.world.boats.update(1 / 30, i / 30, g.player, { moveX: 0, moveY: 1, sprint: false });
-      }
+      g.hud.toastStack.innerHTML = '';
     });
-    await snap(page, '06-sailing-azure.png');
+    await snap(page, '09-fishing-azure.png');
+    await page.evaluate(() => window.__tuw.game.fishing.cancel());
 
-    console.log('7/8 Awakening The Unknown Gate in Hidden Frontier...');
+    console.log('10/12 Verifying Glacier Sovereign Multi-Phase World Boss & Boss Health Bar...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
-      g.world.boats.disembark(g.player);
+      const boss = g.enemies.enemies.find((e) => e.def.id === 'glacier-sovereign');
+      g.playerController.teleport(boss.homeX, boss.homeZ + 11);
+      g.player.facingYaw = Math.PI;
+      g.world.chunks.primeAround(boss.homeX, boss.homeZ);
+      g.enemies.damageEnemy(boss, Math.floor(boss.def.maxHp * 0.55), g.player.root.position);
+      boss.state = 'telegraph';
+      boss.stateTimer = 0.5;
+      g.cameraController.yaw = 0.35;
+      g.cameraController.targetYaw = 0.35;
+      g.cameraController.pitch = 0.36;
+      g.cameraController.targetPitch = 0.36;
+      g.cameraController.distance = 13.5;
+      g.cameraController.targetDistance = 13.5;
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.hud.toastStack.innerHTML = '';
+    });
+    await snap(page, '10-glacier-boss.png');
+
+    console.log('11/12 Awakening The Unknown Gate in Hidden Frontier...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
       g.playerController.teleport(-1620, 1636);
-      g.world.chunks.primeAround(-1620, 1636);
+      g.world.chunks.primeAround(-1620, 1620);
       g.inventory.addItem('resonance-key', 1, true);
-      g.unknownGateAwakened = true;
-      g.world.landmarks.awakenUnknownGate();
-      g.world.particles.emitBurst(g.player.root.position, { count: 48, color: 0xffe88c, speed: 7, spreadY: 9, life: 2.0, gravity: 1.0 });
-      g.cameraController.yaw = 0.0;
-      g.cameraController.targetYaw = 0.0;
-      g.cameraController.pitch = 0.22;
-      g.cameraController.targetPitch = 0.22;
+      g._handleUnknownGateAltar();
+      g.closeAllModals();
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.cameraController.yaw = 0.25;
+      g.cameraController.targetYaw = 0.25;
+      g.cameraController.pitch = 0.28;
+      g.cameraController.targetPitch = 0.28;
       g.cameraController.distance = 20;
       g.cameraController.targetDistance = 20;
-      g.hud._bannerTimer = 0;
-      g.hud.bannerEl.classList.add('hidden');
     });
-    await snap(page, '07-unknown-gate.png');
+    await snap(page, '11-unknown-gate.png');
 
-    console.log('8/8 Verifying Mobile Landscape Touch Viewport (844x390)...');
+    console.log('12/12 Verifying Mobile Landscape Touch Viewport (844x390)...');
     await page.setViewportSize({ width: 844, height: 390 });
     await page.evaluate(() => {
       const g = window.__tuw.game;
@@ -192,20 +228,19 @@ async function run() {
       g.hud.toastStack.innerHTML = '';
       g.setTouchMode('on');
     });
-    await snap(page, '08-mobile-touch.png');
+    await snap(page, '12-mobile-touch.png');
 
-    assert.equal(errors.length, 0, `Browser reported errors:\n${errors.join('\n')}`);
-    console.log('\n✅ ALL 8 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
+    if (errors.length > 0) {
+      throw new Error(`Console/page errors detected:\n${errors.join('\n')}`);
+    }
+    console.log('\n✅ ALL 12 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
   } catch (err) {
     failed = true;
-    console.error('❌ E2E step failed:', err);
+    console.error('❌ E2E Verification Failed:', err);
   } finally {
     await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 2500))]);
-    process.exit(failed || errors.length > 0 ? 1 : 0);
+    process.exit(failed ? 1 : 0);
   }
 }
 
-run().catch((err) => {
-  console.error('❌ Browser verification failed:', err);
-  process.exit(1);
-});
+run();

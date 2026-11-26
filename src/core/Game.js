@@ -24,10 +24,17 @@ import { ExplorationSystem } from '../gameplay/ExplorationSystem.js';
 import { QuestSystem } from '../gameplay/QuestSystem.js';
 import { CombatSystem } from '../gameplay/CombatSystem.js';
 import { PuzzleSystem } from '../gameplay/PuzzleSystem.js';
+import { MagicSystem, SPELLS } from '../gameplay/MagicSystem.js';
+import { JournalSystem } from '../gameplay/JournalSystem.js';
+
+import { MountSystem } from '../world/MountSystem.js';
+import { FishingSystem } from '../world/FishingSystem.js';
+import { WorldEventsManager } from '../world/WorldEventsManager.js';
 
 import { NPCManager } from '../entities/NPCManager.js';
 import { WildlifeManager } from '../entities/WildlifeManager.js';
 import { EnemyManager } from '../entities/EnemyManager.js';
+import { CompanionSystem } from '../entities/CompanionSystem.js';
 
 import { InputManager } from '../controls/InputManager.js';
 import { SaveManager } from '../save/SaveManager.js';
@@ -41,6 +48,8 @@ import { QuestUI } from '../ui/QuestUI.js';
 import { ProgressionUI } from '../ui/ProgressionUI.js';
 import { DialogueUI } from '../ui/DialogueUI.js';
 import { SettingsUI } from '../ui/SettingsUI.js';
+import { CodexUI } from '../ui/CodexUI.js';
+import { CampfireUI } from '../ui/CampfireUI.js';
 
 export class Game {
   constructor(canvas) {
@@ -93,20 +102,33 @@ export class Game {
       this.events
     );
 
-    // 4. Living World Entities
+    // 4. Living World Entities, Magic, Mount, Fishing, Companion & World Events
     this.npcs = new NPCManager(this.sceneManager.scene, this.world.terrain, this.events);
     this.wildlife = new WildlifeManager(this.sceneManager.scene, this.world.terrain);
     this.enemies = new EnemyManager(this.sceneManager.scene, this.world.terrain, this.data.creatures, this.events);
     this.combat = new CombatSystem(this.player, this.enemies, this.inventory, this.progression, this.events);
+    this.magic = new MagicSystem(this.sceneManager.scene, this.world.terrain, this.events);
+    this.combat.attachMagic(this.magic);
+    this.mount = new MountSystem(this.sceneManager.scene, this.world.terrain, this.events);
+    this.fishing = new FishingSystem(this.sceneManager.scene, this.world.terrain, this.world.biomes, this.events);
+    this.companion = new CompanionSystem(this.sceneManager.scene);
+    this.worldEvents = new WorldEventsManager(this.sceneManager.scene, this.world.terrain, this.events);
+    this.journal = new JournalSystem(this.events, { creatures: this.data.creatures }, this.inventory, this.progression);
 
     this.inventory.applyStatsToPlayer(this.player, this.progression.getBonuses());
 
-    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, River Fish)
+    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, World Events, River Fish)
     this.interaction.registerProvider((pos) => this.world.interiors.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.world.boats.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.npcs.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.puzzles.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.wildlife.getInteractables(pos));
+    this.interaction.registerProvider((pos) => {
+      const ev = this.worldEvents.getNearbyInteraction(pos);
+      if (!ev) return [];
+      const tPos = ev.target.pos || ev.target;
+      return [{ id: `we_${ev.type}`, type: `worldevent-${ev.type}`, label: ev.label, x: tPos.x, y: tPos.y, z: tPos.z, radius: 5.0 }];
+    });
 
     // 5. Studio UI Screens
     this.mainMenu = new MainMenu(this);
@@ -117,6 +139,8 @@ export class Game {
     this.progressionUI = new ProgressionUI(this);
     this.dialogueUI = new DialogueUI(this);
     this.settingsUI = new SettingsUI(this);
+    this.codexUI = new CodexUI(this);
+    this.campfireUI = new CampfireUI(this);
 
     this._applySettings();
     this._bindEvents();
@@ -192,6 +216,27 @@ export class Game {
       this.audio.playHit(blocked);
       this.cameraController.addShake(blocked ? 0.14 : 0.34);
     });
+    this.events.on('combat:parry', ({ pos }) => {
+      this.audio.playParry();
+      this.world.particles.emitBurst(pos, { count: 24, color: 0xffe47c, speed: 6.5, spreadY: 5 });
+      this.cameraController.addShake(0.32);
+    });
+    this.events.on('achievement:unlock', (ach) => {
+      this.audio.playDiscoveryFanfare();
+      this.hud.showToast({
+        title: `★ Achievement Unlocked: ${ach.title}`,
+        text: `${ach.desc} (+${ach.xp} XP · +${ach.gold} ✦)`,
+      });
+    });
+    this.events.on('magic:castKey', (idx) => {
+      if (this.started && !this.activeModal) this.castSpellByIndex(idx);
+    });
+    this.events.on('mount:toggle', () => {
+      if (this.started && !this.activeModal) this.toggleMount();
+    });
+    this.events.on('fishing:action', () => {
+      if (this.started && !this.activeModal) this.handleFishingAction();
+    });
     this.events.on('puzzle:note', ({ freq }) => this.audio.playPuzzleNote(freq));
     this.events.on('camera:photoToggle', () => {
       if (this.started && !this.activeModal) this.hud.togglePhotoMode();
@@ -260,8 +305,19 @@ export class Game {
       if (!wasNew) {
         this.openModal('map');
       }
+    } else if (target.type === 'worldevent-starfall') {
+      const res = this.worldEvents.claimStarfall(this.inventory, this.progression, this.world.particles, this.audio);
+      if (res) {
+        this.hud.showToast({
+          title: '★ Starfall Shard Claimed!',
+          text: `Recovered Meteoric Starfall Shard (+${res.gold} Sunshards, +${res.xp} XP)`,
+        });
+      }
+    } else if (target.type === 'worldevent-caravan') {
+      this.openModal('caravan');
     } else if (target.type === 'lore') {
       this.exploration.readLore.add(target.landmarkId);
+      if (target.landmarkId) this.journal.unlockLore(`lore-${target.landmarkId}`);
       this.openModal('lore', target);
     } else if (target.type === 'campfire') {
       this.openModal('campfire');
@@ -271,6 +327,85 @@ export class Game {
     } else if (target.type === 'puzzle') {
       this.puzzles.handleInteract(target, this.player.root.position);
     }
+  }
+
+  castSpellByIndex(idx) {
+    const sp = SPELLS[idx];
+    if (!sp) return;
+    if (this.player.sailing || this.player.diving) return;
+    const res = this.magic.cast(sp.id, {
+      player: this.player,
+      enemies: this.enemies,
+      inventory: this.inventory,
+      progression: this.progression,
+      combat: this.combat,
+      particles: this.world.particles,
+      audio: this.audio,
+      camera: this.cameraController,
+    });
+    if (!res.ok && res.reason === 'Not enough SP') {
+      this.hud.showToast({ title: sp.name, text: `Requires ${sp.spCost} Stamina/Resonance.` });
+    }
+  }
+
+  toggleMount() {
+    const inside = Boolean(this.world.interiors.currentInterior);
+    const res = this.mount.toggleMount(this.player, {
+      isIndoors: inside,
+      isSailing: this.player.sailing,
+      particles: this.world.particles,
+      audio: this.audio,
+    });
+    this.player.mounted = this.mount.mounted;
+    this.hud.showToast({ title: 'Spirit Wind Stag', text: res.message });
+  }
+
+  handleFishingAction() {
+    const inside = Boolean(this.world.interiors.currentInterior);
+    if (this.fishing.state === 'idle') {
+      if (this.mount.mounted) {
+        this.mount.dismount(this.player);
+        this.player.mounted = false;
+      }
+      const res = this.fishing.startCast(this.player, {
+        isIndoors: inside,
+        isSailing: this.player.sailing,
+        audio: this.audio,
+        particles: this.world.particles,
+      });
+      if (!res.ok) this.hud.showToast({ title: 'Spirit Fishing', text: res.message });
+    } else {
+      const res = this.fishing.reelAction(this.player, {
+        inventory: this.inventory,
+        progression: this.progression,
+        audio: this.audio,
+        particles: this.world.particles,
+      });
+      if (res.caught) {
+        const def = this.inventory.getDef(res.itemId);
+        this.hud.showToast({
+          title: '🎣 Catch Landed!',
+          text: `Caught ${def?.name || res.itemId} (+${res.xp} XP${res.bonusGold ? `, +${res.bonusGold} ✦ sunken pouch!` : ''})`,
+        });
+      } else if (res.cancelled) {
+        this.hud.showToast({ title: 'Line Pulled Early', text: res.message });
+      }
+    }
+  }
+
+  restAtCampfire(targetHour = 6.6) {
+    this.player.hp = this.player.maxHp;
+    this.player.stamina = this.player.maxStamina;
+    this.player.warmth = this.player.maxWarmth;
+    this.world.weather.timeOfDay = targetHour;
+    this.world.particles.emitBurst(this.player.root.position, { count: 24, color: 0xffc668, speed: 4.5, spreadY: 5 });
+    this.audio.playDiscoveryFanfare();
+    this.events.emit('campfire:rest', { hour: targetHour });
+    this.saveToSlot('autosave', true);
+    this.hud.showToast({
+      title: 'Rested by the Hearth',
+      text: 'Vitality, Stamina & Warmth fully restored. Progress auto-saved.',
+    });
   }
 
   _handleUnknownGateAltar() {
@@ -363,10 +498,12 @@ export class Game {
     else if (name === 'inventory') this.inventoryUI.open(payload || 'bag');
     else if (name === 'quests') this.questUI.open();
     else if (name === 'progression') this.progressionUI.open();
+    else if (name === 'codex') this.codexUI.open(payload);
     else if (name === 'settings') this.settingsUI.open();
     else if (name === 'dialogue') this.dialogueUI.openNpc(payload);
+    else if (name === 'caravan') this.dialogueUI.openCaravanShop();
     else if (name === 'lore') this.dialogueUI.openLore(payload.title, payload.lore);
-    else if (name === 'campfire') this.dialogueUI.openCampfire();
+    else if (name === 'campfire') this.campfireUI.open();
     else if (name === 'gate-climax') this.dialogueUI.openGateClimax();
   }
 
@@ -376,6 +513,8 @@ export class Game {
     this.inventoryUI.close();
     this.questUI.close();
     this.progressionUI.close();
+    this.codexUI.close();
+    this.campfireUI.close();
     this.dialogueUI.close();
     this.settingsUI.close();
   }
@@ -471,6 +610,11 @@ export class Game {
       puzzles: this.puzzles.getSnapshot(),
       boats: this.world.boats.getSnapshot(),
       interiors: this.world.interiors.getSnapshot(),
+      magic: this.magic.serialize(),
+      mount: this.mount.serialize(),
+      fishing: this.fishing.serialize(),
+      worldEvents: this.worldEvents.serialize(),
+      journal: this.journal.serialize(),
       gathered: [...this.world.chunks.collectedGatherables],
     };
     await this.saveManager.saveSlot(slotId, payload);
@@ -505,6 +649,11 @@ export class Game {
     this.puzzles.loadSnapshot(data.puzzles);
     this.world.boats.loadSnapshot(data.boats);
     this.world.interiors.loadSnapshot(data.interiors);
+    this.magic.hydrate(data.magic);
+    this.mount.hydrate(data.mount);
+    this.fishing.hydrate(data.fishing);
+    this.worldEvents.hydrate(data.worldEvents);
+    this.journal.hydrate(data.journal);
     this.waypoint = data.waypoint || null;
     if (data.unknownGateAwakened) {
       this.unknownGateAwakened = true;
@@ -553,14 +702,35 @@ export class Game {
     }
 
     this.playerAnim.update(dt, elapsed);
+    this.mount.update(dt, elapsed, this.player, this.world.particles);
+    this.player.mounted = this.mount.mounted;
+    if (this.mount.mounted && (this.player.swimming || inside || this.player.sailing)) {
+      this.mount.dismount(this.player);
+      this.player.mounted = false;
+    }
+    this.magic.update(dt, elapsed, this.player, this.enemies, this.world.particles, this.combat);
+    this.fishing.update(dt, elapsed, this.player, this.audio);
+    const nearestSecret = !inside ? this.worldEvents.getNearestSecret(this.player.root.position) : null;
+    this.companion.update(dt, elapsed, this.player, {
+      timeOfDay: this.world.weather.timeOfDay / 24,
+      isIndoors: inside,
+      secretTarget: nearestSecret,
+    });
     this.cameraController.update(dt, this.player.root.position, input);
     this.world.update(dt, elapsed, this.player.root.position, this.player, livePlaying ? input : null);
     if (!inside) {
       this.puzzles.update(dt, elapsed);
       this.npcs.update(dt, elapsed, this.player.root.position, this.world.weather.timeOfDay);
       this.wildlife.update(dt, elapsed, this.player.root.position, this.player.horizontalSpeed);
+      this.worldEvents.update(dt, elapsed, this.player.root.position, {
+        inventory: this.inventory,
+        progression: this.progression,
+        particles: this.world.particles,
+        audio: this.audio,
+      });
     }
-    this.audio.update(dt, this.world.currentRegion, this.world.weather.weather);
+    const activeBoss = !inside ? this.enemies.getActiveBoss(this.player.root.position) : null;
+    this.audio.update(dt, this.world.currentRegion, this.world.weather.weather, Boolean(activeBoss));
 
     if (this.started) {
       this.hud.update(dt);

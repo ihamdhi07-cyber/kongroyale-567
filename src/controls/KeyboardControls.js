@@ -35,11 +35,18 @@ export class KeyboardControls {
         if (code === 'KeyK') this.heavyPressed = true;
         if (code === 'KeyC' || code === 'ControlLeft') this.dodgePressed = true;
         if (code === 'KeyZ') this.stealthToggle = true;
+        if (code === 'KeyH') this.events.emit('mount:toggle');
+        if (code === 'KeyG') this.events.emit('fishing:action');
+        if (code === 'Digit1') this.events.emit('magic:castKey', 0);
+        if (code === 'Digit2') this.events.emit('magic:castKey', 1);
+        if (code === 'Digit3') this.events.emit('magic:castKey', 2);
+        if (code === 'Digit4') this.events.emit('magic:castKey', 3);
         if (code === 'KeyV') this.events.emit('camera:photoToggle');
         if (code === 'KeyM') this.events.emit('ui:toggle', 'map');
         if (code === 'KeyI') this.events.emit('ui:toggle', 'inventory');
         if (code === 'KeyT' || code === 'KeyU') this.events.emit('ui:toggle', 'quests');
         if (code === 'KeyP') this.events.emit('ui:toggle', 'progression');
+        if (code === 'KeyB') this.events.emit('ui:toggle', 'codex');
         if (code === 'Escape') this.events.emit('ui:escape');
         if (code === 'Equal' || code === 'NumpadAdd') this.camZoomDelta -= 2.5;
         if (code === 'Minus' || code === 'NumpadSubtract') this.camZoomDelta += 2.5;

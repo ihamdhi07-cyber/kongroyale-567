@@ -7,8 +7,34 @@
       "rarity": "common",
       "slot": "weapon",
       "attack": 16,
+      "spellBonus": 0,
       "value": 30,
+      "visualTint": "#7e5332",
       "description": "A carved oak staff bound in brass rings. Reliable for sweeping away wild briars and ancient constructs."
+    },
+    {
+      "id": "emerald-bowstaff",
+      "name": "Emerald Canopy Staff",
+      "category": "weapon",
+      "rarity": "uncommon",
+      "slot": "weapon",
+      "attack": 22,
+      "spellBonus": 6,
+      "value": 75,
+      "visualTint": "#3e9b5c",
+      "description": "Living heartwood wrapped in dew-lit vines. Boosts both swift strikes and nature resonance."
+    },
+    {
+      "id": "tidecaller-trident",
+      "name": "Tidecaller Coral Spear",
+      "category": "weapon",
+      "rarity": "rare",
+      "slot": "weapon",
+      "attack": 26,
+      "spellBonus": 8,
+      "value": 110,
+      "visualTint": "#38b4c8",
+      "description": "Forged from sea-glass and bronze salvaged from Azure Coast reefs. Slices swiftly through armor."
     },
     {
       "id": "runeblade-staff",
@@ -17,8 +43,22 @@
       "rarity": "rare",
       "slot": "weapon",
       "attack": 28,
+      "spellBonus": 12,
       "value": 120,
+      "visualTint": "#4ad9ef",
       "description": "Inlaid with Hollow Depths crystal shards that hum with luminous azure resonance on heavy strikes."
+    },
+    {
+      "id": "frostfang-spear",
+      "name": "Frostfang Glacier Lance",
+      "category": "weapon",
+      "rarity": "rare",
+      "slot": "weapon",
+      "attack": 34,
+      "spellBonus": 10,
+      "value": 175,
+      "visualTint": "#9be4ff",
+      "description": "Carved from eternal Highland glacier crystal. Chills struck foes with piercing northern wind."
     },
     {
       "id": "galeblade-staff",
@@ -27,8 +67,34 @@
       "rarity": "epic",
       "slot": "weapon",
       "attack": 42,
+      "spellBonus": 18,
       "value": 260,
+      "visualTint": "#f1c76b",
       "description": "Forged with Shattered Expanse skyfeathers and an Aether Core. Unleashes sweeping wind-arcs."
+    },
+    {
+      "id": "sunfire-halberd",
+      "name": "Sunfire Dawn Halberd",
+      "category": "weapon",
+      "rarity": "epic",
+      "slot": "weapon",
+      "attack": 48,
+      "spellBonus": 22,
+      "value": 320,
+      "visualTint": "#ff8d3d",
+      "description": "Radiant solar polearm tempered with Sun Ore and Starfall Shards. Ignites foes with golden embers."
+    },
+    {
+      "id": "astral-scepter",
+      "name": "Sovereign Astral Scepter",
+      "category": "weapon",
+      "rarity": "legendary",
+      "slot": "weapon",
+      "attack": 56,
+      "spellBonus": 35,
+      "value": 480,
+      "visualTint": "#c886ff",
+      "description": "Crowned by an orbiting star-prism from the Astral Leviathan. Channels boundless arcane resonance."
     },
     {
       "id": "traveler-cloak",
@@ -39,7 +105,34 @@
       "defense": 4,
       "warmthBonus": 10,
       "value": 35,
+      "visualTint": "#314c70",
       "description": "Warm hooded cloak dyed with valley ochre. Grants modest protection against wind and claws."
+    },
+    {
+      "id": "verdant-shroud",
+      "name": "Emerald Whisper Shroud",
+      "category": "equipment",
+      "rarity": "uncommon",
+      "slot": "armor",
+      "defense": 7,
+      "speedBonus": 0.08,
+      "warmthBonus": 15,
+      "value": 90,
+      "visualTint": "#2e6d4d",
+      "description": "Leaf-stitched forest mantle that muffles footsteps and sharpens stealth ambush strikes."
+    },
+    {
+      "id": "mariner-tunic",
+      "name": "Tidehaven Mariner Tunic",
+      "category": "equipment",
+      "rarity": "uncommon",
+      "slot": "armor",
+      "defense": 8,
+      "speedBonus": 0.1,
+      "warmthBonus": 14,
+      "value": 105,
+      "visualTint": "#286e86",
+      "description": "Salt-resistant indigo sailor's weave favoured by Azure Coast pearl divers and navigators."
     },
     {
       "id": "windweaver-cloak",
@@ -51,6 +144,7 @@
       "speedBonus": 0.14,
       "warmthBonus": 20,
       "value": 140,
+      "visualTint": "#3e7cb2",
       "description": "Feather-light azure mantle blessed by the Shattered Expanse drafts. Boosts movement and defense."
     },
     {
@@ -62,7 +156,48 @@
       "defense": 14,
       "warmthBonus": 55,
       "value": 165,
+      "visualTint": "#dce7f2",
       "description": "Fur-lined highland expedition coat woven to endure the freezing snowstorms of Highland Reach."
+    },
+    {
+      "id": "citadel-mantle",
+      "name": "Silent Citadel Guard Mantle",
+      "category": "equipment",
+      "rarity": "epic",
+      "slot": "armor",
+      "defense": 22,
+      "warmthBonus": 25,
+      "value": 240,
+      "visualTint": "#8d7c63",
+      "description": "Layered limestone-threaded mantle bearing the crest of the ancient Citadel royal vanguard."
+    },
+    {
+      "id": "sunfire-robe",
+      "name": "Solar Horizon Vestment",
+      "category": "equipment",
+      "rarity": "epic",
+      "slot": "armor",
+      "defense": 18,
+      "speedBonus": 0.12,
+      "warmthBonus": 65,
+      "spellBonus": 15,
+      "value": 310,
+      "visualTint": "#c85b34",
+      "description": "Gold-embroidered crimson robe infused with ember-bloom silk. Radiates cozy warmth and spell power."
+    },
+    {
+      "id": "astral-vestment",
+      "name": "Astral Horizon Cloak",
+      "category": "equipment",
+      "rarity": "legendary",
+      "slot": "armor",
+      "defense": 26,
+      "speedBonus": 0.18,
+      "warmthBonus": 70,
+      "spellBonus": 24,
+      "value": 460,
+      "visualTint": "#58448a",
+      "description": "Woven from starfall silk and shattered light. Grants unmatched defense, swiftness, and resonance."
     },
     {
       "id": "sunberry",
@@ -84,7 +219,92 @@
       "stamina": 18,
       "warmth": 10,
       "value": 14,
+      "fish": true,
       "description": "Fresh shimmering trout caught along the clear shallows of the Silver River."
+    },
+    {
+      "id": "azure-snapper",
+      "name": "Azure Reef Snapper",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "heal": 28,
+      "stamina": 24,
+      "warmth": 12,
+      "value": 24,
+      "fish": true,
+      "description": "Bright turquoise reef fish prized by Tidehaven chefs for its crisp citrus flavor."
+    },
+    {
+      "id": "golden-koi",
+      "name": "Sanctuary Golden Koi",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 46,
+      "stamina": 45,
+      "warmth": 25,
+      "value": 52,
+      "fish": true,
+      "description": "Luminous amber koi found in serene valley pools and ancient sanctuary waters."
+    },
+    {
+      "id": "abyssal-lanternfish",
+      "name": "Abyssal Lanternfish",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 38,
+      "stamina": 55,
+      "warmth": 30,
+      "value": 58,
+      "fish": true,
+      "description": "Bioluminescent deep-sea swimmer carrying a softly glowing pearl antenna."
+    },
+    {
+      "id": "glacier-char",
+      "name": "Highland Glacier Char",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "heal": 34,
+      "stamina": 30,
+      "warmth": 20,
+      "value": 34,
+      "fish": true,
+      "description": "Silver-blue mountain fish caught in icy alpine tarns of Highland Reach."
+    },
+    {
+      "id": "sunscale-marlin",
+      "name": "Sunscale Open-Sea Marlin",
+      "category": "consumable",
+      "rarity": "epic",
+      "heal": 65,
+      "stamina": 70,
+      "warmth": 35,
+      "value": 92,
+      "fish": true,
+      "description": "Swift golden-finned ocean giant hooked only from open Azure Coast waters."
+    },
+    {
+      "id": "crystalline-eel",
+      "name": "Hollow Crystalline Eel",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 42,
+      "stamina": 65,
+      "warmth": 22,
+      "value": 64,
+      "fish": true,
+      "description": "Translucent singing eel thriving in mineral pools near the Hollow Depths."
+    },
+    {
+      "id": "leviathan-fry",
+      "name": "Ancient Leviathan Fry",
+      "category": "consumable",
+      "rarity": "legendary",
+      "heal": 95,
+      "stamina": 100,
+      "warmth": 60,
+      "value": 165,
+      "fish": true,
+      "description": "Mythic starlit catch whispered of in Tidehaven legends. Restores near-total vitality."
     },
     {
       "id": "berry-stew",
@@ -120,6 +340,61 @@
       "description": "Crisp Crossroads flatbread glazed with wildflower honey. Ideal for long climbs and gliding."
     },
     {
+      "id": "wayfarer-rations",
+      "name": "Spiced Trail Rations",
+      "category": "consumable",
+      "rarity": "common",
+      "heal": 34,
+      "stamina": 55,
+      "warmth": 25,
+      "value": 24,
+      "description": "Dried fruit, roasted seeds, and flatbread packed by traveling frontier scouts."
+    },
+    {
+      "id": "koi-broth",
+      "name": "Golden Koi Sanctuary Broth",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 78,
+      "stamina": 75,
+      "warmth": 60,
+      "value": 76,
+      "description": "Fragrant amber soup that rejuvenates spirit, warmth, and arcane reserves."
+    },
+    {
+      "id": "marlin-feast",
+      "name": "Captain's Sunscale Feast",
+      "category": "consumable",
+      "rarity": "epic",
+      "heal": 110,
+      "stamina": 100,
+      "warmth": 65,
+      "value": 125,
+      "description": "Lavish coastal banquet platter renowned across Tidehaven Harbor. Completely restores vigor."
+    },
+    {
+      "id": "sunfire-curry",
+      "name": "Ember-Spiced Frontier Curry",
+      "category": "consumable",
+      "rarity": "rare",
+      "heal": 68,
+      "stamina": 70,
+      "warmth": 100,
+      "value": 72,
+      "description": "A fiery amber cauldron dish that keeps explorers warm through the fiercest northern blizzard."
+    },
+    {
+      "id": "frost-tea",
+      "name": "Frostbloom Mint Infusion",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "heal": 36,
+      "stamina": 65,
+      "warmth": 55,
+      "value": 38,
+      "description": "Crisp highland herbal tea that sharpens focus and refills stamina swiftly."
+    },
+    {
       "id": "spirit-tonic",
       "name": "Luminous Spirit Tonic",
       "category": "consumable",
@@ -142,6 +417,17 @@
       "description": "Radiant highland brew that completely restores warmth during alpine blizzards."
     },
     {
+      "id": "starlight-draught",
+      "name": "Elixir of Starlight Resonance",
+      "category": "consumable",
+      "rarity": "epic",
+      "heal": 120,
+      "stamina": 120,
+      "warmth": 80,
+      "value": 135,
+      "description": "Bottled starfall luminescence that restores full vitality, stamina, and warmth in an instant."
+    },
+    {
       "id": "moonpetal",
       "name": "Silver Moonpetal",
       "category": "material",
@@ -156,6 +442,22 @@
       "rarity": "common",
       "value": 12,
       "description": "Dense, fragrant timber shed beneath giant forest canopies."
+    },
+    {
+      "id": "amber-resin",
+      "name": "Golden Pine Resin",
+      "category": "material",
+      "rarity": "uncommon",
+      "value": 20,
+      "description": "Warm, fragrant fossilized sap gathered across Hidden Frontier groves."
+    },
+    {
+      "id": "sun-ore",
+      "name": "Forgotten Sun Ore",
+      "category": "material",
+      "rarity": "rare",
+      "value": 44,
+      "description": "Gilded copper-gold mineral mined near ancient Citadel cliffs and highland crags."
     },
     {
       "id": "crystal-shard",
@@ -206,12 +508,44 @@
       "description": "Weightless iridescent plume drifting through the thermal winds of Shattered Expanse."
     },
     {
+      "id": "void-petal",
+      "name": "Shattered Void Petal",
+      "category": "material",
+      "rarity": "rare",
+      "value": 54,
+      "description": "Weightless violet blossom floating beside celestial ruins in the Shattered Expanse."
+    },
+    {
+      "id": "starfall-shard",
+      "name": "Meteoric Starfall Shard",
+      "category": "material",
+      "rarity": "epic",
+      "value": 115,
+      "description": "Warm golden fragment fallen from the night sky during a Resonance Starfall event."
+    },
+    {
+      "id": "glacier-heart",
+      "name": "Heart of the Borealis",
+      "category": "material",
+      "rarity": "epic",
+      "value": 150,
+      "description": "Radiant aurora-infused crystal reclaimed from the Glacier Sovereign atop Highland Reach."
+    },
+    {
       "id": "aether-core",
       "name": "Sovereign Aether Core",
       "category": "material",
       "rarity": "epic",
       "value": 140,
       "description": "Radiant ancient heart reclaimed from mighty guardian bosses across the realm."
+    },
+    {
+      "id": "wind-stag-whistle",
+      "name": "Sylph's Wind-Stag Whistle",
+      "category": "key",
+      "rarity": "rare",
+      "value": 0,
+      "description": "Carved emerald-bone chime that calls Sylph the Spirit Wind Stag anywhere outdoors (Press H)."
     },
     {
       "id": "resonance-key",
@@ -228,6 +562,14 @@
       "rarity": "rare",
       "value": 0,
       "description": "A salt-worn bronze tablet from the submerged halls of the Drowned Archive."
+    },
+    {
+      "id": "astral-echo-relic",
+      "name": "Crown of the Shattered Echo",
+      "category": "key",
+      "rarity": "legendary",
+      "value": 0,
+      "description": "Floating crystalline diadem reclaimed from the Astral Leviathan above the Broken Horizon."
     }
   ],
   "recipes": [
@@ -265,6 +607,64 @@
       ]
     },
     {
+      "id": "craft-trail-rations",
+      "resultId": "wayfarer-rations",
+      "resultQty": 2,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "sunberry", "qty": 2 },
+        { "itemId": "amber-resin", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-frost-tea",
+      "resultId": "frost-tea",
+      "resultQty": 2,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "frostbloom", "qty": 1 },
+        { "itemId": "moonpetal", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-koi-broth",
+      "resultId": "koi-broth",
+      "resultQty": 1,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "golden-koi", "qty": 1 },
+        { "itemId": "moonpetal", "qty": 1 },
+        { "itemId": "sunberry", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-sunfire-curry",
+      "resultId": "sunfire-curry",
+      "resultQty": 1,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "azure-snapper", "qty": 1 },
+        { "itemId": "amber-resin", "qty": 1 },
+        { "itemId": "sunberry", "qty": 2 }
+      ]
+    },
+    {
+      "id": "craft-marlin-feast",
+      "resultId": "marlin-feast",
+      "resultQty": 1,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "sunscale-marlin", "qty": 1 },
+        { "itemId": "moonpetal", "qty": 2 },
+        { "itemId": "sunberry", "qty": 2 }
+      ]
+    },
+    {
       "id": "craft-spirit-tonic",
       "resultId": "spirit-tonic",
       "resultQty": 1,
@@ -287,6 +687,41 @@
       ]
     },
     {
+      "id": "craft-starlight-draught",
+      "resultId": "starlight-draught",
+      "resultQty": 1,
+      "category": "alchemy",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "starfall-shard", "qty": 1 },
+        { "itemId": "moonpetal", "qty": 2 },
+        { "itemId": "crystal-shard", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-emerald-bowstaff",
+      "resultId": "emerald-bowstaff",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "heartwood", "qty": 3 },
+        { "itemId": "moonpetal", "qty": 2 }
+      ]
+    },
+    {
+      "id": "craft-tidecaller-trident",
+      "resultId": "tidecaller-trident",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "sea-glass", "qty": 3 },
+        { "itemId": "sunken-pearl", "qty": 1 },
+        { "itemId": "heartwood", "qty": 2 }
+      ]
+    },
+    {
       "id": "craft-runeblade-staff",
       "resultId": "runeblade-staff",
       "resultQty": 1,
@@ -299,6 +734,18 @@
       ]
     },
     {
+      "id": "craft-frostfang-spear",
+      "resultId": "frostfang-spear",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "frostbloom", "qty": 3 },
+        { "itemId": "crystal-shard", "qty": 2 },
+        { "itemId": "glacier-heart", "qty": 1 }
+      ]
+    },
+    {
       "id": "craft-galeblade-staff",
       "resultId": "galeblade-staff",
       "resultQty": 1,
@@ -308,6 +755,41 @@
         { "itemId": "skyfeather", "qty": 2 },
         { "itemId": "crystal-shard", "qty": 2 },
         { "itemId": "aether-core", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-sunfire-halberd",
+      "resultId": "sunfire-halberd",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "sun-ore", "qty": 3 },
+        { "itemId": "starfall-shard", "qty": 1 },
+        { "itemId": "ancient-core", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-astral-scepter",
+      "resultId": "astral-scepter",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "void-petal", "qty": 2 },
+        { "itemId": "starfall-shard", "qty": 2 },
+        { "itemId": "aether-core", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-verdant-shroud",
+      "resultId": "verdant-shroud",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "moonpetal", "qty": 3 },
+        { "itemId": "heartwood", "qty": 2 }
       ]
     },
     {
@@ -332,6 +814,30 @@
         { "itemId": "frostbloom", "qty": 2 },
         { "itemId": "heartwood", "qty": 2 },
         { "itemId": "sunken-pearl", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-citadel-mantle",
+      "resultId": "citadel-mantle",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "ancient-core", "qty": 2 },
+        { "itemId": "sun-ore", "qty": 2 },
+        { "itemId": "heartwood", "qty": 2 }
+      ]
+    },
+    {
+      "id": "craft-astral-vestment",
+      "resultId": "astral-vestment",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "void-petal", "qty": 3 },
+        { "itemId": "skyfeather", "qty": 2 },
+        { "itemId": "starfall-shard", "qty": 1 }
       ]
     },
     {

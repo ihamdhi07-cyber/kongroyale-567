@@ -196,3 +196,10 @@ export function patchWatercolorMaterial(material, opts = {}) {
   material.needsUpdate = true;
   return material;
 }
+
+/** Convenience factory creating a gouache-patched MeshStandardMaterial */
+export function createWatercolorMaterial({ color = 0xffffff, roughness = 0.8, metalness = 0.05, inkStrength = 0.25 } = {}) {
+  return patchWatercolorMaterial(new THREE.MeshStandardMaterial({ color, roughness, metalness }), {
+    inkEdge: inkStrength,
+  });
+}

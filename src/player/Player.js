@@ -285,7 +285,11 @@ export class Player {
 
   /** Visually updates staff & cloak colors when player crafts/equips upgraded gear */
   applyEquipmentVisuals(equipped) {
-    if (equipped?.weapon === 'galeblade-staff') {
+    if (equipped?.weaponTint) {
+      this.staffOrbMat.color.set(equipped.weaponTint);
+      this.staffOrbMat.emissive.set(equipped.weaponTint);
+      this.slashMat.color.set(equipped.weaponTint);
+    } else if (equipped?.weapon === 'galeblade-staff') {
       this.staffOrbMat.color.setHex(0xe8a8ff);
       this.staffOrbMat.emissive.setHex(0xb858f2);
       this.slashMat.color.setHex(0xf4c8ff);
@@ -298,7 +302,9 @@ export class Player {
       this.staffOrbMat.emissive.setHex(0xffa836);
       this.slashMat.color.setHex(0xffe994);
     }
-    if (equipped?.armor === 'frostward-coat') {
+    if (equipped?.armorTint) {
+      this.cloakMat.color.set(equipped.armorTint);
+    } else if (equipped?.armor === 'frostward-coat') {
       this.cloakMat.color.setHex(0xd4e2ee);
     } else if (equipped?.armor === 'windweaver-cloak') {
       this.cloakMat.color.setHex(0x4b87a8);

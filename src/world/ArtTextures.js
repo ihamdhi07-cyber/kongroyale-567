@@ -310,3 +310,24 @@ export class ArtTextures {
     return finalizeTexture(c, { repeat: 2, srgb: true });
   }
 }
+
+let _sharedContactShadow = null;
+/** Node-safe singleton soft radial contact shadow texture for grounded characters & creatures */
+export function createContactShadowTexture() {
+  if (_sharedContactShadow) return _sharedContactShadow;
+  if (typeof document === 'undefined') return null;
+  const size = 64;
+  const c = makeCanvas(size);
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size / 2, size / 2, 2, size / 2, size / 2, size / 2);
+  g.addColorStop(0, 'rgba(18, 26, 38, 0.56)');
+  g.addColorStop(0.55, 'rgba(18, 26, 38, 0.28)');
+  g.addColorStop(1, 'rgba(18, 26, 38, 0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  _sharedContactShadow = tex;
+  return tex;
+}

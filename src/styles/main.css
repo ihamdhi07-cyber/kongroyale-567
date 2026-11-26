@@ -426,7 +426,7 @@ body {
 @media (max-width: 960px), (max-height: 480px) {
   .hud-hints { display: none; }
   .hud-left-stack { top: 8px; left: 8px; }
-  .hud-center-stack { top: 8px; left: 42%; }
+  .hud-center-stack { top: 8px; left: 37%; }
   .hud-right { top: 8px; right: 8px; }
   .hud-vitals {
     padding: 5px 8px;
@@ -436,26 +436,320 @@ body {
   .hud-bars { width: 96px; }
   .hud-compass-wrap {
     min-width: 0;
-    max-width: 26vw;
-    padding: 4px 10px;
+    max-width: 23vw;
+    padding: 4px 8px;
   }
   .hud-meta-pill { display: none; }
-  .hud-region-name { font-size: 0.82rem; }
+  .hud-region-name { font-size: 0.78rem; }
   .hud-compass-bar {
-    font-size: 0.64rem;
+    font-size: 0.62rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .hud-nav-row { gap: 4px; }
+  .hud-nav-row { gap: 3px; }
   .hud-icon-btn {
-    padding: 5px 7px;
-    font-size: 0.7rem;
+    padding: 4px 6px;
+    font-size: 0.66rem;
   }
   .hud-quest-box { display: none; }
 }
 @media (max-height: 440px) {
   #game-hud.touch-active .hud-minimap-wrap { display: none; }
+}
+
+/* === FULL-GAME MEGA EXPANSION UI: 4-Spell Hotbar, Fishing Bar, Codex, 3-Branch Skills & Campfire === */
+.hud-buff-pill, .hud-secret-pill {
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(24, 58, 66, 0.88);
+  border: 1px solid rgba(132, 240, 214, 0.65);
+  color: #a9ffea;
+}
+.hud-secret-pill {
+  background: rgba(68, 48, 18, 0.9);
+  border-color: var(--border-gold);
+  color: #ffe699;
+}
+
+.hud-spell-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  margin-bottom: 6px;
+}
+.spell-slot {
+  position: relative;
+  width: 52px;
+  height: 50px;
+  border-radius: 11px;
+  background: rgba(20, 30, 46, 0.88);
+  border: 1px solid rgba(236, 198, 114, 0.52);
+  color: #f9eed8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 6px 14px rgba(10, 16, 26, 0.42);
+}
+.spell-slot:hover {
+  transform: translateY(-2px);
+  border-color: #ffe28c;
+}
+.spell-slot.spell-util {
+  border-color: rgba(126, 232, 200, 0.48);
+  background: rgba(18, 40, 48, 0.86);
+}
+.spell-slot.on-cd {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+.spell-slot.low-sp {
+  opacity: 0.68;
+}
+.spell-slot .sp-key {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--gold);
+}
+.spell-slot .sp-ico {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.spell-slot .sp-lbl {
+  font-size: 0.62rem;
+  opacity: 0.88;
+  margin-top: 2px;
+}
+.spell-slot .sp-cd {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff2ba;
+  text-shadow: 0 2px 6px #000;
+}
+
+.fishing-overlay {
+  width: 310px;
+  padding: 10px 14px;
+  border-radius: 13px;
+  background: rgba(18, 30, 46, 0.94);
+  border: 1.5px solid rgba(126, 238, 255, 0.72);
+  box-shadow: 0 10px 26px rgba(8, 16, 28, 0.58);
+  margin-bottom: 8px;
+  pointer-events: auto;
+}
+.fish-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a9f4ff;
+  text-align: center;
+  margin-bottom: 7px;
+}
+.fish-bar-wrap {
+  position: relative;
+  height: 16px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.fish-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #e7b84a, #ffe88a, #e7b84a);
+  opacity: 0.85;
+}
+.fish-cursor {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 6px;
+  transform: translateX(-50%);
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 0 8px #7ef2ff;
+}
+.fish-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fish-prog-track {
+  flex: 1;
+  height: 8px;
+}
+
+.modal-wide {
+  width: min(860px, 94vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+}
+.tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+.tab-btn {
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--parchment-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab-btn.active {
+  background: linear-gradient(180deg, #e4b75c, #c79236);
+  color: #1c1408;
+  border-color: #ffe39b;
+}
+.codex-body, .skills-tree-grid, .camp-recipes {
+  overflow-y: auto;
+  max-height: 52vh;
+  padding-right: 4px;
+}
+.codex-grid, .skills-tree-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: 10px;
+}
+.codex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.codex-card, .skill-card {
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.codex-card.unlocked, .skill-card.skill-unlocked {
+  border-color: rgba(238, 198, 110, 0.65);
+  background: rgba(238, 198, 110, 0.09);
+}
+.codex-card.codex-boss {
+  border-color: rgba(240, 102, 82, 0.72);
+  background: rgba(185, 48, 38, 0.14);
+}
+.codex-card.locked {
+  opacity: 0.72;
+}
+.codex-card-head, .skill-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.codex-pill, .skill-branch-tag, .skill-cost {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(20, 30, 46, 0.72);
+  color: var(--gold);
+}
+.codex-sub {
+  font-size: 0.76rem;
+  color: #ffd989;
+  margin-bottom: 4px;
+}
+.codex-desc, .skill-card p {
+  font-size: 0.79rem;
+  color: var(--parchment-soft);
+  margin: 4px 0 8px;
+  line-height: 1.35;
+}
+.codex-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: rgba(246, 238, 220, 0.78);
+}
+.rep-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  margin: 6px 0;
+}
+.rep-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #5fd8c4, #f1cb6c);
+}
+.prog-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.stat-chip {
+  padding: 6px 11px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.76rem;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.stat-chip strong {
+  color: var(--gold);
+}
+.camp-section {
+  margin-top: 12px;
+}
+.camp-section h4 {
+  margin: 0 0 8px;
+  color: var(--gold);
+  font-size: 0.85rem;
+}
+.camp-time-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ing-ok { color: #8ef2a8; }
+.ing-miss { color: #f0887e; }
+.shop-discount {
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(98, 226, 168, 0.2);
+  border: 1px solid rgba(98, 226, 168, 0.6);
+  color: #9bf7c4;
+  font-size: 0.75rem;
+}
+.btn-accent {
+  background: linear-gradient(180deg, #e7bc5f, #c48e30);
+  color: #1c1306;
+  border-color: #ffe59e;
+  font-weight: 700;
+}
+@media (max-height: 460px) {
+  .hud-spell-bar { gap: 4px; margin-bottom: 4px; }
+  .spell-slot { width: 42px; height: 38px; }
+  .spell-slot .sp-lbl { display: none; }
 }
 
 .dmg-layer {
@@ -728,7 +1022,7 @@ body {
 /* ---- Discovery Banner & Toasts ---- */
 .discovery-banner {
   position: absolute;
-  top: 108px;
+  top: 158px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;

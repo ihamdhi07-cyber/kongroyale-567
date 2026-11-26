@@ -29,6 +29,7 @@ export class DialogueUI {
   }
 
   openNpc(npc) {
+    if (!npc) return;
     this._currentNpc = npc;
     this.shopEl.classList.add('hidden');
     this.roleEl.textContent = npc.role;
@@ -38,23 +39,43 @@ export class DialogueUI {
     this.el.classList.remove('hidden');
   }
 
+  openCaravanShop() {
+    this.roleEl.textContent = 'WANDERING STARLIGHT CARAVAN';
+    this.nameEl.textContent = 'Caravan Master Kaelen';
+    this.bodyEl.textContent =
+      'Greetings, Wayfarer! My wagon circles the Crossroads, Forgotten Kingdom, and Tidehaven bringing rare Starfall Shards, Sun Ore, and coastal banquets.';
+    const caravanNpc = {
+      id: 'caravan-kaelen',
+      name: 'Caravan Master Kaelen',
+      factionId: 'crossroads-guild',
+      shop: this.game.worldEvents.getCaravanStock(),
+    };
+    this.openShop(caravanNpc);
+    this.optsEl.innerHTML = `<button class="dlg-opt-btn" id="dlg-caravan-close" type="button">Safe Travels, Kaelen</button>`;
+    this.optsEl.querySelector('#dlg-caravan-close').addEventListener('click', () => this.game.closeAllModals());
+    this.el.classList.remove('hidden');
+  }
+
   openShop(npc) {
     const inv = this.game.inventory;
+    const discount = this.game.journal?.getMerchantDiscount?.(npc.factionId || 'crossroads-guild') || 0;
+    const discountPct = Math.round(discount * 100);
     this.shopEl.classList.remove('hidden');
 
     const buyHtml = (npc.shop || [])
       .map((entry) => {
         const def = inv.getDef(entry.itemId);
         if (!def) return '';
-        const canAfford = inv.gold >= entry.price;
+        const finalPrice = Math.max(1, Math.round(entry.price * (1 - discount)));
+        const canAfford = inv.gold >= finalPrice;
         return `
           <div class="shop-row">
             <div>
               <strong>${def.name}</strong>
               <div class="slot-meta">${def.description}</div>
             </div>
-            <button class="btn-mini" data-buy="${entry.itemId}" data-price="${entry.price}" ${canAfford ? '' : 'disabled'} type="button">
-              Buy · ${entry.price} ✦
+            <button class="btn-mini" data-buy="${entry.itemId}" data-price="${finalPrice}" ${canAfford ? '' : 'disabled'} type="button">
+              Buy · ${finalPrice} ✦
             </button>
           </div>
         `;
@@ -82,7 +103,10 @@ export class DialogueUI {
             .join('');
 
     this.shopEl.innerHTML = `
-      <div class="shop-balance">Your Purse: <strong>${inv.gold} ✦ Sunshards</strong></div>
+      <div class="shop-balance">
+        Your Purse: <strong>${inv.gold} ✦ Sunshards</strong>
+        ${discountPct > 0 ? `<span class="shop-discount">★ Regional Trust -${discountPct}%</span>` : ''}
+      </div>
       <h4>Wares for Purchase</h4>
       <div class="shop-list">${buyHtml}</div>
       <h4>Sell Surplus Forage &amp; Relics</h4>

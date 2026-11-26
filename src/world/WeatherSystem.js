@@ -57,6 +57,13 @@ void main() {
     float twinkle = 0.65 + 0.35 * sin(uTime * 2.5 + st * 40.0);
     float starMask = smoothstep(0.9945, 0.999, st) * smoothstep(0.08, 0.35, h) * uNightFactor * twinkle;
     sky += vec3(0.95, 0.97, 1.0) * starMask * 1.25;
+
+    // Shimmering Aurora Borealis ribbons across northern night sky
+    float northMask = smoothstep(-0.15, -0.75, d.z) * smoothstep(0.12, 0.45, h) * (1.0 - smoothstep(0.55, 0.88, h));
+    float wave = sin(d.x * 9.0 + uTime * 0.45 + sin(d.y * 12.0 - uTime * 0.3)) * 0.5 + 0.5;
+    float curtain = smoothstep(0.45, 0.95, wave) * northMask * uNightFactor;
+    vec3 auroraCol = mix(vec3(0.24, 0.92, 0.72), vec3(0.55, 0.48, 0.98), clamp(h * 1.4, 0.0, 1.0));
+    sky += auroraCol * curtain * 0.42;
   }
 
   gl_FragColor = vec4(sky, 1.0);

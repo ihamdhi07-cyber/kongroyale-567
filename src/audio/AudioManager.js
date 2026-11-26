@@ -1,6 +1,5 @@
-// Procedural Web Audio API Spatial Ambience, Regional Music & SFX Engine.
+// Procedural Web Audio API Adaptive Soundtrack, Boss Music, Environmental Beds & Rich SFX Engine.
 // Browser-autoplay compliant: unlocks cleanly only after first user interaction.
-// Supports Master, Music, SFX, Ambience volumes and Mute toggle.
 export class AudioManager {
   constructor() {
     this.ctx = null;
@@ -10,6 +9,7 @@ export class AudioManager {
 
     this.currentScale = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25];
     this._musicTimer = 1.2;
+    this._bossTimer = 0.5;
     this._windGain = null;
     this._windFilter = null;
   }
@@ -107,6 +107,10 @@ export class AudioManager {
     osc.stop(now + dur + 0.03);
   }
 
+  playUiClick() {
+    this._tone(640, { type: 'sine', dur: 0.08, gain: 0.12, slideTo: 820 });
+  }
+
   playFootstep(surface = 'grass') {
     const map = { grass: 145, dirt: 120, stone: 230, sand: 165, snow: 180, water: 310 };
     const base = map[surface] || 150;
@@ -118,6 +122,11 @@ export class AudioManager {
     });
   }
 
+  playSplash() {
+    this._tone(360, { type: 'sine', dur: 0.22, gain: 0.18, slideTo: 180 });
+    setTimeout(() => this._tone(520, { type: 'sine', dur: 0.14, gain: 0.12, slideTo: 740 }), 65);
+  }
+
   playAttack(isHeavy = false) {
     this._tone(isHeavy ? 190 : 340, {
       type: isHeavy ? 'sawtooth' : 'triangle',
@@ -125,6 +134,26 @@ export class AudioManager {
       gain: isHeavy ? 0.24 : 0.18,
       slideTo: isHeavy ? 68 : 130,
     });
+  }
+
+  playParry() {
+    this._tone(880, { type: 'triangle', dur: 0.28, gain: 0.28, slideTo: 1320 });
+    setTimeout(() => this._tone(1320, { type: 'sine', dur: 0.35, gain: 0.22 }), 55);
+  }
+
+  playSpell(spellId) {
+    if (spellId === 'resonance-bolt') {
+      this._tone(580, { type: 'sine', dur: 0.22, gain: 0.22, slideTo: 980 });
+    } else if (spellId === 'gale-updraft') {
+      this._tone(240, { type: 'triangle', dur: 0.45, gain: 0.24, slideTo: 720 });
+    } else if (spellId === 'sunfire-nova') {
+      this._tone(160, { type: 'sawtooth', dur: 0.48, gain: 0.25, slideTo: 65 });
+      setTimeout(() => this._tone(420, { type: 'triangle', dur: 0.35, gain: 0.16, slideTo: 210 }), 70);
+    } else {
+      this._tone(523.25, { type: 'sine', dur: 0.45, gain: 0.2 });
+      setTimeout(() => this._tone(659.25, { type: 'sine', dur: 0.5, gain: 0.18 }), 90);
+      setTimeout(() => this._tone(783.99, { type: 'sine', dur: 0.6, gain: 0.16 }), 180);
+    }
   }
 
   playHit(blocked = false) {
@@ -146,6 +175,10 @@ export class AudioManager {
     this._tone(freq * 1.5, { type: 'sine', dur: 0.7, gain: 0.12 });
   }
 
+  playDiscovery() {
+    this.playDiscoveryFanfare();
+  }
+
   playDiscoveryFanfare() {
     const chord = [392.0, 493.88, 587.33, 783.99];
     chord.forEach((f, i) => {
@@ -153,19 +186,33 @@ export class AudioManager {
     });
   }
 
-  update(dt, region, weather) {
+  update(dt, region, weather, bossActive = false) {
     if (!this.unlocked || !this.ctx || this.muted) return;
 
     if (region && region.musicScale) {
       this.currentScale = region.musicScale;
     }
 
-    // Adapt wind/rain ambient filter smoothly
     if (this._windFilter && this._windGain) {
       const now = this.ctx.currentTime;
       const isRain = weather === 'rain';
-      this._windFilter.frequency.setTargetAtTime(isRain ? 950 : 340, now, 0.3);
-      this._windGain.gain.setTargetAtTime(isRain ? 0.22 : 0.08, now, 0.3);
+      const isSnow = weather === 'snow';
+      this._windFilter.frequency.setTargetAtTime(isRain ? 950 : isSnow ? 520 : 340, now, 0.3);
+      this._windGain.gain.setTargetAtTime(isRain ? 0.22 : isSnow ? 0.14 : 0.08, now, 0.3);
+    }
+
+    // Dynamic Boss Combat Pulse!
+    if (bossActive) {
+      this._bossTimer -= dt;
+      if (this._bossTimer <= 0) {
+        this._bossTimer = 0.58;
+        const bass = [110, 130.81, 146.83, 123.47][Math.floor(Math.random() * 4)];
+        this._tone(bass, { type: 'sawtooth', dur: 0.42, gain: 0.14, dest: 'music' });
+        if (Math.random() > 0.45) {
+          this._tone(bass * 3, { type: 'triangle', dur: 0.32, gain: 0.1, dest: 'music' });
+        }
+      }
+      return;
     }
 
     // Generative serene anime watercolor harp/flute notes

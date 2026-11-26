@@ -20,6 +20,7 @@ export class WorldManager {
     WATERCOLOR_UNIFORMS.uWcPaperMap.value = this.textures.paperGrain;
 
     this.terrain = new TerrainManager(WORLD_CONFIG.SEED);
+    this.biomes = this.terrain.biomes;
     this.vegetation = new VegetationSystem(this.terrain, this.textures);
     this.chunks = new ChunkManager(sceneManager.scene, this.terrain, this.textures, this.vegetation, preset);
     this.water = new WaterSystem(sceneManager.scene);

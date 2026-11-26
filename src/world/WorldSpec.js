@@ -14,6 +14,8 @@ export const WORLD_CONFIG = {
   SPAWN_POS: { x: 4, z: 398 },
 };
 
+export const SEA_LEVEL = WORLD_CONFIG.SEA_LEVEL;
+
 // Eight organically blended interconnected regions totalling 64 km²
 export const REGIONS = [
   {

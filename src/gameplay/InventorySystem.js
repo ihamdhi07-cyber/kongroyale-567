@@ -32,6 +32,7 @@ export class InventorySystem {
     if (!amount || amount <= 0) return;
     this.gold += Math.round(amount);
     if (!silent && this.events) {
+      this.events.emit('inventory:gold', { gold: this.gold, delta: Math.round(amount) });
       this.events.emit('inventory:changed', this.getSnapshot());
     }
   }
@@ -138,6 +139,20 @@ export class InventorySystem {
     return true;
   }
 
+  getEquipmentBonuses() {
+    const wDef = this.defs.get(this.equipped.weapon);
+    const aDef = this.defs.get(this.equipped.armor);
+    return {
+      attack: wDef?.stats?.attack ?? wDef?.attack ?? 16,
+      spellBonus: (wDef?.spellBonus ?? 0) + (aDef?.spellBonus ?? 0),
+      defense: aDef?.stats?.defense ?? aDef?.defense ?? 5,
+      speedBonus: aDef?.stats?.speedBonus ?? aDef?.speedBonus ?? 0,
+      warmthBonus: aDef?.stats?.warmthBonus ?? aDef?.warmthBonus ?? 10,
+      weaponTint: wDef?.visualTint || null,
+      armorTint: aDef?.visualTint || null,
+    };
+  }
+
   applyStatsToPlayer(player, skillBonuses = {}) {
     const wDef = this.defs.get(this.equipped.weapon);
     const aDef = this.defs.get(this.equipped.armor);
@@ -157,7 +172,13 @@ export class InventorySystem {
     player.speedMultiplier = 1.0 + aSpeed + (skillBonuses.speedBonus || 0);
     if (player.hp > player.maxHp) player.hp = player.maxHp;
     if (player.stamina > player.maxStamina) player.stamina = player.maxStamina;
-    if (player.applyEquipmentVisuals) player.applyEquipmentVisuals(this.equipped);
+    if (player.applyEquipmentVisuals) {
+      player.applyEquipmentVisuals({
+        ...this.equipped,
+        weaponTint: wDef?.visualTint,
+        armorTint: aDef?.visualTint,
+      });
+    }
   }
 
   getSnapshot() {

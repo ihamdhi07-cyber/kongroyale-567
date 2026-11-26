@@ -74,6 +74,102 @@ export const INTERIORS = [
     chestQty: 2,
     chestGold: 75,
   },
+  {
+    id: 'skywatch-sanctum',
+    name: 'Skywatch Astrolabe Sanctum',
+    subtitle: 'Celestial Observatory Inner Dome',
+    doorX: -1580,
+    doorZ: -1936,
+    returnX: -1580,
+    returnZ: -1930,
+    roomX: 360,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 9.5,
+    halfD: 8.5,
+    wallColor: 0x2a3b58,
+    floorColor: 0x455a78,
+    lightColor: 0x9be5ff,
+    specialProp: 'orrery',
+    loreTitle: 'Star-Chart of the Falling Resonance',
+    loreText:
+      'Every fifty cycles, fragments of the Shattered Horizon descend across the valley as Meteoric Starfall Shards. Catch their fire to temper weapons beyond mortal steel.',
+    chestItem: 'starfall-shard',
+    chestQty: 1,
+    chestGold: 95,
+  },
+  {
+    id: 'citadel-crypt',
+    name: 'Silent Citadel Crypt',
+    subtitle: 'Vault of the Forgotten Dynasty',
+    doorX: 1720,
+    doorZ: -226,
+    returnX: 1720,
+    returnZ: -219,
+    roomX: 480,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 10.0,
+    halfD: 9.0,
+    wallColor: 0x7e725e,
+    floorColor: 0x595145,
+    lightColor: 0xffb35c,
+    specialProp: 'braziers',
+    loreTitle: 'Oath of the Limestone Vanguard',
+    loreText:
+      'We laid down our crowns before the Silent Citadel so no war would ever scar Verdant Valley again. Let the Wayfarer who reads this bear our Mantle in defense of the realm.',
+    chestItem: 'sun-ore',
+    chestQty: 3,
+    chestGold: 110,
+  },
+  {
+    id: 'heart-tree-hollow',
+    name: 'Heart Tree Root Hollow',
+    subtitle: 'Bioluminescent Emerald Sanctuary',
+    doorX: -980,
+    doorZ: -144,
+    returnX: -980,
+    returnZ: -138,
+    roomX: 600,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 9.0,
+    halfD: 8.0,
+    wallColor: 0x3b593c,
+    floorColor: 0x2d4834,
+    lightColor: 0x8ef7b4,
+    specialProp: 'spring',
+    loreTitle: 'Whisper of the First Sapling',
+    loreText:
+      'Before roads crossed the hills, the Wind Stag Sylph drank from this luminous root spring. Speak with gentle resolve and the wilds will carry your feet swifter than the wind.',
+    chestItem: 'moonpetal',
+    chestQty: 4,
+    chestGold: 85,
+  },
+  {
+    id: 'astral-spire-chamber',
+    name: 'The Astral Spire Chamber',
+    subtitle: 'Suspended Hall of the Broken Horizon',
+    doorX: 1780,
+    doorZ: -1805,
+    returnX: 1780,
+    returnZ: -1798,
+    roomX: 720,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 9.5,
+    halfD: 8.5,
+    wallColor: 0x4b3c6c,
+    floorColor: 0x32284c,
+    lightColor: 0xd49eff,
+    specialProp: 'astral-rings',
+    loreTitle: 'Fragments of the Fractured Sky',
+    loreText:
+      'Above the Shattered Expanse orbits the Astral Leviathan—born of pure echo when the sky broke. Calm its storm and the Crown of the Shattered Echo shall answer your staff.',
+    chestItem: 'void-petal',
+    chestQty: 3,
+    chestGold: 135,
+  },
 ];
 
 export class InteriorManager {
@@ -92,6 +188,11 @@ export class InteriorManager {
     this.openedChests = new Set();
     this.chestMeshes = new Map();
     this.portalRings = [];
+    this.animatedProps = [];
+
+    // Single reusable interior PointLight (moves into active sanctuary; 0 cost outdoors!)
+    this.roomLight = new THREE.PointLight(0xffd28c, 0, 28);
+    this.root.add(this.roomLight);
 
     this._buildOutdoorPortals();
     this._buildRooms();
@@ -200,11 +301,7 @@ export class InteriorManager {
         g.add(sconce);
       }
 
-      // Warm interior point light + central study table / crystal altar
-      const light = new THREE.PointLight(def.lightColor, 4.5, 28);
-      light.position.set(0, 4.8, 0);
-      g.add(light);
-
+      // Central study table / crystal altar
       const table = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.0, 2.0), woodMat);
       table.position.set(0, 0.5, -1.8);
       g.add(table);
@@ -212,6 +309,46 @@ export class InteriorManager {
       const scrollOrb = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), glowMat);
       scrollOrb.position.set(0, 1.55, -1.8);
       g.add(scrollOrb);
+      this.animatedProps.push({ mesh: scrollOrb, speed: 1.4, axis: 'y' });
+
+      // Bespoke architectural centerpiece for our 4 regional dungeons & sanctums
+      if (def.specialProp === 'orrery') {
+        const brassMat = new THREE.MeshStandardMaterial({ color: 0xe3b856, metalness: 0.6, roughness: 0.3 });
+        const ring1 = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.08, 8, 32), brassMat);
+        ring1.position.set(0, 3.6, -1.8);
+        const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.07, 8, 28), glowMat);
+        ring2.position.set(0, 3.6, -1.8);
+        ring2.rotation.x = Math.PI / 3;
+        g.add(ring1, ring2);
+        this.animatedProps.push({ mesh: ring1, speed: 0.85, axis: 'y' }, { mesh: ring2, speed: -1.3, axis: 'x' });
+      } else if (def.specialProp === 'braziers') {
+        const fireMat = new THREE.MeshBasicMaterial({ color: 0xff9a3c });
+        for (const [bx, bz] of [[-4.8, 1.8], [4.8, 1.8], [-4.8, -3.5], [4.8, -3.5]]) {
+          const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.38, 1.1, 8), wallMat);
+          bowl.position.set(bx, 0.55, bz);
+          const flame = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.95, 6), fireMat);
+          flame.position.set(bx, 1.45, bz);
+          g.add(bowl, flame);
+          this.animatedProps.push({ mesh: flame, speed: 2.2, axis: 'y' });
+        }
+      } else if (def.specialProp === 'spring') {
+        const pool = new THREE.Mesh(
+          new THREE.CircleGeometry(2.4, 24),
+          new THREE.MeshBasicMaterial({ color: 0x7ef7c2, transparent: true, opacity: 0.78 })
+        );
+        pool.rotation.x = -Math.PI / 2;
+        pool.position.set(0, 0.09, 1.2);
+        g.add(pool);
+      } else if (def.specialProp === 'astral-rings') {
+        const violetMat = new THREE.MeshBasicMaterial({ color: 0xd89eff, transparent: true, opacity: 0.85 });
+        const ar1 = new THREE.Mesh(new THREE.TorusGeometry(2.5, 0.1, 8, 32), violetMat);
+        ar1.position.set(0, 3.4, -1.8);
+        const ar2 = new THREE.Mesh(new THREE.TorusGeometry(1.75, 0.08, 8, 28), sconceMat);
+        ar2.position.set(0, 3.4, -1.8);
+        ar2.rotation.y = Math.PI / 2;
+        g.add(ar1, ar2);
+        this.animatedProps.push({ mesh: ar1, speed: 1.1, axis: 'z' }, { mesh: ar2, speed: -1.4, axis: 'y' });
+      }
 
       // Corner decorative pillars or crystal spires
       for (const sx of [-def.halfW + 1.4, def.halfW - 1.4]) {
@@ -245,6 +382,10 @@ export class InteriorManager {
     const isFirstVisit = !this.visited.has(def.id);
     this.visited.add(def.id);
 
+    this.roomLight.color.setHex(def.lightColor);
+    this.roomLight.position.set(def.roomX, def.roomY + 4.8, def.roomZ);
+    this.roomLight.intensity = 4.5;
+
     player.root.position.set(def.roomX, def.roomY + 0.05, def.roomZ + def.halfD - 2.4);
     player.velocity.set(0, 0, 0);
     player.grounded = true;
@@ -266,6 +407,7 @@ export class InteriorManager {
     if (!this.currentInterior) return false;
     const def = this.currentInterior;
     this.currentInterior = null;
+    this.roomLight.intensity = 0;
 
     const h = this.terrain.getHeight(def.returnX, def.returnZ);
     player.root.position.set(def.returnX, Math.max(h, 0.5), def.returnZ);
@@ -372,6 +514,9 @@ export class InteriorManager {
   update(dt, elapsed) {
     for (let i = 0; i < this.portalRings.length; i++) {
       this.portalRings[i].rotation.y = elapsed * 0.9 + i;
+    }
+    for (const prop of this.animatedProps) {
+      prop.mesh.rotation[prop.axis] = elapsed * prop.speed;
     }
   }
 

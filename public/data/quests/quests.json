@@ -30,6 +30,32 @@
       "rewards": { "xp": 600, "gold": 250, "items": [{ "itemId": "galeblade-staff", "qty": 1 }] }
     },
     {
+      "id": "resonance-of-four-sovereigns",
+      "type": "main",
+      "title": "Sovereigns of the Shattered Age",
+      "summary": "Now that the Gate resonates, vanquish the mighty regional guardians of Highland Reach and the Shattered Expanse.",
+      "giver": "Elder Maren",
+      "autoStart": false,
+      "objectives": [
+        { "id": "defeat-glacier", "text": "Vanquish the Glacier Sovereign in Highland Reach", "target": 1, "event": "enemy:defeat:glacier-sovereign" },
+        { "id": "defeat-leviathan", "text": "Vanquish the Astral Leviathan at the Broken Horizon", "target": 1, "event": "enemy:defeat:astral-leviathan" }
+      ],
+      "rewards": { "xp": 950, "gold": 420, "items": [{ "itemId": "astral-scepter", "qty": 1 }, { "itemId": "starlight-draught", "qty": 2 }] }
+    },
+    {
+      "id": "beyond-the-horizon-veil",
+      "type": "main",
+      "title": "Charting the Frontier Gates",
+      "summary": "Journey to the distant perimeter monuments marking the 15x15 km outer frontier beyond the 8 playable regions.",
+      "giver": "Cartographer Solen",
+      "autoStart": false,
+      "objectives": [
+        { "id": "discover-all-8", "text": "Discover all 8 Major Regional Landmarks", "target": 8, "event": "landmark:discover" },
+        { "id": "enter-5-sanctuaries", "text": "Explore 4 Ancient 3D Sanctuaries across the world", "target": 4, "event": "interior:enter" }
+      ],
+      "rewards": { "xp": 1100, "gold": 500, "items": [{ "itemId": "astral-vestment", "qty": 1 }] }
+    },
+    {
       "id": "herbs-of-the-canopy",
       "type": "side",
       "title": "Herbs of the Emerald Canopy",
@@ -85,6 +111,81 @@
       "rewards": { "xp": 240, "gold": 95, "items": [{ "itemId": "frostward-coat", "qty": 1 }, { "itemId": "frost-elixir", "qty": 2 }] }
     },
     {
+      "id": "angler-of-the-eight-waters",
+      "type": "side",
+      "title": "Angler of the Silver Waters",
+      "summary": "Cast your glowing Spirit Line along rivers, coves, and alpine tarns to land fresh regional catches.",
+      "giver": "Harbormaster Kael",
+      "autoStart": true,
+      "objectives": [
+        { "id": "catch-fish-3", "text": "Catch 3 Fish using the Spirit Fishing Line (Press F near water)", "target": 3, "event": "fishing:catch" }
+      ],
+      "rewards": { "xp": 220, "gold": 90, "items": [{ "itemId": "tidecaller-trident", "qty": 1 }, { "itemId": "koi-broth", "qty": 1 }] }
+    },
+    {
+      "id": "trials-of-the-wind-stag",
+      "type": "side",
+      "title": "Bond of the Wind Stag",
+      "summary": "Call Sylph the Spirit Wind Stag (Press H outdoors) and channel Resonance Magic across the open hills.",
+      "giver": "Scout Vesper",
+      "autoStart": true,
+      "objectives": [
+        { "id": "summon-mount", "text": "Summon and ride Sylph the Wind Stag (Press H)", "target": 1, "event": "mount:summon" },
+        { "id": "cast-spells-3", "text": "Cast 3 Ancient Resonance Spells (Keys 1-4)", "target": 3, "event": "magic:cast" }
+      ],
+      "rewards": { "xp": 230, "gold": 95, "items": [{ "itemId": "verdant-shroud", "qty": 1 }, { "itemId": "wayfarer-rations", "qty": 2 }] }
+    },
+    {
+      "id": "flames-of-the-hearth",
+      "type": "side",
+      "title": "Flames of the Traveling Hearth",
+      "summary": "Rest beside any regional campfire to advance day into dawn or dusk and prepare warm journey rations.",
+      "giver": "Merchant Rowan",
+      "autoStart": false,
+      "objectives": [
+        { "id": "campfire-rest", "text": "Rest at a Crossroads or Outpost Campfire", "target": 1, "event": "campfire:rest" },
+        { "id": "cook-meal", "text": "Cook a meal at the Campfire or Crafting Bench", "target": 1, "event": "craft:complete" }
+      ],
+      "rewards": { "xp": 180, "gold": 75, "items": [{ "itemId": "sunfire-curry", "qty": 2 }] }
+    },
+    {
+      "id": "astrolabe-of-skywatch",
+      "type": "side",
+      "title": "Secrets of the Brass Astrolabe",
+      "summary": "Step inside the hidden Skywatch Astrolabe Sanctum high in Highland Reach and inspect its celestial instruments.",
+      "giver": "Alpine Guide Soren",
+      "autoStart": false,
+      "objectives": [
+        { "id": "enter-skywatch-sanctum", "text": "Enter the Skywatch Astrolabe Sanctum", "target": 1, "event": "interior:enter:skywatch-sanctum" }
+      ],
+      "rewards": { "xp": 310, "gold": 135, "items": [{ "itemId": "frostfang-spear", "qty": 1 }] }
+    },
+    {
+      "id": "crypt-of-the-silent-king",
+      "type": "side",
+      "title": "Crypt of the Silent Citadel",
+      "summary": "Descend into the Silent Citadel Crypt beneath the Forgotten Kingdom ruins and claim the ancient royal seal.",
+      "giver": "Relic Hunter Orin",
+      "autoStart": false,
+      "objectives": [
+        { "id": "enter-citadel-crypt", "text": "Enter the Silent Citadel Crypt", "target": 1, "event": "interior:enter:citadel-crypt" },
+        { "id": "defeat-colossus", "text": "Vanquish the Mossback Colossus", "target": 1, "event": "enemy:defeat:mossback-colossus" }
+      ],
+      "rewards": { "xp": 360, "gold": 160, "items": [{ "itemId": "citadel-mantle", "qty": 1 }] }
+    },
+    {
+      "id": "caravan-of-starlight",
+      "type": "side",
+      "title": "Fallen Stars & Wandering Traders",
+      "summary": "Track down a fallen Meteoric Starfall Shard or follow a guiding Spirit Wisp in the wilds.",
+      "giver": "Caravan Master Kaelen",
+      "autoStart": false,
+      "objectives": [
+        { "id": "world-event-1", "text": "Complete a Dynamic World Event (Starfall or Spirit Wisp)", "target": 1, "event": "worldevent:complete" }
+      ],
+      "rewards": { "xp": 290, "gold": 140, "items": [{ "itemId": "starlight-draught", "qty": 2 }, { "itemId": "sun-ore", "qty": 2 }] }
+    },
+    {
       "id": "cartographers-horizon",
       "type": "discovery",
       "title": "The Cartographer's Horizon",
@@ -101,7 +202,7 @@
       "id": "secrets-of-the-sanctuaries",
       "type": "hidden",
       "title": "Secrets of the Hidden Sanctuaries",
-      "summary": "Venture inside ancient enclosed sanctuaries across the realm — Elder's Hall, the Crystal Vault, and the Drowned Archive Chamber.",
+      "summary": "Venture inside ancient enclosed sanctuaries across the realm — Elder's Hall, Crystal Vault, Drowned Archive, Astrolabe Sanctum, and more.",
       "giver": "World Discovery",
       "autoStart": true,
       "objectives": [
@@ -109,6 +210,31 @@
         { "id": "defeat-boss", "text": "Vanquish a Legendary Regional Guardian Boss", "target": 1, "event": "boss:defeat" }
       ],
       "rewards": { "xp": 380, "gold": 160, "items": [{ "itemId": "aether-core", "qty": 1 }, { "itemId": "spirit-tonic", "qty": 2 }] }
+    },
+    {
+      "id": "master-of-the-blade",
+      "type": "hidden",
+      "title": "Grace of the Perfect Parry",
+      "summary": "Master Wayfarer defense and stealth tactics against hostile guardians across the continent.",
+      "giver": "World Discovery",
+      "autoStart": true,
+      "objectives": [
+        { "id": "perfect-parry", "text": "Land a Perfect Shield Parry or Stealth Ambush", "target": 1, "event": "combat:style" },
+        { "id": "defeat-5-foes", "text": "Defeat 5 Hostile Creatures across the realm", "target": 5, "event": "enemy:defeat" }
+      ],
+      "rewards": { "xp": 340, "gold": 150, "items": [{ "itemId": "sunfire-halberd", "qty": 1 }] }
+    },
+    {
+      "id": "wayfarer-codex-mastery",
+      "type": "discovery",
+      "title": "Chronicler of the Unknown World",
+      "summary": "Uncover ancient lore tablets and sanctuary charters to fill the Wayfarer's Codex (Press B).",
+      "giver": "World Discovery",
+      "autoStart": true,
+      "objectives": [
+        { "id": "read-lore-3", "text": "Record 3 Ancient Lore Entries in the Codex", "target": 3, "event": "lore:discover" }
+      ],
+      "rewards": { "xp": 300, "gold": 125, "items": [{ "itemId": "sunfire-robe", "qty": 1 }] }
     }
   ]
 }

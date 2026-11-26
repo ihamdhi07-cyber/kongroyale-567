@@ -108,6 +108,51 @@ export class LandmarkBuilder {
 
       this.root.add(group);
     }
+    this._buildFrontierMonuments();
+  }
+
+  /** Builds 4 dramatic 3D Frontier Border Gates marking the 15x15 km outer expansion realm */
+  _buildFrontierMonuments() {
+    const gates = [
+      { id: 'frostpeak-gate', name: 'Frostpeak Frontier Gate', x: -120, z: -3780, color: 0x8ef0ff, lore: 'Beyond this northern arch lies the 42 km² Frostpeak Expanse of the 15×15 km grand continent.' },
+      { id: 'astral-rift-pier', name: 'Astral Rift Sky-Pier', x: 3760, z: -180, color: 0xd19cff, lore: 'Eastern sentinel beacon looking out toward the suspended Astral Rift Archipelago (40 km²).' },
+      { id: 'sunfire-lighthouse', name: 'Sunfire Horizon Beacon', x: 180, z: 3760, color: 0xffb34d, lore: 'Southern coastal lighthouse pointing toward the sunlit Sunfire Atolls across the deep sea.' },
+      { id: 'whispering-mire-arch', name: 'Whispering Mire Arch', x: -3760, z: 140, color: 0x8ef5a8, lore: 'Moss-bound western threshold marking the mist-veiled Whispering Mire frontier.' },
+    ];
+    for (const fg of gates) {
+      const y = Math.max(2.0, this.terrain.getHeight(fg.x, fg.z));
+      const g = new THREE.Group();
+      g.position.set(fg.x, y, fg.z);
+
+      const pL = new THREE.Mesh(new THREE.BoxGeometry(2.6, 13, 2.6), this.darkStoneMat);
+      pL.position.set(-5.2, 6.5, 0);
+      const pR = pL.clone();
+      pR.position.x = 5.2;
+      const lintel = new THREE.Mesh(new THREE.BoxGeometry(14.2, 2.2, 3.0), this.stoneMat);
+      lintel.position.set(0, 13.4, 0);
+      const gemMat = new THREE.MeshStandardMaterial({ color: fg.color, emissive: fg.color, emissiveIntensity: 1.5 });
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(1.15, 0), gemMat);
+      gem.position.set(0, 10.6, 0);
+      g.add(pL, pR, lintel, gem);
+      this.root.add(g);
+
+      this.interactables.push({
+        id: `lore_${fg.id}`,
+        type: 'lore',
+        landmarkId: fg.id,
+        title: fg.name,
+        lore: fg.lore,
+        label: `Inspect ${fg.name}`,
+        x: fg.x,
+        y: y + 1,
+        z: fg.z + 3,
+        radius: 5.0,
+      });
+      this.animated.push((dt, t) => {
+        gem.rotation.y += dt * 1.2;
+        gem.position.y = 10.6 + Math.sin(t * 2.2) * 0.35;
+      });
+    }
   }
 
   _buildCottage(w, h, d, roofMat) {

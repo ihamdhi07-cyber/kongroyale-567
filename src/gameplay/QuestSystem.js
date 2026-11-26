@@ -104,9 +104,12 @@ export class QuestSystem {
         text: `${def.title} (+${def.rewards?.xp || 0} XP${def.rewards?.gold ? `, +${def.rewards.gold} Sunshards` : ''})`,
       });
     }
-    // Seamlessly unlock the climax main quest when Echoes of the Gate finishes
+    // Seamlessly chain main story chapters
     if (questId === 'echoes-of-the-gate' && this.defs.has('awakening-the-horizon')) {
       this.startQuest('awakening-the-horizon');
+    } else if (questId === 'awakening-the-horizon') {
+      if (this.defs.has('resonance-of-four-sovereigns')) this.startQuest('resonance-of-four-sovereigns');
+      if (this.defs.has('beyond-the-horizon-veil')) this.startQuest('beyond-the-horizon-veil');
     }
   }
 

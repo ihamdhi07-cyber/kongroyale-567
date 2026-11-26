@@ -330,6 +330,40 @@ export class MapUI {
         ctx.fillStyle = solved ? '#62e082' : '#d89cf5';
         ctx.fill();
       }
+
+      // 4 Legendary World Bosses (crimson star circles)
+      for (const e of this.game.enemies?.enemies || []) {
+        if (!e.alive || e.def.category !== 'boss') continue;
+        const [ex, ey] = this._worldToCanvas(e.homeX, e.homeZ);
+        ctx.beginPath();
+        ctx.arc(ex, ey, 6.2, 0, Math.PI * 2);
+        ctx.fillStyle = '#e04238';
+        ctx.fill();
+        ctx.strokeStyle = '#ffdf78';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+
+      // Live Wandering Merchant Caravan & Active Starfall Shard
+      if (this.game.worldEvents?.caravanPos) {
+        const [cx, cy] = this._worldToCanvas(this.game.worldEvents.caravanPos.x, this.game.worldEvents.caravanPos.z);
+        ctx.fillStyle = '#f2b84b';
+        ctx.fillRect(cx - 5, cy - 4, 10, 8);
+        ctx.strokeStyle = '#2d1c10';
+        ctx.lineWidth = 1.4;
+        ctx.strokeRect(cx - 5, cy - 4, 10, 8);
+      }
+      if (this.game.worldEvents?.activeStarfall && !this.game.worldEvents.activeStarfall.collected) {
+        const sf = this.game.worldEvents.activeStarfall.pos;
+        const [sx, sy] = this._worldToCanvas(sf.x, sf.z);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 5.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff08a';
+        ctx.fill();
+        ctx.strokeStyle = '#ff9c3b';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
+      }
     }
 
     // 6b. Custom Waypoint Pin

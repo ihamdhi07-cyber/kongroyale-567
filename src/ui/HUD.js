@@ -35,6 +35,9 @@ export class HUD {
         <div class="hud-status-row">
           <span class="hud-gold-pill" id="hud-gold">60 ✦</span>
           <span class="hud-stealth-pill hidden" id="hud-stealth">◉ Stealth · 1.75× Ambush</span>
+          <span class="hud-buff-pill hidden" id="hud-ward">❀ Runic Ward</span>
+          <span class="hud-buff-pill hidden" id="hud-mount-pill">≋ Wind Stag</span>
+          <span class="hud-secret-pill hidden" id="hud-luma">✦ Luma senses a secret nearby!</span>
         </div>
       </div>
 
@@ -59,7 +62,8 @@ export class HUD {
           <button class="hud-icon-btn" data-modal="map" title="World Map [M]" type="button">Map</button>
           <button class="hud-icon-btn" data-modal="inventory" title="Inventory &amp; Craft [I]" type="button">Bag</button>
           <button class="hud-icon-btn" data-modal="quests" title="Quest Journal [T]" type="button">Quests</button>
-          <button class="hud-icon-btn" data-modal="progression" title="Skills &amp; Codex [P]" type="button">Skills</button>
+          <button class="hud-icon-btn" data-modal="progression" title="3-Branch Skill Tree [P]" type="button">Skills</button>
+          <button class="hud-icon-btn" data-modal="codex" title="Bestiary, Lore &amp; Achievements [B]" type="button">Codex</button>
           <button class="hud-icon-btn" data-modal="pause" title="Pause / Save [Esc]" type="button">Menu</button>
         </div>
         <div class="hud-quest-box" id="hud-quest-box">
@@ -72,11 +76,11 @@ export class HUD {
       <!-- Bottom Left: Subtle Keybind Legend -->
       <div class="hud-hints" id="hud-hints">
         <span><b>WASD</b> Move</span>
-        <span><b>Space×2</b> Glide</span>
-        <span><b>Z</b> Stealth</span>
-        <span><b>C</b> Dodge/Dive</span>
+        <span><b>1–4</b> Spells</span>
+        <span><b>H</b> Wind Stag</span>
+        <span><b>G</b> Fish</span>
+        <span><b>B</b> Codex</span>
         <span><b>E</b> Interact</span>
-        <span><b>V</b> Photo</span>
       </div>
 
       <!-- Bottom Right: Live Circular Watercolor Minimap -->
@@ -85,11 +89,30 @@ export class HUD {
         <span class="minimap-n">N</span>
       </div>
 
-      <!-- Bottom Center: Contextual Interact Prompt + 2.5D Camera Preset Switcher -->
+      <!-- Bottom Center: Fishing Mini-Game + Contextual Interact + 4-Spell Hotbar + Camera Switcher -->
       <div class="hud-bottom">
+        <div class="fishing-overlay hidden" id="fishing-overlay">
+          <div class="fish-title" id="fish-title">Spirit Line Cast — Wait for a bite...</div>
+          <div class="fish-bar-wrap">
+            <div class="fish-zone" id="fish-zone"></div>
+            <div class="fish-cursor" id="fish-cursor"></div>
+          </div>
+          <div class="fish-progress-row">
+            <div class="bar-track fish-prog-track"><div class="bar-fill bar-air" id="fish-prog-fill"></div></div>
+            <button class="btn-mini btn-accent" id="btn-fish-reel" type="button">Reel! [G]</button>
+          </div>
+        </div>
         <div class="hud-interact-pill hidden" id="hud-interact">
           <span class="keycap">E</span>
           <span id="hud-interact-text">Interact</span>
+        </div>
+        <div class="hud-spell-bar" id="hud-spell-bar">
+          <button class="spell-slot" data-spell-idx="0" type="button" title="Resonance Bolt [1]"><span class="sp-key">1</span><span class="sp-ico">✦</span><span class="sp-lbl">Bolt</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="1" type="button" title="Gale Updraft [2]"><span class="sp-key">2</span><span class="sp-ico">≋</span><span class="sp-lbl">Gale</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="2" type="button" title="Sunfire Nova [3]"><span class="sp-key">3</span><span class="sp-ico">☀</span><span class="sp-lbl">Nova</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="3" type="button" title="Spirit Ward [4]"><span class="sp-key">4</span><span class="sp-ico">❀</span><span class="sp-lbl">Mend</span><span class="sp-cd"></span></button>
+          <button class="spell-slot spell-util" id="btn-hud-mount" type="button" title="Call Sylph Wind Stag [H]"><span class="sp-key">H</span><span class="sp-ico">❖</span><span class="sp-lbl">Stag</span></button>
+          <button class="spell-slot spell-util" id="btn-hud-fish" type="button" title="Spirit Fishing [G]"><span class="sp-key">G</span><span class="sp-ico">∿</span><span class="sp-lbl">Fish</span></button>
         </div>
         <div class="hud-cam-strip">
           <button class="cam-pill" data-cam="close" type="button" title="Close Adventure View">Close</button>
@@ -133,6 +156,15 @@ export class HUD {
     this.levelEl = this.root.querySelector('#hud-level');
     this.goldEl = this.root.querySelector('#hud-gold');
     this.stealthEl = this.root.querySelector('#hud-stealth');
+    this.wardEl = this.root.querySelector('#hud-ward');
+    this.mountPillEl = this.root.querySelector('#hud-mount-pill');
+    this.lumaEl = this.root.querySelector('#hud-luma');
+    this.fishOverlay = this.root.querySelector('#fishing-overlay');
+    this.fishTitle = this.root.querySelector('#fish-title');
+    this.fishZone = this.root.querySelector('#fish-zone');
+    this.fishCursor = this.root.querySelector('#fish-cursor');
+    this.fishProgFill = this.root.querySelector('#fish-prog-fill');
+    this.spellSlots = [...this.root.querySelectorAll('.spell-slot[data-spell-idx]')];
     this.regionEl = this.root.querySelector('#hud-region');
     this.timeEl = this.root.querySelector('#hud-time');
     this.compassEl = this.root.querySelector('#hud-compass');
@@ -172,6 +204,12 @@ export class HUD {
       this.game.cameraController.targetDistance = Math.min(38, this.game.cameraController.targetDistance + 4);
     });
     this.interactEl.addEventListener('click', () => this.game.interaction.interact());
+    for (const slot of this.spellSlots) {
+      slot.addEventListener('click', () => this.game.castSpellByIndex(Number(slot.dataset.spellIdx)));
+    }
+    this.root.querySelector('#btn-hud-mount').addEventListener('click', () => this.game.toggleMount());
+    this.root.querySelector('#btn-hud-fish').addEventListener('click', () => this.game.handleFishingAction());
+    this.root.querySelector('#btn-fish-reel').addEventListener('click', () => this.game.handleFishingAction());
     this.root.querySelector('#dismiss-portrait').addEventListener('click', () => {
       this.root.querySelector('#portrait-hint').style.display = 'none';
     });
@@ -220,6 +258,9 @@ export class HUD {
   }
 
   showToast({ title, text }) {
+    while (this.toastStack.children.length >= 3) {
+      this.toastStack.firstElementChild?.remove();
+    }
     const el = document.createElement('div');
     el.className = 'toast-item';
     el.innerHTML = `<div class="toast-title">${title}</div><div class="toast-text">${text}</div>`;
@@ -249,8 +290,43 @@ export class HUD {
       this.airVal.textContent = Math.round(p.breath);
     }
 
-    // Stealth indicator
+    // Stealth, Ward, Mount & Luma Secret Indicators
     this.stealthEl.classList.toggle('hidden', !p.stealth);
+    if (this.wardEl) this.wardEl.classList.toggle('hidden', !this.game.magic?.hasWard?.());
+    if (this.mountPillEl) this.mountPillEl.classList.toggle('hidden', !p.mounted);
+    if (this.lumaEl) this.lumaEl.classList.toggle('hidden', !this.game.companion?.alertSecret);
+
+    // Update 4-Slot Spell Hotbar cooldowns & SP readiness
+    const spells = this.game.magic?.getSpells?.() || [];
+    for (let i = 0; i < this.spellSlots.length; i++) {
+      const sp = spells[i];
+      const slot = this.spellSlots[i];
+      if (!sp || !slot) continue;
+      const cdEl = slot.querySelector('.sp-cd');
+      const onCd = sp.remaining > 0.05;
+      const lowSp = p.stamina < sp.spCost;
+      slot.classList.toggle('on-cd', onCd);
+      slot.classList.toggle('low-sp', !onCd && lowSp);
+      if (cdEl) cdEl.textContent = onCd ? sp.remaining.toFixed(1) : '';
+    }
+
+    // Update Interactive Fishing Mini-Game Bar
+    const fishHud = this.game.fishing?.getHudState?.();
+    if (this.fishOverlay) {
+      if (fishHud) {
+        this.fishOverlay.classList.remove('hidden');
+        this.fishTitle.textContent =
+          fishHud.state === 'waiting'
+            ? 'Spirit Line Cast — Wait for the ripple bite...'
+            : 'FISH ON THE LINE! Hit [G] inside the golden zone!';
+        this.fishZone.style.left = `${Math.round(fishHud.zoneStart * 100)}%`;
+        this.fishZone.style.width = `${Math.round((fishHud.zoneEnd - fishHud.zoneStart) * 100)}%`;
+        this.fishCursor.style.left = `${Math.round(fishHud.cursor * 100)}%`;
+        this.fishProgFill.style.width = `${fishHud.progress}%`;
+      } else {
+        this.fishOverlay.classList.add('hidden');
+      }
+    }
 
     // Region / Interior title + time & weather
     const inside = w.interiors?.currentInterior;
@@ -290,11 +366,13 @@ export class HUD {
     }
     this.compassEl.textContent = `${cardinal} · ${px}m, ${pz}m · Elev ${alt}m${modeTag}${wpTag}`;
 
-    // Active Boss Health Bar
+    // Active Boss Health Bar with Phase Indicator & Subtitle
     const boss = !inside ? this.game.enemies.getActiveBoss(p.root.position) : null;
     if (boss) {
       this.bossBarWrap.classList.remove('hidden');
-      this.bossNameEl.textContent = `${boss.def.name} (${Math.ceil(boss.hp)}/${boss.def.maxHp})`;
+      const phaseTag = boss.phase === 2 ? ' · PHASE II' : '';
+      const subTag = boss.def.subtitle ? ` — ${boss.def.subtitle}` : '';
+      this.bossNameEl.textContent = `${boss.def.name}${phaseTag}${subTag} (${Math.ceil(boss.hp)}/${boss.def.maxHp})`;
       this.bossFillEl.style.width = `${Math.max(2, Math.round((boss.hp / boss.def.maxHp) * 100))}%`;
     } else {
       this.bossBarWrap.classList.add('hidden');

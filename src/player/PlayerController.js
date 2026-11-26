@@ -188,13 +188,14 @@ export class PlayerController {
 
     if (jumpEdge && !p.diving) {
       if (p.grounded || p.swimming) {
-        p.velocity.y = p.swimming ? this.jumpSpeed * 0.75 : this.jumpSpeed;
+        const jumpPower = p.mounted ? this.jumpSpeed * 1.24 : p.swimming ? this.jumpSpeed * 0.75 : this.jumpSpeed;
+        p.velocity.y = jumpPower;
         p.grounded = false;
         p.swimming = false;
         p.gliding = false;
         p.stealth = false;
         this.events.emit('player:jump');
-      } else if (!inside && !p.gliding && p.stamina > 8) {
+      } else if (!inside && !p.mounted && !p.gliding && p.stamina > 8) {
         p.gliding = true;
         if (p.velocity.y < -2) p.velocity.y = -2;
         this.events.emit('player:glideStart');
@@ -214,7 +215,8 @@ export class PlayerController {
     } else {
       const wantsSprint = input.sprint && moveMag > 0.25 && p.stamina > 1 && !p.guarding && !p.diving;
       let targetSpeed = this.walkSpeed;
-      if (p.gliding) targetSpeed = this.glideForwardSpeed;
+      if (p.mounted) targetSpeed = wantsSprint ? 17.6 : 12.2;
+      else if (p.gliding) targetSpeed = this.glideForwardSpeed;
       else if (p.diving) targetSpeed = this.swimSpeed * 0.9;
       else if (p.swimming) targetSpeed = this.swimSpeed;
       else if (p.climbing) targetSpeed = this.climbSpeed;

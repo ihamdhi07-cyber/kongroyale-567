@@ -1,35 +1,42 @@
-// Character Progression, Unlockable Wayfarer Skills & Discovered Lore Codex Screen.
-import { SKILLS } from '../gameplay/ProgressionSystem.js';
-import { LANDMARKS } from '../world/WorldSpec.js';
+// Character Progression & 3-Branch 18-Skill Wayfarer Tree Modal [P].
+import { SKILLS, SKILL_BRANCHES } from '../gameplay/ProgressionSystem.js';
 
 export class ProgressionUI {
   constructor(game) {
     this.game = game;
-    this._buildDOM();
-  }
+    this.activeBranch = 'all';
 
-  _buildDOM() {
     this.el = document.createElement('div');
     this.el.id = 'progression-modal';
     this.el.className = 'modal-overlay hidden';
     this.el.innerHTML = `
-      <div class="modal-card wide-card">
+      <div class="modal-card modal-wide">
         <div class="modal-header">
           <div>
-            <div class="modal-eyebrow">WAYFARER CHRONICLE</div>
-            <h2 class="modal-title">Character, Skills &amp; Discoveries</h2>
+            <div class="modal-eyebrow">WAYFARER MASTERY · 3-BRANCH SKILL TREE</div>
+            <h2 class="modal-title">Character &amp; Skills</h2>
+            <p class="slot-meta" id="prog-summary">Level 1 · 2 Skill Points Available</p>
           </div>
-          <button class="modal-close" type="button">✕</button>
+          <button class="icon-btn" id="prog-close" type="button">✕</button>
         </div>
-        <div class="prog-summary" id="prog-summary"></div>
-        <h3>Wayfarer Skills</h3>
-        <div class="skill-grid" id="skill-grid"></div>
-        <h3>Discovered Landmarks &amp; Lore</h3>
-        <div class="lore-list" id="lore-list"></div>
+        <div class="prog-stats-row" id="prog-stats"></div>
+        <div class="tab-row" id="prog-tabs">
+          <button class="tab-btn active" data-branch="all" type="button">All 18 Skills</button>
+          ${SKILL_BRANCHES.map((b) => `<button class="tab-btn" data-branch="${b.id}" type="button">${b.icon} ${b.name}</button>`).join('')}
+        </div>
+        <div class="skills-tree-grid" id="prog-skills"></div>
       </div>
     `;
     document.body.appendChild(this.el);
-    this.el.querySelector('.modal-close').addEventListener('click', () => this.game.closeAllModals());
+
+    this.el.querySelector('#prog-close').addEventListener('click', () => this.game.closeAllModals());
+    this.el.querySelectorAll('#prog-tabs .tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.activeBranch = btn.dataset.branch;
+        this.el.querySelectorAll('#prog-tabs .tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
+        this.render();
+      });
+    });
   }
 
   open() {
@@ -42,61 +49,55 @@ export class ProgressionUI {
   }
 
   render() {
-    const pr = this.game.progression;
-    const p = this.game.player;
-    const nextXp = pr.xpForNextLevel();
+    const p = this.game.progression;
+    const inv = this.game.inventory;
+    const player = this.game.player;
+    const eq = inv.getEquipmentBonuses ? inv.getEquipmentBonuses() : {};
+    const bonuses = p.getBonuses();
 
-    this.el.querySelector('#prog-summary').innerHTML = `
-      <div class="stat-pill"><span>Level</span><strong>${pr.level}</strong></div>
-      <div class="stat-pill"><span>Experience</span><strong>${pr.xp} / ${nextXp}</strong></div>
-      <div class="stat-pill highlight"><span>Skill Points</span><strong>${pr.skillPoints}</strong></div>
-      <div class="stat-pill"><span>Attack / Def</span><strong>${p.attackPower} / ${p.defense}</strong></div>
-      <div class="stat-pill"><span>Explored</span><strong>${this.game.exploration.getExplorationPercent()}%</strong></div>
-      <div class="stat-pill"><span>Puzzles Solved</span><strong>${pr.stats.puzzlesSolved} / ${this.game.puzzles.puzzles.length}</strong></div>
-      <div class="stat-pill"><span>Sanctuaries</span><strong>${this.game.world.interiors.visited.size} / 3</strong></div>
-      <div class="stat-pill"><span>Unknown Gate</span><strong>${this.game.unknownGateAwakened ? 'Awakened ✦' : 'Sealed'}</strong></div>
+    this.el.querySelector('#prog-summary').textContent =
+      `Level ${p.level} · XP ${p.xp} / ${p.xpForNextLevel()} · ${p.skillPoints} Skill Point(s) Available · Unlocked ${p.unlockedSkills.size}/${SKILLS.length}`;
+
+    this.el.querySelector('#prog-stats').innerHTML = `
+      <div class="stat-chip"><span>Attack</span><strong>${player.attackPower}</strong></div>
+      <div class="stat-chip"><span>Spell Power</span><strong>${(eq.spellBonus || 0) + (bonuses.spellPower || 0)}</strong></div>
+      <div class="stat-chip"><span>Defense</span><strong>${player.defense}</strong></div>
+      <div class="stat-chip"><span>Max HP</span><strong>${player.maxHp}</strong></div>
+      <div class="stat-chip"><span>Max SP</span><strong>${player.maxStamina}</strong></div>
+      <div class="stat-chip"><span>Warmth</span><strong>+${player.warmthBonus + (bonuses.warmthBonus || 0)}</strong></div>
     `;
 
-    const sGrid = this.el.querySelector('#skill-grid');
-    sGrid.innerHTML = SKILLS.map((s) => {
-      const unlocked = pr.unlockedSkills.has(s.id);
-      const canBuy = !unlocked && pr.skillPoints >= s.cost;
-      return `
-        <div class="skill-card ${unlocked ? 'unlocked' : ''}">
-          <div class="skill-head">
-            <strong>${s.name}</strong>
-            <span class="skill-tag">${unlocked ? 'Unlocked' : `${s.cost} pt`}</span>
+    const visibleSkills = this.activeBranch === 'all' ? SKILLS : SKILLS.filter((s) => s.branch === this.activeBranch);
+    const grid = this.el.querySelector('#prog-skills');
+    grid.innerHTML = visibleSkills
+      .map((s) => {
+        const unlocked = p.unlockedSkills.has(s.id);
+        const canBuy = !unlocked && p.skillPoints >= s.cost;
+        const branchMeta = SKILL_BRANCHES.find((b) => b.id === s.branch) || SKILL_BRANCHES[0];
+        return `
+        <div class="skill-card ${unlocked ? 'skill-unlocked' : ''}">
+          <div class="skill-card-head">
+            <span class="skill-branch-tag" style="color:${branchMeta.color}">${branchMeta.icon} Tier ${s.tier || 1}</span>
+            <span class="skill-cost">${unlocked ? 'ACTIVE' : `${s.cost} pt`}</span>
           </div>
+          <h4>${s.name}</h4>
           <p>${s.description}</p>
           ${
             unlocked
-              ? ''
-              : `<button class="btn-mini" data-skill="${s.id}" ${canBuy ? '' : 'disabled'} type="button">Unlock Skill</button>`
+              ? '<button class="btn-mini" disabled type="button">Unlocked</button>'
+              : `<button class="btn-mini btn-accent" data-skill="${s.id}" ${canBuy ? '' : 'disabled'} type="button">Unlock (${s.cost} pt)</button>`
           }
-        </div>
-      `;
-    }).join('');
+        </div>`;
+      })
+      .join('');
 
-    for (const btn of sGrid.querySelectorAll('[data-skill]')) {
+    grid.querySelectorAll('button[data-skill]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        if (pr.unlockSkill(btn.dataset.skill, this.game.inventory, this.game.player)) {
-          this.game.audio.playDiscoveryFanfare();
+        if (p.unlockSkill(btn.dataset.skill, inv, player)) {
+          this.game.audio.playPickup();
           this.render();
         }
       });
-    }
-
-    const lEl = this.el.querySelector('#lore-list');
-    const discovered = LANDMARKS.filter((lm) => this.game.exploration.discoveredLandmarks.has(lm.id));
-    lEl.innerHTML = discovered
-      .map(
-        (lm) => `
-      <div class="lore-card">
-        <strong>◆ ${lm.name}</strong>
-        <p>${lm.lore}</p>
-      </div>
-    `
-      )
-      .join('');
+    });
   }
 }
