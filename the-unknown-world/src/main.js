@@ -5,6 +5,9 @@ import { createPhysics } from "./physics.js";
 import { SaveManager } from "./save/SaveManager.js";
 import { Exploration, cellAt } from "./gameplay/Exploration.js";
 import { Journey, PLANTS } from "./gameplay/Journey.js";
+import { Environment, DEFAULT_ENVIRONMENT } from "./world/Environment.js";
+import { Wildlife } from "./world/Wildlife.js";
+import { createGuide, guideMessage, GUIDE } from "./world/Guide.js";
 const $ = (s) => document.querySelector(s),
   canvas = $("#world");
 const saves = new SaveManager();
@@ -36,7 +39,8 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color("#bbcbb9");
 scene.fog = new THREE.FogExp2("#b8c9b8", 0.0065);
 const camera = new THREE.PerspectiveCamera(43, 1, 0.1, 700);
-scene.add(new THREE.HemisphereLight("#e4eed5", "#65755a", 2.3));
+const ambient = new THREE.HemisphereLight("#e4eed5", "#65755a", 2.3);
+scene.add(ambient);
 const sun = new THREE.DirectionalLight("#fff2d1", 3);
 sun.position.set(-45, 80, 35);
 sun.castShadow = true;
@@ -51,6 +55,13 @@ Object.assign(sun.shadow.camera, {
 });
 sun.shadow.bias = -0.0004;
 scene.add(sun, sun.target);
+const environment = new Environment(
+  scene,
+  renderer,
+  sun,
+  ambient,
+  saved?.environment ?? DEFAULT_ENVIRONMENT,
+);
 const groundGeo = new THREE.PlaneGeometry(500, 500, 150, 150);
 groundGeo.rotateX(-Math.PI / 2);
 const pos = groundGeo.attributes.position,
@@ -96,7 +107,8 @@ for (let i = 0; i < treeCount; i++) {
   if (
     Math.abs(x - 5 * Math.sin(z * 0.025)) < 9 ||
     Math.hypot(x, z + 22) < 11 ||
-    PLANTS.some((p) => Math.hypot(x - p.x, z - p.z) < 4)
+    PLANTS.some((p) => Math.hypot(x - p.x, z - p.z) < 4) ||
+    Math.hypot(x - GUIDE.x, z - GUIDE.z) < 4
   )
     x += 25;
   const y = heightAt(x, z),
@@ -198,6 +210,8 @@ function syncJourneyVisuals() {
   halo.material.opacity = journey.restored ? 1 : 0.65;
 }
 syncJourneyVisuals();
+const wildlife = new Wildlife(scene);
+const guide = createGuide(scene);
 const player = new THREE.Group();
 scene.add(player);
 const mat = (color) =>
@@ -275,6 +289,7 @@ async function saveGame() {
     await saves.save({
       ...exploration.snapshot(state.x, state.z),
       journey: journey.snapshot(),
+      environment: environment.snapshot(),
     });
     showSaveStatus("JOURNEY SAVED ON THIS DEVICE");
   } catch (error) {
@@ -301,7 +316,10 @@ function renderMap() {
     `${exploration.explored.size} / 100 areas explored`;
 }
 function toggleMap() {
-  if ((!state.started || !$("#bagPanel").hidden) && $("#mapPanel").hidden)
+  if (
+    (!state.started || !$("#bagPanel").hidden || !$("#settingsPanel").hidden) &&
+    $("#mapPanel").hidden
+  )
     return;
   $("#mapPanel").hidden = !$("#mapPanel").hidden;
   if (!$("#mapPanel").hidden) {
@@ -321,7 +339,10 @@ function renderBag() {
     : "Craft a wayfarer's light from 3 glowleaves.";
 }
 function toggleBag() {
-  if ((!state.started || !$("#mapPanel").hidden) && $("#bagPanel").hidden)
+  if (
+    (!state.started || !$("#mapPanel").hidden || !$("#settingsPanel").hidden) &&
+    $("#bagPanel").hidden
+  )
     return;
   $("#bagPanel").hidden = !$("#bagPanel").hidden;
   if (!$("#bagPanel").hidden) {
@@ -332,6 +353,32 @@ function toggleBag() {
 }
 $("#bagButton").addEventListener("click", toggleBag);
 $("#closeBag").addEventListener("click", toggleBag);
+function toggleSettings() {
+  if (
+    (!state.started || !$("#mapPanel").hidden || !$("#bagPanel").hidden) &&
+    $("#settingsPanel").hidden
+  )
+    return;
+  $("#settingsPanel").hidden = !$("#settingsPanel").hidden;
+  if (!$("#settingsPanel").hidden) {
+    $("#qualitySelect").value = environment.quality;
+    $("#weatherSelect").value = environment.weather;
+    keys.clear();
+    resetJoy();
+  }
+}
+$("#settingsButton").addEventListener("click", toggleSettings);
+$("#closeSettings").addEventListener("click", toggleSettings);
+$("#qualitySelect").addEventListener("change", (event) => {
+  environment.quality = event.target.value;
+  environment.applyQuality();
+  resize();
+  saveGame();
+});
+$("#weatherSelect").addEventListener("change", (event) => {
+  environment.weather = event.target.value;
+  saveGame();
+});
 $("#craftButton").addEventListener("click", () => {
   if (journey.craft()) {
     renderBag();
@@ -392,6 +439,11 @@ function nearestInteraction() {
     nearest = { type: "stone" };
     distance = stoneDistance;
   }
+  const guideDistance = Math.hypot(state.x - GUIDE.x, state.z - GUIDE.z);
+  if (guideDistance < Math.min(distance, 3)) {
+    nearest = { type: "guide" };
+    distance = guideDistance;
+  }
   PLANTS.forEach((plant) => {
     if (journey.gathered.has(plant.id)) return;
     const d = Math.hypot(state.x - plant.x, state.z - plant.z);
@@ -403,11 +455,27 @@ function nearestInteraction() {
   return nearest;
 }
 function interact() {
-  if (!state.started || !$("#mapPanel").hidden || !$("#bagPanel").hidden)
+  if (
+    !state.started ||
+    !$("#mapPanel").hidden ||
+    !$("#bagPanel").hidden ||
+    !$("#settingsPanel").hidden
+  )
     return;
   const target = nearestInteraction();
   if (!target) return;
-  if (target.type === "plant") {
+  if (target.type === "guide") {
+    guide.rotation.y = Math.atan2(state.x - GUIDE.x, state.z - GUIDE.z);
+    notify(
+      "TRAVELER",
+      GUIDE.name,
+      guideMessage(
+        exploration.discoveries.has("waystone"),
+        journey.lantern,
+        journey.restored,
+      ),
+    );
+  } else if (target.type === "plant") {
     if (!journey.gather(target.id)) return;
     notify(
       "MATERIAL GATHERED",
@@ -518,6 +586,7 @@ $("#newGame").onclick = () => {
   physics.teleport(state.x, state.y, state.z);
   exploration = new Exploration();
   journey = new Journey();
+  environment.time = DEFAULT_ENVIRONMENT.time;
   syncJourneyVisuals();
   // Explicit confirmation allows recovery from an invalid save, but not an unavailable database.
   if (saves.db) saveAvailable = true;
@@ -547,7 +616,12 @@ function frame(now) {
   const dt = Math.min((now - previous) / 1000, 0.05);
   previous = now;
   elapsed += dt;
-  if (state.started && $("#mapPanel").hidden && $("#bagPanel").hidden) {
+  const running =
+    state.started &&
+    $("#mapPanel").hidden &&
+    $("#bagPanel").hidden &&
+    $("#settingsPanel").hidden;
+  if (running) {
     let x =
         (keys.has("KeyD") || keys.has("ArrowRight") ? 1 : 0) -
         (keys.has("KeyA") || keys.has("ArrowLeft") ? 1 : 0) +
@@ -611,17 +685,15 @@ function frame(now) {
     camera.position.copy(desired);
   else camera.position.lerp(desired, 1 - Math.exp(-dt * 5));
   camera.lookAt(target);
-  sun.position.set(state.x - 45, state.y + 80, state.z + 35);
-  sun.target.position.copy(player.position);
+  $("#timeOfDay").textContent =
+    `${environment.weather === "rain" ? "☂" : "☼"}  ${environment.update(dt, state, running)}`;
+  if (running) wildlife.update(dt, state);
   rune.rotation.y += dt;
-  const near =
-    state.started && $("#mapPanel").hidden && $("#bagPanel").hidden
-      ? nearestInteraction()
-      : null;
+  const near = running ? nearestInteraction() : null;
   $("#prompt").hidden = !near;
   if (near)
     $("#prompt").innerHTML =
-      `<kbd>E</kbd> &nbsp; ${near.type === "plant" ? "Gather glowleaf" : "Examine waystone"}`;
+      `<kbd>E</kbd> &nbsp; ${near.type === "plant" ? "Gather glowleaf" : near.type === "guide" ? "Talk to Mira" : "Examine waystone"}`;
   renderer.render(scene, camera);
 }
 requestAnimationFrame(frame);

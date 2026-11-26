@@ -4,6 +4,7 @@ import { indexedDB } from "fake-indexeddb";
 import { SaveManager, validateSave } from "../src/save/SaveManager.js";
 import { Exploration, cellAt } from "../src/gameplay/Exploration.js";
 import { Journey } from "../src/gameplay/Journey.js";
+import { DEFAULT_ENVIRONMENT } from "../src/world/Environment.js";
 
 test("exploration grid and discoveries survive IndexedDB round trip", async () => {
   const save = new SaveManager(indexedDB);
@@ -15,6 +16,7 @@ test("exploration grid and discoveries survive IndexedDB round trip", async () =
   const snapshot = {
     ...exploration.snapshot(51, 9),
     journey: new Journey().snapshot(),
+    environment: { ...DEFAULT_ENVIRONMENT },
   };
   await save.save(snapshot);
   assert.deepEqual(await save.load(), snapshot);
@@ -28,13 +30,26 @@ test("invalid, out-of-bounds and future saves are rejected", () => {
     explored: [0],
     discoveries: [],
   };
-  assert.throws(() => validateSave({ ...good, version: 3 }));
-  assert.equal(validateSave(good).version, 2);
+  assert.throws(() => validateSave({ ...good, version: 4 }));
+  assert.equal(validateSave(good).version, 3);
   assert.throws(() =>
     validateSave({
       ...good,
       version: 2,
       journey: { gathered: [], leaves: 3, lantern: false, restored: false },
+    }),
+  );
+  assert.equal(
+    validateSave({ ...good, version: 2, journey: new Journey().snapshot() })
+      .environment.weather,
+    "clear",
+  );
+  assert.throws(() =>
+    validateSave({
+      ...good,
+      version: 3,
+      journey: new Journey().snapshot(),
+      environment: { ...DEFAULT_ENVIRONMENT, weather: "hail" },
     }),
   );
   assert.throws(() =>

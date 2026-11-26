@@ -561,3 +561,40 @@ kbd {
     font-size: 7px;
   }
 }
+.top-right #settingsButton {
+  border-radius: 3px;
+  width: 33px;
+  padding: 0;
+  font-size: 16px;
+}
+.settings-modal {
+  max-height: 95vh;
+  overflow: auto;
+}
+.settings-modal h2 {
+  font-size: 40px;
+  margin: 10px 0;
+}
+.settings-modal p {
+  margin: 12px auto;
+  font-size: 12px;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 0;
+  border-top: 1px solid #f0e2ba30;
+  text-align: left;
+  font-size: 13px;
+}
+.setting-row select {
+  background: #132d25;
+  color: #f7eedb;
+  border: 1px solid #e8d7aa80;
+  border-radius: 2px;
+  padding: 8px;
+  min-width: 115px;
+  font: inherit;
+}

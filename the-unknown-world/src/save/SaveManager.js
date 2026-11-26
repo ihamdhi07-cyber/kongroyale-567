@@ -1,10 +1,11 @@
 // A single versioned local slot; failures are surfaced to the player, not swallowed.
 import { validJourney } from "../gameplay/Journey.js";
-export const SAVE_VERSION = 2;
+import { DEFAULT_ENVIRONMENT, validEnvironment } from "../world/Environment.js";
+export const SAVE_VERSION = 3;
 export function validateSave(value) {
   if (
     !value ||
-    ![1, SAVE_VERSION].includes(value.version) ||
+    ![1, 2, SAVE_VERSION].includes(value.version) ||
     !value.position ||
     !Number.isFinite(value.position.x) ||
     !Number.isFinite(value.position.z) ||
@@ -16,15 +17,20 @@ export function validateSave(value) {
     !Array.isArray(value.explored) ||
     value.explored.length > 100 ||
     !value.explored.every((x) => Number.isInteger(x) && x >= 0 && x < 100) ||
-    (value.version === SAVE_VERSION && !validJourney(value.journey))
+    (value.version >= 2 && !validJourney(value.journey)) ||
+    (value.version === SAVE_VERSION && !validEnvironment(value.environment))
   ) {
     throw new Error("The save is invalid or from an unsupported version.");
   }
-  if (value.version === 1)
+  if (value.version < SAVE_VERSION)
     return {
       ...value,
       version: SAVE_VERSION,
-      journey: { gathered: [], leaves: 0, lantern: false, restored: false },
+      journey:
+        value.version === 1
+          ? { gathered: [], leaves: 0, lantern: false, restored: false }
+          : value.journey,
+      environment: { ...DEFAULT_ENVIRONMENT },
     };
   return value;
 }

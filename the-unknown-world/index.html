@@ -22,9 +22,10 @@
           </div>
         </div>
         <div class="top-right">
+          <button id="settingsButton" aria-label="Open settings">⚙</button>
           <button id="bagButton" aria-label="Open inventory">BAG</button>
           <button id="mapButton" aria-label="Open exploration map">MAP</button
-          ><span>☼ &nbsp; EARLY MORNING</span
+          ><span id="timeOfDay">☼ &nbsp; MORNING</span
           ><button id="helpButton" aria-label="Show controls">?</button>
         </div>
       </header>
@@ -74,6 +75,39 @@
             ⊕<small>ZOOM</small></button
           ><button id="interactTouch">✧<small>INTERACT</small></button
           ><button id="jumpTouch">↑<small>JUMP</small></button>
+        </div>
+      </div>
+      <div id="settingsPanel" class="overlay" hidden>
+        <div
+          class="modal settings-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settingsTitle"
+        >
+          <div class="eyebrow centered">MAKE YOURSELF AT HOME</div>
+          <h2 id="settingsTitle">Your <em>settings.</em></h2>
+          <p>These settings apply immediately and are saved on this device.</p>
+          <label class="setting-row" for="qualitySelect"
+            >Graphics quality
+            <select id="qualitySelect">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="ultra">Ultra</option>
+            </select></label
+          >
+          <label class="setting-row" for="weatherSelect"
+            >Weather
+            <select id="weatherSelect">
+              <option value="clear">Clear</option>
+              <option value="rain">Rain</option>
+            </select></label
+          >
+          <p>
+            Quality controls pixel ratio, shadows and rain density. No adaptive
+            performance claims are made.
+          </p>
+          <button id="closeSettings">RETURN TO THE WORLD</button>
         </div>
       </div>
       <div id="bagPanel" class="overlay" hidden>
