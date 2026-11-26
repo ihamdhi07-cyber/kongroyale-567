@@ -1,0 +1,146 @@
+{
+  "world": {
+    "ultimateSizeKm": 15,
+    "ultimateHalfMeters": 7500,
+    "playableSizeKm": 8,
+    "playableHalfMeters": 4000,
+    "seaLevel": 0,
+    "chunkSize": 128
+  },
+  "regions": [
+    {
+      "id": "verdant-valley",
+      "name": "Verdant Valley",
+      "areaKm2": 8,
+      "center": [0, 400],
+      "radius": 1550,
+      "landmarkId": "crossroads-settlement",
+      "landmarkName": "The Crossroads Settlement",
+      "description": "Sunlit clover meadows, silver rivers, and welcoming timber cottages where travelers gather before venturing into the wilds.",
+      "palette": {
+        "ground": "#7eb852",
+        "accent": "#d9b974",
+        "foliage": "#4f9b4c",
+        "fog": "#cfe8ea"
+      }
+    },
+    {
+      "id": "emerald-wilds",
+      "name": "Emerald Wilds",
+      "areaKm2": 12,
+      "center": [-1450, -350],
+      "radius": 1850,
+      "landmarkId": "ancient-heart-tree",
+      "landmarkName": "The Ancient Heart Tree",
+      "description": "Ancient towering groves steeped in golden sunbeams, mossy monoliths, and whispering forest spirits.",
+      "palette": {
+        "ground": "#46894b",
+        "accent": "#2d6447",
+        "foliage": "#317b4e",
+        "fog": "#b7dfd3"
+      }
+    },
+    {
+      "id": "highland-reach",
+      "name": "Highland Reach",
+      "areaKm2": 10,
+      "center": [-1750, -2250],
+      "radius": 1750,
+      "landmarkId": "skywatch-observatory",
+      "landmarkName": "The Skywatch Observatory",
+      "description": "Wind-carved alpine ridges, emerald tarns, waterfalls, and snow-crowned summits crowned by an ancient astrolabe tower.",
+      "palette": {
+        "ground": "#798c7c",
+        "accent": "#dce5ee",
+        "foliage": "#335e4f",
+        "fog": "#c7d9ee"
+      }
+    },
+    {
+      "id": "azure-coast",
+      "name": "Azure Coast",
+      "areaKm2": 8,
+      "center": [1900, 1750],
+      "radius": 1650,
+      "landmarkId": "drowned-archive",
+      "landmarkName": "The Drowned Archive",
+      "description": "Golden crescent beaches, sunlit turquoise shallows, coral shoals, weathered shipwrecks, and sunken limestone halls.",
+      "palette": {
+        "ground": "#e6cf98",
+        "accent": "#4cc4c8",
+        "foliage": "#58a454",
+        "fog": "#c8ecf2"
+      }
+    },
+    {
+      "id": "forgotten-kingdom",
+      "name": "Forgotten Kingdom",
+      "areaKm2": 8,
+      "center": [2050, -350],
+      "radius": 1600,
+      "landmarkId": "silent-citadel",
+      "landmarkName": "The Silent Citadel",
+      "description": "Moss-draped viaducts, fallen royal colonnades, and silent stone guardians watching over the relics of a vanished era.",
+      "palette": {
+        "ground": "#9b9870",
+        "accent": "#cfc3a7",
+        "foliage": "#628252",
+        "fog": "#d9d8ca"
+      }
+    },
+    {
+      "id": "hollow-depths",
+      "name": "Hollow Depths",
+      "areaKm2": 6,
+      "center": [150, -2100],
+      "radius": 1350,
+      "landmarkId": "crystal-cathedral",
+      "landmarkName": "The Crystal Cathedral",
+      "description": "A dramatic sunken canyon and luminous subterranean grotto glittering with singing amethyst and cyan crystal formations.",
+      "palette": {
+        "ground": "#4b5a74",
+        "accent": "#6fe7f0",
+        "foliage": "#498791",
+        "fog": "#9db8d4"
+      }
+    },
+    {
+      "id": "shattered-expanse",
+      "name": "Shattered Expanse",
+      "areaKm2": 6,
+      "center": [2150, -2200],
+      "radius": 1450,
+      "landmarkId": "broken-horizon",
+      "landmarkName": "The Broken Horizon",
+      "description": "Surreal suspended monoliths drifting above misty chasms, warm updrafts, and luminescent lavender-gold blossoms.",
+      "palette": {
+        "ground": "#8f7ea8",
+        "accent": "#f1c77d",
+        "foliage": "#c280b2",
+        "fog": "#d8c8eb"
+      }
+    },
+    {
+      "id": "hidden-frontier",
+      "name": "Hidden Frontier",
+      "areaKm2": 6,
+      "center": [-1950, 1950],
+      "radius": 1500,
+      "landmarkId": "unknown-gate",
+      "landmarkName": "The Unknown Gate",
+      "description": "Untamed amber-pine valleys and lantern-lit groves guarding the mysterious sealed threshold at the edge of known charts.",
+      "palette": {
+        "ground": "#9d7b4a",
+        "accent": "#d9934c",
+        "foliage": "#b56a38",
+        "fog": "#e2d4c2"
+      }
+    }
+  ],
+  "expansionZones": [
+    { "id": "frostpeak-expanse", "name": "Frostpeak Expanse (Expansion)", "direction": "North", "areaKm2": 42 },
+    { "id": "astral-rift", "name": "Astral Rift Archipelago (Expansion)", "direction": "East", "areaKm2": 40 },
+    { "id": "sunfire-atolls", "name": "Sunfire Atolls (Expansion)", "direction": "South", "areaKm2": 40 },
+    { "id": "whispering-mire", "name": "Whispering Mire (Expansion)", "direction": "West", "areaKm2": 39 }
+  ]
+}

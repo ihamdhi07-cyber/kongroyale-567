@@ -1,0 +1,173 @@
+{
+  "items": [
+    {
+      "id": "wayfarer-staff",
+      "name": "Wayfarer's Heartwood Staff",
+      "category": "equipment",
+      "slot": "weapon",
+      "rarity": "common",
+      "stats": { "attack": 16, "heavyMultiplier": 1.85 },
+      "description": "A balanced traveler's staff carved from valley oak, inlaid with a warm lantern rune."
+    },
+    {
+      "id": "runeblade-staff",
+      "name": "Citadel Runeblade Staff",
+      "category": "equipment",
+      "slot": "weapon",
+      "rarity": "rare",
+      "stats": { "attack": 28, "heavyMultiplier": 2.15 },
+      "description": "Forged with resonant crystals and an ancient sentinel core; emits luminous cyan-gold arcs."
+    },
+    {
+      "id": "traveler-cloak",
+      "name": "Wayfarer's Indigo Cloak",
+      "category": "equipment",
+      "slot": "armor",
+      "rarity": "common",
+      "stats": { "defense": 5, "maxStamina": 100 },
+      "description": "Weatherproof indigo wool cloak stitched for long marches over hills and forests."
+    },
+    {
+      "id": "windweaver-cloak",
+      "name": "Windweaver's Sky Cloak",
+      "category": "equipment",
+      "slot": "armor",
+      "rarity": "epic",
+      "stats": { "defense": 14, "maxStamina": 135, "glideEfficiency": 0.6 },
+      "description": "Woven with moonpetal silk and shard-dust; catches thermals effortlessly while gliding."
+    },
+    {
+      "id": "sunberry",
+      "name": "Golden Sunberry",
+      "category": "material",
+      "rarity": "common",
+      "effects": { "heal": 12, "warmth": 10 },
+      "description": "Sweet amber berries found growing along sunlit meadows and forest clearings."
+    },
+    {
+      "id": "moonpetal",
+      "name": "Silver Moonpetal",
+      "category": "material",
+      "rarity": "uncommon",
+      "description": "Luminescent blossom native to the Emerald Wilds. Valued by herbalists and alchemists."
+    },
+    {
+      "id": "heartwood",
+      "name": "Ancient Heartwood",
+      "category": "material",
+      "rarity": "common",
+      "description": "Fragrant dense timber fallen from ancient valley and woodland trees."
+    },
+    {
+      "id": "crystal-shard",
+      "name": "Resonant Crystal Shard",
+      "category": "material",
+      "rarity": "rare",
+      "description": "A humming prism shard harvested from Hollow Depths formations and floating monoliths."
+    },
+    {
+      "id": "ancient-core",
+      "name": "Guardian Sentinel Core",
+      "category": "material",
+      "rarity": "rare",
+      "description": "A warm bronze-and-azure core recovered from ancient Forgotten Kingdom guardians."
+    },
+    {
+      "id": "river-trout",
+      "name": "Silver River Trout",
+      "category": "material",
+      "rarity": "common",
+      "description": "Fresh catch from Verdant Valley streams and Azure Coast coves."
+    },
+    {
+      "id": "berry-stew",
+      "name": "Crossroads Berry Stew",
+      "category": "consumable",
+      "rarity": "common",
+      "effects": { "heal": 42, "stamina": 35, "warmth": 40 },
+      "description": "Steaming bowl of sunberries and herbs. Restores vitality and wards off highland chill."
+    },
+    {
+      "id": "hearty-roast",
+      "name": "Spiced Trout Roast",
+      "category": "consumable",
+      "rarity": "uncommon",
+      "effects": { "heal": 65, "stamina": 50, "warmth": 60 },
+      "description": "Seared over glowing heartwood embers; keeps a traveler energized for miles."
+    },
+    {
+      "id": "spirit-tonic",
+      "name": "Moonpetal Spirit Tonic",
+      "category": "consumable",
+      "rarity": "rare",
+      "effects": { "heal": 95, "stamina": 90, "warmth": 30 },
+      "description": "A shimmering cerulean draught that rapidly mends wounds and refills stamina."
+    },
+    {
+      "id": "resonance-key",
+      "name": "Echoing Gate Sigil",
+      "category": "quest",
+      "rarity": "epic",
+      "description": "An ancient harmonic sigil attuned to the sealed Unknown Gate in the Hidden Frontier."
+    }
+  ],
+  "recipes": [
+    {
+      "id": "craft-berry-stew",
+      "resultId": "berry-stew",
+      "resultQty": 1,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "sunberry", "qty": 2 },
+        { "itemId": "heartwood", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-hearty-roast",
+      "resultId": "hearty-roast",
+      "resultQty": 1,
+      "category": "cooking",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "river-trout", "qty": 1 },
+        { "itemId": "sunberry", "qty": 1 },
+        { "itemId": "heartwood", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-spirit-tonic",
+      "resultId": "spirit-tonic",
+      "resultQty": 1,
+      "category": "alchemy",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "moonpetal", "qty": 2 },
+        { "itemId": "crystal-shard", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-runeblade-staff",
+      "resultId": "runeblade-staff",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "heartwood", "qty": 3 },
+        { "itemId": "crystal-shard", "qty": 2 },
+        { "itemId": "ancient-core", "qty": 1 }
+      ]
+    },
+    {
+      "id": "craft-windweaver-cloak",
+      "resultId": "windweaver-cloak",
+      "resultQty": 1,
+      "category": "forging",
+      "requiresCampfire": false,
+      "ingredients": [
+        { "itemId": "moonpetal", "qty": 3 },
+        { "itemId": "crystal-shard", "qty": 2 }
+      ]
+    }
+  ]
+}

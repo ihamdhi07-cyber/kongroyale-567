@@ -1,0 +1,64 @@
+{
+  "creatures": [
+    {
+      "id": "bramble-stalker",
+      "name": "Bramble Stalker",
+      "category": "territorial",
+      "regions": ["emerald-wilds", "verdant-valley", "hidden-frontier"],
+      "maxHp": 55,
+      "damage": 10,
+      "speed": 5.2,
+      "aggroRange": 13,
+      "xp": 35,
+      "drops": [{ "itemId": "heartwood", "chance": 0.8 }, { "itemId": "moonpetal", "chance": 0.45 }]
+    },
+    {
+      "id": "stone-sentinel",
+      "name": "Stone Sentinel",
+      "category": "guardian",
+      "regions": ["forgotten-kingdom", "highland-reach", "azure-coast"],
+      "maxHp": 95,
+      "damage": 16,
+      "speed": 3.8,
+      "aggroRange": 15,
+      "xp": 65,
+      "drops": [{ "itemId": "ancient-core", "chance": 0.75 }, { "itemId": "crystal-shard", "chance": 0.5 }]
+    },
+    {
+      "id": "crystal-wisp",
+      "name": "Crystal Wisp",
+      "category": "fantasy",
+      "regions": ["hollow-depths", "shattered-expanse"],
+      "maxHp": 65,
+      "damage": 14,
+      "speed": 6.0,
+      "aggroRange": 16,
+      "xp": 55,
+      "drops": [{ "itemId": "crystal-shard", "chance": 0.9 }]
+    },
+    {
+      "id": "moss-sprite",
+      "name": "Moss Sprite",
+      "category": "small",
+      "regions": ["verdant-valley", "emerald-wilds"],
+      "maxHp": 35,
+      "damage": 6,
+      "speed": 5.8,
+      "aggroRange": 0,
+      "xp": 20,
+      "drops": [{ "itemId": "sunberry", "chance": 0.85 }]
+    },
+    {
+      "id": "elder-warden",
+      "name": "Elder Stone Warden",
+      "category": "boss",
+      "regions": ["forgotten-kingdom", "hidden-frontier"],
+      "maxHp": 220,
+      "damage": 24,
+      "speed": 4.1,
+      "aggroRange": 18,
+      "xp": 180,
+      "drops": [{ "itemId": "ancient-core", "chance": 1.0 }, { "itemId": "crystal-shard", "chance": 1.0 }, { "itemId": "spirit-tonic", "chance": 1.0 }]
+    }
+  ]
+}

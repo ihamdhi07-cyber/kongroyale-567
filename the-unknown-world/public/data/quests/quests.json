@@ -1,0 +1,61 @@
+{
+  "quests": [
+    {
+      "id": "echoes-of-the-gate",
+      "type": "main",
+      "title": "Echoes of the Unknown Gate",
+      "summary": "Uncover the ancient harmonic mystery linking the Crossroads, the Heart Tree, and the sealed Unknown Gate.",
+      "giver": "Elder Maren",
+      "autoStart": true,
+      "objectives": [
+        { "id": "talk-maren", "text": "Speak with Elder Maren at the Crossroads Settlement", "target": 1, "event": "npc:talk:elder-maren" },
+        { "id": "discover-heart-tree", "text": "Journey west and discover The Ancient Heart Tree", "target": 1, "event": "landmark:discover:ancient-heart-tree" },
+        { "id": "solve-obelisk", "text": "Awaken the Singing Obelisk puzzle in the valley ruins", "target": 1, "event": "puzzle:solve:crossroads-obelisks" },
+        { "id": "awaken-waystones", "text": "Attune 3 Regional Waystones across the realm", "target": 3, "event": "waystone:activate" },
+        { "id": "reach-unknown-gate", "text": "Discover The Unknown Gate in the Hidden Frontier", "target": 1, "event": "landmark:discover:unknown-gate" }
+      ],
+      "rewards": { "xp": 350, "items": [{ "itemId": "resonance-key", "qty": 1 }, { "itemId": "spirit-tonic", "qty": 2 }] }
+    },
+    {
+      "id": "herbs-of-the-canopy",
+      "type": "side",
+      "title": "Herbs of the Emerald Canopy",
+      "summary": "Herbalist Lyra seeks luminous Moonpetals and Golden Sunberries to brew traveling tonics.",
+      "giver": "Herbalist Lyra",
+      "autoStart": false,
+      "objectives": [
+        { "id": "gather-sunberry", "text": "Gather Golden Sunberries (3)", "target": 3, "event": "item:gather:sunberry" },
+        { "id": "gather-moonpetal", "text": "Gather Silver Moonpetals from the forest edge (2)", "target": 2, "event": "item:gather:moonpetal" },
+        { "id": "return-lyra", "text": "Report back to Herbalist Lyra", "target": 1, "event": "npc:talk:herbalist-lyra" }
+      ],
+      "rewards": { "xp": 150, "items": [{ "itemId": "spirit-tonic", "qty": 2 }, { "itemId": "berry-stew", "qty": 2 }] }
+    },
+    {
+      "id": "forge-of-the-old-kingdom",
+      "type": "side",
+      "title": "Forge of the Old Kingdom",
+      "summary": "Blacksmith Torin can teach you to craft ancient weaponry once you recover sentinel parts and crystals.",
+      "giver": "Blacksmith Torin",
+      "autoStart": false,
+      "objectives": [
+        { "id": "defeat-sentinel", "text": "Defeat a Stone Sentinel or Bramble Stalker", "target": 1, "event": "enemy:defeat" },
+        { "id": "gather-crystal", "text": "Collect Resonant Crystal Shards (2)", "target": 2, "event": "item:gather:crystal-shard" },
+        { "id": "craft-gear", "text": "Craft any item or meal via Inventory -> Crafting", "target": 1, "event": "craft:complete" }
+      ],
+      "rewards": { "xp": 200, "items": [{ "itemId": "ancient-core", "qty": 1 }, { "itemId": "crystal-shard", "qty": 1 }] }
+    },
+    {
+      "id": "cartographers-horizon",
+      "type": "discovery",
+      "title": "The Cartographer's Horizon",
+      "summary": "Chart the diverse regions of the 8x8 km realm and uncover ancient landmarks hidden across the continent.",
+      "giver": "Cartographer Solen",
+      "autoStart": true,
+      "objectives": [
+        { "id": "discover-landmarks", "text": "Discover 4 Major Regional Landmarks", "target": 4, "event": "landmark:discover" },
+        { "id": "solve-any-puzzle", "text": "Solve 2 Ancient Environmental Puzzles", "target": 2, "event": "puzzle:solve" }
+      ],
+      "rewards": { "xp": 280, "items": [{ "itemId": "windweaver-cloak", "qty": 1 }] }
+    }
+  ]
+}
