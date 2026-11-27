@@ -1,6 +1,6 @@
 // Original temporary procedural puzzle site. The text on the three stones is generated locally.
 import * as THREE from "three";
-import { heightAt } from "../world.js";
+import { groundHeightAt } from "../world.js";
 import { TABLET, SWITCHES } from "../gameplay/EchoPuzzle.js";
 function label(text) {
   const canvas = document.createElement("canvas");
@@ -35,7 +35,7 @@ export function createEchoGrove(scene) {
   const lights = [];
   for (const point of SWITCHES) {
     const group = new THREE.Group();
-    group.position.set(point.x, heightAt(point.x, point.z), point.z);
+    group.position.set(point.x, groundHeightAt(point.x, point.z), point.z);
     const base = new THREE.Mesh(
       new THREE.CylinderGeometry(0.8, 1, 0.35, 6),
       stone,
@@ -64,7 +64,7 @@ export function createEchoGrove(scene) {
     scene.add(group);
   }
   const clue = new THREE.Group();
-  clue.position.set(TABLET.x, heightAt(TABLET.x, TABLET.z), TABLET.z);
+  clue.position.set(TABLET.x, groundHeightAt(TABLET.x, TABLET.z), TABLET.z);
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(0.6, 0.85, 1.1, 6),
     stone,

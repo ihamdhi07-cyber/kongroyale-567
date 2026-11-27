@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { heightAt, clampWorld, inRiver, RIVER_LEVEL } from "./world.js";
+import { groundHeightAt, clampWorld, inRiver, RIVER_LEVEL } from "./world.js";
 import "./style.css";
 import { createPhysics } from "./physics.js";
 import { SaveManager } from "./save/SaveManager.js";
@@ -44,7 +44,7 @@ const audio = new AudioManager(saved?.audio);
 const initial = saved?.position || { x: 0, z: 9 };
 const initialY = inRiver(initial.x, initial.z)
   ? RIVER_LEVEL - 1.1
-  : heightAt(initial.x, initial.z);
+  : groundHeightAt(initial.x, initial.z);
 const renderer = new THREE.WebGLRenderer({
   canvas,
   antialias: true,
@@ -97,7 +97,7 @@ const river = new RiverSystem(scene);
 createLandmarks(scene, physics);
 // Procedural placeholder art, not final assets.
 const stone = new THREE.Group();
-stone.position.set(0, heightAt(0, -22), -22);
+stone.position.set(0, groundHeightAt(0, -22), -22);
 scene.add(stone);
 physics.addCylinder(0, stone.position.y, -22, 2, 4);
 physics.sync();
@@ -143,7 +143,7 @@ stone.add(halo);
 // Temporary procedural glowleaf plants; each is a unique, non-respawning resource.
 const plantMeshes = PLANTS.map((plant) => {
   const group = new THREE.Group();
-  group.position.set(plant.x, heightAt(plant.x, plant.z), plant.z);
+  group.position.set(plant.x, groundHeightAt(plant.x, plant.z), plant.z);
   const stem = new THREE.Mesh(
     new THREE.CylinderGeometry(0.08, 0.12, 1.2, 6),
     new THREE.MeshStandardMaterial({ color: "#536f4e" }),
@@ -859,6 +859,7 @@ $("#start").onclick = () => {
   exploration.visit(state.x, state.z);
   saveGame();
   $("#overlay").hidden = true;
+  document.body.classList.add("playing");
 };
 $("#newGame").onclick = () => {
   if (!confirm("Start a new journey? This replaces the save on this device."))
@@ -866,7 +867,7 @@ $("#newGame").onclick = () => {
   startAudio();
   state.x = 0;
   state.z = 9;
-  state.y = heightAt(0, 9);
+  state.y = groundHeightAt(0, 9);
   terrain.update(state.x, state.z);
   physics.teleport(state.x, state.y, state.z);
   exploration = new Exploration();
@@ -885,6 +886,7 @@ $("#newGame").onclick = () => {
   saveGame();
   state.started = true;
   $("#overlay").hidden = true;
+  document.body.classList.add("playing");
 };
 $("#helpButton").onclick = () => {
   $("#overlay").hidden = false;
@@ -990,7 +992,7 @@ function frame(now) {
     if (event?.type === "respawn") {
       state.x = 0;
       state.z = 9;
-      state.y = heightAt(0, 9);
+      state.y = groundHeightAt(0, 9);
       terrain.update(state.x, state.z);
       physics.teleport(state.x, state.y, state.z);
       notify(
@@ -1041,7 +1043,7 @@ function frame(now) {
     state.y + 1.7 + Math.sin(state.pitch) * state.distance,
     state.z + Math.cos(state.yaw) * horizontal,
   );
-  desired.y = Math.max(desired.y, heightAt(desired.x, desired.z) + 2);
+  desired.y = Math.max(desired.y, groundHeightAt(desired.x, desired.z) + 2);
   const direction = desired.clone().sub(target);
   const cameraDistance = direction.length();
   direction.normalize();

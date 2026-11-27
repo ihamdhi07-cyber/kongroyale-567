@@ -27,4 +27,20 @@ The original plan was to keep the existing game intact. The user subsequently re
 
 ## Strengths and weaknesses
 
-Existing mature real-time simulation, tools, tests and performance work are valuable; deterministic multiplayer constraints and battle-royale art/game rules are not the intended adventure architecture. The new prototype has an independent build and uses Rapier for kinematic player and static collider queries. It has basic local persistence but lacks streaming, general-purpose dynamic object gameplay and complete modular systems.
+Existing mature real-time simulation, tools, tests and performance work are valuable; deterministic multiplayer constraints and battle-royale art/game rules are not the intended adventure architecture. The new prototype has an independent build and uses Rapier for kinematic player and static collider queries. It now has local persistence and experimental bounded terrain/vegetation streaming, but lacks general-purpose dynamic object gameplay and complete modular systems.
+
+## Focused follow-up: world scaling and asset reuse (base `28a69913`)
+
+A further targeted inspection of the original Git tree found 4,511 tracked paths, including source, data and assets; this is **not** an exhaustive line-by-line audit or proof that all reusable components have been identified. Original files remain accessible in Git history, although the user-requested replacement removed them from the current tree. The base version was not executed or benchmarked during this follow-up.
+
+| Original component | What the inspected code does | Decision for this project |
+|---|---|---|
+| `shared/world/terrain.ts` | Samples the same triangle diagonal as the rendered heightfield, so placement and ground agree. | Adapt the principle independently: `groundHeightAt` now samples the actual prototype mesh triangles, tested against its geometry. The new project has different grid and diagonal conventions. |
+| `client/src/world/terrain/lod.ts` | Quadtree, screen-space/geometric error, skirts, instanced nodes and a high-detail near region. | Useful reference for a future measured terrain LOD; not directly portable because it depends on the original island data, shaders, engine and terrain contract. Our prototype has no LOD yet. |
+| `client/src/world/terrain/jobs.ts`, `client/src/engine/worker-pool.ts` | Off-main-thread generation, transferable arrays, bounded worker pool and fallback paths. | Strong reference for asynchronous generation; not yet integrated. Worker results must be discarded when stale and near-player terrain kept safe. |
+| `client/src/world/veg/lod.ts` | Spatial-cell culling, tiered instancing, impostors and distance-limited shadows. | Reference for profiling-led vegetation scaling; current trees use simpler per-chunk instances without LOD. |
+| `client/src/engine/hlod.ts` | Time-sliced far POI merging with restrictions for dynamic/custom/transparent geometry. | Candidate for a later independent design after measuring real scene bottlenecks, not a drop-in module. |
+| `PERFORMANCE.md` and performance tooling | Separates correctness, representative scenarios, frame pacing, memory and real-GPU measurements. | Adopt the measurement-first approach; historical claims about Kong Royale do not establish performance for this game. |
+| Original `CREDITS.md` and `LICENSE` | Code is MIT-licensed, but some community assets explicitly require separate permission, and other assets have separate licenses. | Do not assume all assets are MIT. No original game assets were imported in this increment; verify each asset's provenance and suitability before any reuse. |
+
+The original multiplayer engine also contains authoritative networking, match logic and battle-royale systems; these are not substitutes for exploration quests, save semantics, touch UX or the specified world. Additional source-by-source review, porting decisions, license checks and testing remain before claiming that everything useful has been evaluated.

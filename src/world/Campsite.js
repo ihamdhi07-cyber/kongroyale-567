@@ -1,6 +1,6 @@
 // Temporary procedural camp and berry bushes, with no externally sourced assets.
 import * as THREE from "three";
-import { heightAt } from "../world.js";
+import { groundHeightAt } from "../world.js";
 import { BUSHES, CAMP } from "../gameplay/Survival.js";
 export function createCampsite(scene) {
   const rock = new THREE.MeshStandardMaterial({
@@ -13,7 +13,7 @@ export function createCampsite(scene) {
     emissiveIntensity: 1,
   });
   const camp = new THREE.Group();
-  camp.position.set(CAMP.x, heightAt(CAMP.x, CAMP.z), CAMP.z);
+  camp.position.set(CAMP.x, groundHeightAt(CAMP.x, CAMP.z), CAMP.z);
   for (let i = 0; i < 7; i++) {
     const a = (i * Math.PI * 2) / 7,
       r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.25, 0), rock);
@@ -26,7 +26,7 @@ export function createCampsite(scene) {
   scene.add(camp);
   const bushes = BUSHES.map((b) => {
     const group = new THREE.Group();
-    group.position.set(b.x, heightAt(b.x, b.z), b.z);
+    group.position.set(b.x, groundHeightAt(b.x, b.z), b.z);
     const leaves = new THREE.Mesh(
       new THREE.SphereGeometry(0.85, 8, 6),
       new THREE.MeshStandardMaterial({ color: "#617b55", roughness: 1 }),

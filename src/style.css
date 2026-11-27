@@ -757,3 +757,8 @@ kbd {
   letter-spacing: 0.16em;
   pointer-events: none;
 }
+
+/* The editorial title is useful at the opening, but should not cover the world during play. */
+body.playing .location {
+  display: none;
+}

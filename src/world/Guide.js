@@ -1,6 +1,6 @@
 // A single stationary guide, built from temporary procedural geometry.
 import * as THREE from "three";
-import { heightAt } from "../world.js";
+import { groundHeightAt } from "../world.js";
 export const GUIDE = Object.freeze({ x: 6, z: 5, name: "Mira" });
 export function createGuide(scene) {
   const group = new THREE.Group();
@@ -30,7 +30,7 @@ export function createGuide(scene) {
   );
   legs.position.y = 0.52;
   group.add(legs);
-  group.position.set(GUIDE.x, heightAt(GUIDE.x, GUIDE.z), GUIDE.z);
+  group.position.set(GUIDE.x, groundHeightAt(GUIDE.x, GUIDE.z), GUIDE.z);
   group.traverse((o) => {
     if (o.isMesh) o.castShadow = true;
   });

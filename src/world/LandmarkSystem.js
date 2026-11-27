@@ -1,6 +1,6 @@
 // Distinct procedural stand-ins for authored discovery locations, not final production art.
 import * as THREE from "three";
-import { heightAt } from "../world.js";
+import { groundHeightAt } from "../world.js";
 import { LANDMARKS } from "../gameplay/Landmarks.js";
 export function createLandmarks(scene, physics) {
   const stone = new THREE.MeshStandardMaterial({
@@ -13,7 +13,7 @@ export function createLandmarks(scene, physics) {
   });
   for (const site of LANDMARKS) {
     const group = new THREE.Group();
-    const y = heightAt(site.x, site.z);
+    const y = groundHeightAt(site.x, site.z);
     group.position.set(site.x, y, site.z);
     scene.add(group);
     function box(w, h, d, x, yy, z, mat = stone) {
@@ -39,7 +39,7 @@ export function createLandmarks(scene, physics) {
         m.rotation.y = a;
         physics.addCylinder(
           site.x + x,
-          heightAt(site.x + x, site.z + z),
+          groundHeightAt(site.x + x, site.z + z),
           site.z + z,
           0.4,
           1.5,

@@ -1,8 +1,13 @@
 // Experimental, bounded test-area streaming. Chunk size is provisional pending device profiling.
 import * as THREE from "three";
-import { heightAt, WORLD_HALF } from "../world.js";
-export const CHUNK_SIZE = 125;
-export const SEGMENTS = 32;
+import {
+  heightAt,
+  WORLD_HALF,
+  CHUNK_SIZE,
+  TERRAIN_SEGMENTS,
+} from "../world.js";
+export { CHUNK_SIZE };
+export const SEGMENTS = TERRAIN_SEGMENTS;
 export const CHUNK_COUNT = (2 * WORLD_HALF) / CHUNK_SIZE;
 export function chunkAt(x, z) {
   return {

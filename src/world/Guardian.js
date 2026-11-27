@@ -1,6 +1,6 @@
 // Temporary procedural enemy visual; combat state lives in CombatSystem.
 import * as THREE from "three";
-import { heightAt } from "../world.js";
+import { groundHeightAt } from "../world.js";
 export function createGuardian(scene) {
   const group = new THREE.Group();
   const stone = new THREE.MeshStandardMaterial({
@@ -57,7 +57,7 @@ export function createGuardian(scene) {
       glow.emissiveIntensity = combat.enemyWindup > 0 ? 2 : 0.7;
       group.position.set(
         combat.enemyX,
-        heightAt(combat.enemyX, combat.enemyZ),
+        groundHeightAt(combat.enemyX, combat.enemyZ),
         combat.enemyZ,
       );
       group.rotation.y = Math.atan2(

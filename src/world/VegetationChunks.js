@@ -1,6 +1,6 @@
 // Chunk-owned instances and colliders. The 125 m layout and density are provisional until real-device profiling.
 import * as THREE from "three";
-import { WORLD_HALF, seeded, heightAt, riverCenter } from "../world.js";
+import { WORLD_HALF, seeded, groundHeightAt, riverCenter } from "../world.js";
 import { CHUNK_SIZE } from "./TerrainChunks.js";
 import { PLANTS } from "../gameplay/Journey.js";
 import { BUSHES, CAMP } from "../gameplay/Survival.js";
@@ -71,7 +71,7 @@ export class VegetationChunks {
       trees.length,
     );
     trees.forEach((tree, i) => {
-      const y = heightAt(tree.x, tree.z);
+      const y = groundHeightAt(tree.x, tree.z);
       colliders.push(
         this.physics.addCylinder(
           tree.x,

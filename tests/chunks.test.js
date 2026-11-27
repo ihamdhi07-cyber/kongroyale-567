@@ -90,3 +90,27 @@ test("player crosses a streamed seam without falling", async () => {
   chunks.dispose();
   physics.dispose();
 });
+
+test("surface sampling matches the actual rendered triangles across chunk seams", async () => {
+  const { groundHeightAt } = await import("../src/world.js");
+  for (const [cx, cz] of [
+    [0, 0],
+    [1, 2],
+    [2, 2],
+    [3, 3],
+  ]) {
+    const geometry = createChunkGeometry(cx, cz);
+    const p = geometry.attributes.position;
+    const indices = geometry.index;
+    for (let t = 0; t < indices.count; t += 3 * 31) {
+      const a = indices.getX(t),
+        b = indices.getX(t + 1),
+        c = indices.getX(t + 2);
+      const x = p.getX(a) * 0.2 + p.getX(b) * 0.3 + p.getX(c) * 0.5;
+      const z = p.getZ(a) * 0.2 + p.getZ(b) * 0.3 + p.getZ(c) * 0.5;
+      const y = p.getY(a) * 0.2 + p.getY(b) * 0.3 + p.getY(c) * 0.5;
+      assert.ok(Math.abs(groundHeightAt(x, z) - y) < 0.00001, `${x},${z}`);
+    }
+    geometry.dispose();
+  }
+});
