@@ -33,11 +33,28 @@ export function createGuardian(scene) {
   group.traverse((o) => {
     if (o.isMesh) o.castShadow = true;
   });
+  const warning = new THREE.Mesh(
+    new THREE.RingGeometry(2.7, 3.1, 40),
+    new THREE.MeshBasicMaterial({
+      color: "#e77d4d",
+      transparent: true,
+      opacity: 0.75,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+  );
+  warning.rotation.x = -Math.PI / 2;
+  warning.position.y = 0.15;
+  group.add(warning);
   scene.add(group);
   return {
     group,
     update(combat, player) {
       group.visible = combat.guardianHealth > 0;
+      warning.visible = combat.enemyWindup > 0;
+      const pulse = 1 + (0.8 - combat.enemyWindup) * 0.12;
+      warning.scale.setScalar(pulse);
+      glow.emissiveIntensity = combat.enemyWindup > 0 ? 2 : 0.7;
       group.position.set(
         combat.enemyX,
         heightAt(combat.enemyX, combat.enemyZ),

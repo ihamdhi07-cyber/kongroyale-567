@@ -17,20 +17,44 @@ test("attacks require range, facing, stamina and cooldown", () => {
   assert.equal(c.attack("heavy", player, Math.PI).defeated, true);
   assert.equal(c.snapshot().guardianHealth, 0);
 });
-test("guard, dodge and respawn respond to enemy hits", () => {
+test("guardian telegraphs, can miss or be dodged, and guard reduces damage", () => {
   const c = new CombatSystem();
-  c.update(1, player, true);
-  assert.equal(c.health, 95);
+  assert.equal(c.update(1, player, true).type, "warning");
+  assert.equal(c.health, 100);
+  assert.equal(c.update(0.8, player, true).damage, 5);
   c.enemyCooldown = 0;
+  c.update(0.01, player, false);
   assert.ok(c.dodge());
-  assert.equal(c.update(0.01, player, false).type, "dodged");
-  assert.equal(c.health, 95);
+  assert.equal(c.update(0.2, player, false), null);
+  assert.equal(
+    c.update(0.61, { x: player.x + 10, z: player.z }, false).type,
+    "missed",
+  );
+  c.enemyCooldown = 0;
+  c.update(0.01, player, false);
+  c.update(0.5, player, false);
+  assert.ok(c.dodge());
+  assert.equal(c.update(0.31, player, false).type, "dodged");
   c.dodgeTime = 0;
   c.health = 10;
   c.enemyCooldown = 0;
-  assert.equal(c.update(0.01, player, false).type, "respawn");
+  c.update(0.01, player, false);
+  assert.equal(c.update(0.8, player, false).type, "respawn");
   assert.equal(c.health, 100);
   assert.ok(validCombat(c.snapshot()));
+});
+test("guardian windup cancels on leaving the encounter or defeat", () => {
+  const c = new CombatSystem();
+  c.enemyCooldown = 0;
+  c.update(0.01, player, false);
+  assert.ok(c.enemyWindup > 0);
+  c.update(0.1, { x: 0, z: 0 }, false);
+  assert.equal(c.enemyWindup, 0);
+  c.enemyCooldown = 0;
+  c.update(0.01, player, false);
+  c.guardianHealth = 0;
+  c.update(0.1, player, false);
+  assert.equal(c.enemyWindup, 0);
 });
 test("guardian returns home when the player leaves the encounter", () => {
   const c = new CombatSystem();

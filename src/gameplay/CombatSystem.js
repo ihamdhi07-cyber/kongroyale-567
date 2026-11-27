@@ -24,6 +24,7 @@ export class CombatSystem {
     this.enemyZ = GUARDIAN_HOME.z;
     this.attackCooldown = 0;
     this.enemyCooldown = 1;
+    this.enemyWindup = 0;
     this.dodgeTime = 0;
     this.attackTime = 0;
     this.blocking = false;
@@ -69,7 +70,10 @@ export class CombatSystem {
       0,
       Math.min(100, this.stamina + (this.blocking ? -12 : 18) * dt),
     );
-    if (this.guardianHealth <= 0) return null;
+    if (this.guardianHealth <= 0) {
+      this.enemyWindup = 0;
+      return null;
+    }
     this.enemyCooldown = Math.max(0, this.enemyCooldown - dt);
     let dx = player.x - this.enemyX,
       dz = player.z - this.enemyZ,
@@ -79,6 +83,7 @@ export class CombatSystem {
       player.z - GUARDIAN_HOME.z,
     );
     if (playerFromHome > 24) {
+      this.enemyWindup = 0;
       dx = GUARDIAN_HOME.x - this.enemyX;
       dz = GUARDIAN_HOME.z - this.enemyZ;
       distance = Math.hypot(dx, dz);
@@ -88,12 +93,11 @@ export class CombatSystem {
       }
       return null;
     }
-    if (distance < 15 && distance > 2.5) {
-      this.enemyX += (dx / distance) * Math.min(distance - 2.5, 2.8 * dt);
-      this.enemyZ += (dz / distance) * Math.min(distance - 2.5, 2.8 * dt);
-    }
-    if (distance <= 3 && this.enemyCooldown === 0) {
+    if (this.enemyWindup > 0) {
+      this.enemyWindup = Math.max(0, this.enemyWindup - dt);
+      if (this.enemyWindup > 0) return null;
       this.enemyCooldown = 1.5;
+      if (distance > 3.5) return { type: "missed" };
       if (this.dodgeTime > 0) return { type: "dodged" };
       const damage = this.blocking ? 5 : 20;
       this.health = Math.max(0, this.health - damage);
@@ -106,6 +110,14 @@ export class CombatSystem {
         return { type: "respawn" };
       }
       return { type: "hurt", damage };
+    }
+    if (distance < 15 && distance > 2.5) {
+      this.enemyX += (dx / distance) * Math.min(distance - 2.5, 2.8 * dt);
+      this.enemyZ += (dz / distance) * Math.min(distance - 2.5, 2.8 * dt);
+    }
+    if (distance <= 3 && this.enemyCooldown === 0) {
+      this.enemyWindup = 0.8;
+      return { type: "warning" };
     }
     return null;
   }
