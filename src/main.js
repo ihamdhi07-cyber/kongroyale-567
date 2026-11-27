@@ -20,6 +20,7 @@ import { LANDMARKS, detectLandmarks } from "./gameplay/Landmarks.js";
 import { createLandmarks } from "./world/LandmarkSystem.js";
 import { RiverSystem } from "./world/RiverSystem.js";
 import { Survival, BUSHES, CAMP } from "./gameplay/Survival.js";
+import { inventoryItems } from "./gameplay/Inventory.js";
 import { createCampsite } from "./world/Campsite.js";
 const $ = (s) => document.querySelector(s),
   canvas = $("#world");
@@ -348,11 +349,25 @@ function toggleMap() {
 $("#mapButton").addEventListener("click", toggleMap);
 $("#closeMap").addEventListener("click", toggleMap);
 function renderBag() {
-  $("#leafCount").textContent = journey.leaves;
-  $("#berryCount").textContent = survival.berries;
-  $("#mealCount").textContent = survival.meals;
+  const list = $("#inventoryList");
+  list.replaceChildren();
+  for (const item of inventoryItems(journey, survival, {
+    category: $("#itemCategory").value,
+    sort: $("#itemSort").value,
+  })) {
+    const row = document.createElement("div");
+    row.className = "item-row";
+    const label = document.createElement("span");
+    label.textContent = `${item.icon}  ${item.name}`;
+    const description = document.createElement("small");
+    description.textContent = `${item.category} · ${item.description}`;
+    label.append(description);
+    const count = document.createElement("strong");
+    count.textContent = item.quantity;
+    row.append(label, count);
+    list.append(row);
+  }
   $("#eatButton").disabled = survival.meals === 0 || combat.health >= 100;
-  $("#lanternCount").textContent = journey.lantern ? "1" : "—";
   $("#craftButton").disabled = journey.leaves < 3 || journey.lantern;
   $("#craftInfo").textContent = journey.lantern
     ? "Your light is ready to restore the waystone."
@@ -374,6 +389,8 @@ function toggleBag() {
     resetJoy();
   }
 }
+$("#itemCategory").addEventListener("change", renderBag);
+$("#itemSort").addEventListener("change", renderBag);
 $("#bagButton").addEventListener("click", toggleBag);
 $("#closeBag").addEventListener("click", toggleBag);
 function toggleSettings() {

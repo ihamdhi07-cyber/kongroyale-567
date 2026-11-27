@@ -762,3 +762,39 @@ kbd {
 body.playing .location {
   display: none;
 }
+
+.inventory-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 16px 0 4px;
+}
+.inventory-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #e4d5b4;
+}
+.inventory-controls select {
+  min-width: 0;
+  max-width: 145px;
+  color: #f7eedb;
+  background: #18362c;
+  border: 1px solid #e8d7aa80;
+  padding: 8px;
+  font: inherit;
+}
+.item-row small {
+  text-transform: none;
+  line-height: 1.4;
+}
+@media (max-width: 700px) {
+  .bottom .controls,
+  .bottom .prototype {
+    display: none;
+  }
+  .bottom .compass {
+    margin: auto;
+  }
+}

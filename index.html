@@ -204,28 +204,25 @@
           <div class="eyebrow centered">WHAT YOU CARRY</div>
           <h2 id="bagTitle">Field <em>satchel.</em></h2>
           <p>Materials gathered in the wild can be made into useful things.</p>
-          <div class="item-row">
-            <span>✿ &nbsp; Glowleaf <small>Material</small></span
-            ><strong id="leafCount">0</strong>
+          <div class="inventory-controls">
+            <label for="itemCategory"
+              >Show
+              <select id="itemCategory">
+                <option value="all">All items</option>
+                <option value="material">Materials</option>
+                <option value="consumable">Consumables</option>
+                <option value="quest">Quest items</option>
+              </select>
+            </label>
+            <label for="itemSort"
+              >Sort
+              <select id="itemSort">
+                <option value="name">Name</option>
+                <option value="quantity">Quantity</option>
+              </select>
+            </label>
           </div>
-          <div class="item-row">
-            <span
-              >✧ &nbsp; Wayfarer's light
-              <small>Equipment · a light for the waystone</small></span
-            ><strong id="lanternCount">—</strong>
-          </div>
-          <div class="item-row">
-            <span
-              >● &nbsp; Wild berries
-              <small>Material · cook two at the camp</small></span
-            ><strong id="berryCount">0</strong>
-          </div>
-          <div class="item-row">
-            <span
-              >◉ &nbsp; Berry meal
-              <small>Consumable · restores 35 health</small></span
-            ><strong id="mealCount">0</strong>
-          </div>
+          <div id="inventoryList" aria-live="polite"></div>
           <button id="eatButton" class="secondary">EAT BERRY MEAL</button>
           <p id="craftInfo">Craft a wayfarer's light from 3 glowleaves.</p>
           <button id="craftButton">CRAFT LIGHT · 3 GLOWLEAVES</button>
