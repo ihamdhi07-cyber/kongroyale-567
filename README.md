@@ -1,131 +1,28 @@
-# Kong Royale
+# The Unknown World — early prototype
 
-A 50-player banana battle royale that runs in your browser. Play it at [kongroyale.com](https://kongroyale.com).
+This project replaces the former Kong Royale application in the repository. It is **not** the specified open-world release: it is a 500 × 500 metre procedural test area with temporary geometry. No existing Kong Royale assets are used.
 
-![The Kong Royale title screen](.github/assets/title.jpg)
+## Run and build
 
-You drop from the Banana Co. plane onto a jungle island, loot chests, and fight 49 other kongs while the storm closes
-in. Play solo or in trios; bots fill any empty seats.
-
-The client is built with [three.js](https://threejs.org). The multiplayer server is Node.js with WebSockets. Both run
-the same simulation code from `shared/`, and the server has the final say on every hit, pickup and storm tick.
-
-![Freefall over the island](.github/assets/gameplay.jpg)
-
-## Status
-
-- **Status:** playable and in active development (version 0.2.0).
-- **To play:** a desktop browser with WebGL2, a decent GPU, and a keyboard and mouse or a controller. There are no
-  touch controls, so phones and tablets don't work yet.
-- **Limits:** there are no accounts and the server saves nothing between matches. Lobbies live in one server
-  process's memory.
-
-## Run it
-
-You need [Node.js](https://nodejs.org) 22.12 or newer.
+Requires Node 22.12 or newer.
 
 ```sh
 npm ci
 npm run dev
-```
-
-Prefer [Bun](https://bun.sh)? `bun install --frozen-lockfile` works in place of `npm ci`: it reads `package-lock.json` and
-installs the same versions, and refuses to run if the lockfile is out of date. npm stays the source of truth, so add or
-update dependencies with npm. Run everything on Node: Bun isn't supported as the runtime, because the simulation gives
-different results under it.
-
-Open <http://localhost:5317/> and press **Play**. That starts a match against 49 bots that runs entirely in your
-browser, so you don't need the server. Pick **Easy**, **Standard** or **Hard** bots on the title screen.
-
-Until you start the server (below), the terminal keeps complaining that it can't reach `/health` on port 3020. That's
-harmless: practice matches don't use the server.
-
-### Controls
-
-| Key | Action |
-|---|---|
-| WASD | Move |
-| Mouse | Look |
-| Left / right mouse | Fire / aim |
-| Space | Jump, leave the plane, pull the chute |
-| Left Shift / C | Sprint / crouch |
-| R | Reload |
-| E | Interact: pick up, open chests, get in vehicles |
-| 1-5 or mouse wheel | Switch weapon |
-| G | Throw a banana bomb |
-| Tab / M | Inventory / map |
-| Middle mouse or Z | Ping |
-| B | Push to talk (squad voice) |
-| Esc | Menu and settings |
-
-You can rebind every key in **Settings**. Controllers work too.
-
-### Firing range
-
-**Firing Range** on the title screen has every gun at every rarity, every heal and every ammo type, with targets from
-10 to 205 m. It uses the real match code for damage, falloff, spread and hit registration, so it's the quickest place
-to test a weapon change.
-
-### Online rooms
-
-To play with friends on your own machine, start the server in a second terminal:
-
-```sh
-KR_EVENT_MODE=0 npm run server
-```
-
-Then open **Friends** on the title screen to create a room or join one by its code. `KR_EVENT_MODE=0` lets players
-create their own rooms; see [HOSTING.md](HOSTING.md) for what it and the other settings do.
-
-## Project layout
-
-| Folder | What's in it |
-|---|---|
-| `client/src/` | The browser game: rendering, UI, audio, input and client prediction |
-| `client/src/world/` | The island you see: terrain, water, plants, sky, and one folder per location |
-| `shared/sim/` | The game rules, run by both server and browser: movement, weapons, loot, storm, bots, vehicles |
-| `shared/net/` | The network protocol and the loop that runs a match |
-| `shared/world/`, `shared/pois/` | The map: the terrain generator and the collision shapes of every location |
-| `server/` | The Node server: lobbies, the 60 Hz match loop, admin lobbies, bug reports, voice relay |
-| `public/assets/` | Models, textures, sounds and fonts the browser downloads |
-| `tools/` | Tests, benchmarks and the admin key tool |
-
-[ARCHITECTURE.md](ARCHITECTURE.md) explains how the pieces fit together.
-
-## Check your changes
-
-```sh
-npm run build   # build the game into dist/ (about 15 s)
-npm test        # types, movement, swimming, animation, path finding, network parity, a headless match, security
-```
-
-Run the build first: one of the tests uses the built admin pages. The tests need no GPU, network or database and take
-about two minutes. The same checks run on every pull request.
-
-## Run your own server
-
-```sh
-npm ci
+npm test
 npm run build
-npm start
 ```
 
-That serves the game and the multiplayer server on one port, 3020 by default. A build shows a simpler title screen
-with one Play button and no Solo / Trios, bot difficulty or Friends. Build with `VITE_KR_PLAYTEST=0 npm run build`
-for the full one. [HOSTING.md](HOSTING.md) lists every setting and explains how to run it safely on the internet.
+Open the URL Vite prints. The static `dist/` directory can be deployed to Vercel, Netlify or another static host; use `npm run build` as the build command and `dist` as the output directory, with the repository root as the project root. No backend is required. Deployment has not been tested.
 
-## Contribute
+## Controls
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md). Every change goes through a pull request, and the Kong Royale Committee of
-Truth and Prosperity reviews it before it can reach the live game. Using an AI coding agent? Point it at
-[AGENTS.md](AGENTS.md).
+Click Begin Exploring. WASD or arrow keys move relative to the camera; drag the scene to rotate and change angle; scroll to zoom; Space jumps; Shift sprints; E examines the waystone when near it; M opens the exploration map; I opens the satchel; J opens the journal. F and G perform light and heavy attacks, Q dodges, and holding R blocks. On touch devices use the joystick, drag the scene, and tap jump, interact, zoom, light attack, heavy attack or dodge; hold the run button to sprint or block button to defend. The question mark reopens the instructions; the gear opens graphics and weather settings. Portrait works but landscape gives more space.
 
-Questions: [Discussions](https://github.com/MaximilianHansen/kongroyale/discussions). Ideas for the game: open an **Idea** issue.
+## What's here
 
-Found a security problem or a cheat? Don't open an issue. See [SECURITY.md](SECURITY.md).
+An experimentally streamed height-field landscape, chunk-streamed instanced procedural trees, a temporary character with leg movement, a Rapier kinematic character controller with terrain and obstacle collision, a follow camera with ray-based obstruction checks, a jump and a small discovery loop: find the waystone, gather three glowleaves, craft a light in the satchel, then restore the waystone. The coarse map reveals visited areas, and a single IndexedDB slot stores position, visited cells, the waystone discovery, collected plants and crafting progress. Versions 1 through 6 migrate on load. Saves occur on starting, discovery, and every 10 seconds of active simulation. Wait for the saved indicator before closing; an unload warning during a pending save is best-effort and may not work on mobile. Starting a new journey replaces the slot only after confirmation; failed or invalid saves are reported, and an invalid save is not overwritten automatically. A simple eight-minute simulation day cycles the lighting; a settings panel offers clear/rain and four graphics presets. A stationary guide provides progress-dependent hints, while six passive procedural grazers wander and flee the player. An optional stone guardian in the eastern woods has proximity-based pursuit and combat, including a visible windup before strikes; it is not required for the waystone quest. A carved river has an animated custom shader and buoyancy-based swimming; crossing it grants discovery XP. Near the starting path, gather berries and use the campfire to rest and cook a meal, then consume the meal from your satchel when hurt. Three placeholder landmarks award discovery XP and are marked in the journal and map when found. The Echo Grove contains an inscription and three environmental switches. Solving it unlocks the Fleetfoot sprint improvement; the journal records quest progress and discovery XP. Player health and guardian health persist. Synthesized music drone, wind ambience, steps and interaction/combat effects begin only after pressing play; settings control master, music, effects, ambience and mute. There are no external textures, models, audio files or fonts. Everything visual is procedural placeholder art. See [status](docs/STATUS.md), [repo analysis](docs/REVERSE_ENGINEERING.md) and [world plan](docs/WORLD_PLAN.md).
 
-## Licence
+## Limitations
 
-The code and the game's own art and audio are under the [MIT licence](LICENSE). A few files come from other people
-under their own licences; they're listed in [CREDITS.md](CREDITS.md). The MIT licence covers the code and files, not
-the **Kong Royale** name and logo: please don't use those for your own game or in a way that suggests it's official.
+Collision uses simplified cylinders for trees and the waystone; there are no dynamic bodies or climbing. Camera collision is a ray, not a swept volume, and can clip near obstacles. Touch zoom is a two-position toggle. The map is a coarse test-area grid, not a world map. Saves are local to this browser, use one slot, and can lose up to 10 seconds of progress; concurrent tabs are not coordinated. The satchel lists glowleaves, a light, berries and a meal with category filters, descriptions and sorting; quantities come from the existing quest and survival state. There is no general-purpose equipment or cooking framework. Wildlife has only simple wander/flee behavior and can pass through obstacles; the guide is stationary. Rain is manually selected, not a regional weather simulation. The guardian uses simple distance checks rather than physics/pathfinding, can move through obstacles, and has only a simple ring telegraph and no advanced animation. Combat has no targeting lock or equipment system. The journal and progression currently cover only the authored quest, one puzzle, three landmarks and a single skill; XP has no level tree. Terrain, trees and their colliders stream in the 500 m test area; other content remains globally resident, and chunk generation is synchronous with no LOD or asset streaming. The 125 m chunk size is provisional and has not been profiled on actual devices. The river uses a simple generated water surface and buoyancy; there is no underwater exploration, current, water collision for NPCs, or dedicated swim animation. There is no adaptive music, recorded ambience, voice or region-specific audio; synthesized audio is a temporary foundation. Headless Chromium and emulated touch were smoke-tested, but actual device performance, physical mobile devices and accessibility have not been verified. This is not a completed Phase 1 acceptance or a vertical slice. Rapier is Apache-2.0; Three.js is MIT.

@@ -1,0 +1,19 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { heightAt, clampWorld, seeded } from "../src/world.js";
+test("terrain is deterministic and finite", () => {
+  for (const x of [-250, 0, 250])
+    for (const z of [-250, 0, 250]) {
+      assert.ok(Number.isFinite(heightAt(x, z)));
+      assert.equal(heightAt(x, z), heightAt(x, z));
+    }
+});
+test("movement stays inside boundary", () => {
+  assert.equal(clampWorld(300), 248);
+  assert.equal(clampWorld(-300), -248);
+});
+test("scatter is reproducible", () => {
+  const a = seeded(1),
+    b = seeded(1);
+  for (let i = 0; i < 20; i++) assert.equal(a(), b());
+});
