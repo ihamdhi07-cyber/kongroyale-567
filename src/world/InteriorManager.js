@@ -170,6 +170,78 @@ export const INTERIORS = [
     chestQty: 3,
     chestGold: 135,
   },
+  {
+    id: 'hollow-cavern',
+    name: 'Echoing Crystal Grotto',
+    subtitle: 'Subterranean Hollow Depths Cave',
+    doorX: 92,
+    doorZ: -1745,
+    returnX: 92,
+    returnZ: -1738,
+    roomX: 840,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 10.5,
+    halfD: 9.0,
+    wallColor: 0x262f4a,
+    floorColor: 0x1d253b,
+    lightColor: 0x76f7ff,
+    specialProp: 'crystal-cave',
+    loreTitle: 'Echo of the First Miners',
+    loreText:
+      'Far beneath the emerald hills, singing crystal veins pulse in rhythm with the ocean tides. Those who listen closely can hear the Unknown Gate breathing far to the north.',
+    chestItem: 'crystal-shard',
+    chestQty: 4,
+    chestGold: 90,
+  },
+  {
+    id: 'alpine-ice-cave',
+    name: 'Highland Ice Cavern',
+    subtitle: 'Glacial Cave Beneath Skywatch',
+    doorX: -1490,
+    doorZ: -1835,
+    returnX: -1490,
+    returnZ: -1828,
+    roomX: 960,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 9.5,
+    halfD: 8.5,
+    wallColor: 0x5c85a6,
+    floorColor: 0x7caac9,
+    lightColor: 0x9ef0ff,
+    specialProp: 'ice-cave',
+    loreTitle: 'Frost-Etched Journal of the Climbers',
+    loreText:
+      'We sheltered inside this gleaming ice cave when the aurora broke across Highland Reach. Even in the deepest frost, a warm golden pulse shines from the stones below.',
+    chestItem: 'frost-lotus',
+    chestQty: 3,
+    chestGold: 105,
+  },
+  {
+    id: 'frontier-cave',
+    name: 'Whispering Frontier Cave',
+    subtitle: 'Uncharted Ancient Fissure',
+    doorX: -1545,
+    doorZ: 1555,
+    returnX: -1545,
+    returnZ: 1562,
+    roomX: 1080,
+    roomY: 600,
+    roomZ: 0,
+    halfW: 10.0,
+    halfD: 8.5,
+    wallColor: 0x4b4238,
+    floorColor: 0x38312a,
+    lightColor: 0xffc66e,
+    specialProp: 'ancient-cave',
+    loreTitle: 'Carving of the Unnamed Wayfarer',
+    loreText:
+      'Beyond the western border gate waits a realm unmapped by any guild. Leave a lantern lit here so every traveler after us finds warmth in the dark.',
+    chestItem: 'frontier-relic',
+    chestQty: 1,
+    chestGold: 140,
+  },
 ];
 
 export class InteriorManager {
@@ -348,6 +420,35 @@ export class InteriorManager {
         ar2.rotation.y = Math.PI / 2;
         g.add(ar1, ar2);
         this.animatedProps.push({ mesh: ar1, speed: 1.1, axis: 'z' }, { mesh: ar2, speed: -1.4, axis: 'y' });
+      } else if (def.specialProp === 'crystal-cave' || def.specialProp === 'ice-cave' || def.specialProp === 'ancient-cave') {
+        const crystalCol =
+          def.specialProp === 'ice-cave' ? 0x9cf0ff : def.specialProp === 'ancient-cave' ? 0xffc96b : 0x7df7ff;
+        const spireMat = new THREE.MeshStandardMaterial({
+          color: crystalCol,
+          emissive: crystalCol,
+          emissiveIntensity: 1.25,
+          roughness: 0.2,
+          transparent: true,
+          opacity: 0.9,
+        });
+        for (let k = 0; k < 8; k++) {
+          const ang = (k / 8) * Math.PI * 2;
+          const rx = Math.cos(ang) * (def.halfW - 2.6);
+          const rz = Math.sin(ang) * (def.halfD - 2.6) - 0.8;
+          const h = 1.6 + (k % 3) * 0.9;
+          const spire = new THREE.Mesh(new THREE.ConeGeometry(0.45, h, 6), spireMat);
+          spire.position.set(rx, h * 0.5, rz);
+          spire.rotation.z = Math.sin(k) * 0.18;
+          g.add(spire);
+        }
+        // Glowing subterranean water pool or ember pit in center
+        const pool = new THREE.Mesh(
+          new THREE.CircleGeometry(2.6, 20),
+          new THREE.MeshBasicMaterial({ color: crystalCol, transparent: true, opacity: 0.55 })
+        );
+        pool.rotation.x = -Math.PI / 2;
+        pool.position.set(0, 0.08, 1.5);
+        g.add(pool);
       }
 
       // Corner decorative pillars or crystal spires

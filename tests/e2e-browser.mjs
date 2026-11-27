@@ -250,9 +250,11 @@ async function run() {
     await snap(page, '14-bounty-board.png');
     await page.evaluate(() => window.__tuw.game.closeAllModals());
 
-    console.log('15/16 Verifying Interactive Photo Studio Mode (Golden Hour Gouache)...');
+    console.log('15/19 Verifying Interactive Photo Studio Mode (Golden Hour Gouache)...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
+      if (g.mount.mounted) g.mount.dismount(g.player);
+      for (let i = 0; i < 6; i++) g.magic.update(0.6, 5 + i, g.player, g.enemies, g.world.particles, g.combat);
       g.playerController.teleport(4, 398);
       g.player.facingYaw = Math.PI;
       g.world.chunks.primeAround(4, 398);
@@ -274,7 +276,62 @@ async function run() {
       g.world.weather.timeOfDay = 9.4;
     });
 
-    console.log('16/16 Verifying Mobile Landscape Touch Viewport (844x390)...');
+    console.log('16/19 Verifying Emerald Falls Animated Waterfall & HDR Painterly Bloom...');
+    const postStats = await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.playerController.teleport(-882, -84);
+      g.player.facingYaw = Math.PI + 0.32;
+      g.world.chunks.primeAround(-882, -84);
+      g.world.weather.timeOfDay = 10.2;
+      g.cameraController.yaw = 0.32;
+      g.cameraController.targetYaw = 0.32;
+      g.cameraController.pitch = 0.10;
+      g.cameraController.targetPitch = 0.10;
+      g.cameraController.distance = 17.5;
+      g.cameraController.targetDistance = 17.5;
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.hud.toastStack.innerHTML = '';
+      return g.renderer.getStats();
+    });
+    console.log(`   -> PostPipeline: postActive=${postStats.postActive}, hdr=${postStats.hdr}, fps=${postStats.fps}`);
+    if (!postStats.postActive) throw new Error('Expected Painterly PostPipeline to be active on default/high preset!');
+    await snap(page, '16-emerald-falls.png');
+
+    console.log('17/19 Verifying Azure Coast Shipwreck (The Star-Seeker) & Underwater Coral Reefs...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.playerController.teleport(1425, 1510);
+      g.player.facingYaw = Math.PI + 0.72;
+      g.world.chunks.primeAround(1425, 1510);
+      g.world.weather.timeOfDay = 15.4;
+      g.cameraController.yaw = 0.78;
+      g.cameraController.targetYaw = 0.78;
+      g.cameraController.pitch = 0.26;
+      g.cameraController.targetPitch = 0.26;
+      g.cameraController.distance = 18.5;
+      g.cameraController.targetDistance = 18.5;
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.hud.toastStack.innerHTML = '';
+    });
+    await snap(page, '17-azure-shipwreck.png');
+
+    console.log('18/19 Verifying Subterranean Echoing Crystal Grotto Cave Interior...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.world.interiors.enter('hollow-cavern', g.player, g.cameraController);
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.hud.toastStack.innerHTML = '';
+    });
+    await snap(page, '18-crystal-grotto.png');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.world.interiors.exit(g.player, g.cameraController);
+    });
+
+    console.log('19/19 Verifying Mobile Landscape Touch Viewport (844x390)...');
     await page.setViewportSize({ width: 844, height: 390 });
     await page.evaluate(() => {
       const g = window.__tuw.game;
@@ -294,12 +351,27 @@ async function run() {
       g.hud.toastStack.innerHTML = '';
       g.setTouchMode('on');
     });
-    await snap(page, '16-mobile-touch.png');
+    await snap(page, '19-mobile-touch.png');
+
+    // Export 6 curated hero showcase PNGs to docs/screenshots/ for README & PR visual gallery
+    const galleryDir = path.resolve('docs/screenshots');
+    fs.mkdirSync(galleryDir, { recursive: true });
+    const exports = [
+      ['02-crossroads.png', 'crossroads-village.png'],
+      ['03-mount-and-magic.png', 'wind-stag-magic.png'],
+      ['15-photo-studio.png', 'golden-hour-photo-studio.png'],
+      ['16-emerald-falls.png', 'emerald-falls-waterfall.png'],
+      ['17-azure-shipwreck.png', 'azure-coast-shipwreck.png'],
+      ['18-crystal-grotto.png', 'crystal-grotto-cave.png'],
+    ];
+    for (const [srcName, dstName] of exports) {
+      fs.copyFileSync(path.join(OUT_DIR, srcName), path.join(galleryDir, dstName));
+    }
 
     if (errors.length > 0) {
       throw new Error(`Console/page errors detected:\n${errors.join('\n')}`);
     }
-    console.log('\n✅ ALL 16 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
+    console.log('\n✅ ALL 19 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
   } catch (err) {
     failed = true;
     console.error('❌ E2E Verification Failed:', err);

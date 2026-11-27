@@ -2,7 +2,8 @@
 
 Complete engineering & real headless Chromium WebGL2 verification across the full 7-Pillar Mega-Expansion (all legacy Kong Royale files removed; **THE UNKNOWN WORLD** is the sole project at repository root).
 
-## Automated Simulation & Unit Verification (`npm test` — 19/19 Passing)
+## Automated Simulation & Unit Verification (`npm test` — 22/22 Passing)
+- [x] **Expansion III — HDR Painterly Post-Processing, FrameProfiler & Biome Wonders** (`tests/expansion3.test.js`): Quality presets configure Selective Bloom & OkLab Painterly Grade cleanly (`low` bypasses post for mobile FPS), rolling `FrameProfiler` tracks FPS & adaptive recommendations, 2 animated GLSL waterfalls + Azure Coast shipwreck & coral reefs + 3 subterranean caves connect cleanly to **10 total enterable 3D interiors**.
 - [x] **4 Flat Sculpted World Boss Arenas** (`tests/expansion2.test.js`): All 4 `BOSS_ARENAS` flatten terrain cleanly to exact `padY` with zero cliff occlusion, framed by etched stone daises & 4 glowing elemental obelisks.
 - [x] **Elemental Weapon Rune Infusions & 3 Elemental Combo Reactions** (`tests/expansion2.test.js`): 4 Elemental Runes (`Sunfire`, `Frostbite`, `Tempest`, `Astral`) + live 3D weapon aura + verified `2.2× THERMAL SHATTER`, `1.8× WILDFIRE GALE`, and `2.0× ASTRAL OVERLOAD` reactions.
 - [x] **5 Timed Shrine Trials, 8-Upgrade Wayfarer's Homestead & Guild Bounty Board** (`tests/expansion2.test.js`): Golden Sky Ring trial completion & Gold Medal payout, 8 Homestead upgrades + Herb Garden harvest + Well-Rested +25 HP/SP + Boss Trophy pedestals, and canonical EventBus auto-tracking Guild Bounties.
@@ -15,8 +16,9 @@ Complete engineering & real headless Chromium WebGL2 verification across the ful
 - [x] **Sailing, Underwater Diving & 8 Regional Puzzles** (`tests/fullgame.test.js`): 3 sailboats moored in deep navigable water (`h < -0.5 m`), 5 sunken seabed treasures (`h < -2.5 m`), and all 8 environmental puzzles verified end-to-end.
 - [x] **Persistent Multi-Slot Save System** (`tests/save.test.js`): IndexedDB + `localStorage`/memory fallback preserving v1 schema + backward-compatible `magic`, `mount`, `fishing`, `worldEvents`, and `journal` state.
 
-## Real Headless Chromium WebGL2 Visual & E2E Verification (`npm run verify:browser` — 16/16 Passing)
-Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader WebGL 2.0), capturing and visually inspecting all 16 screenshots with **0 console errors** and **0 uncaught page errors** (including Ghibli-upgraded Crossroads Village w/ shutters, flower boxes, chimney smoke, festival bunting, Bounty Board & articulated villagers; Glacier Sovereign on its flat Runic Borealis Terrace; active Timed Shrine Trial Golden Sky Rings; Homestead Builder & Rune Anvil UI; Crossroads Guild Bounty Board; Golden Hour Interactive Photo Studio; and `844×390` Mobile Landscape Touch layout).
+## Real Headless Chromium WebGL2 Visual & E2E Verification (`npm run verify:browser` — 19/19 Passing)
+Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader WebGL 2.0), capturing and visually inspecting all 19 screenshots with **0 console errors** and **0 uncaught page errors** (and exporting 6 showcase PNGs to `docs/screenshots/`):
+- **Expansion III Verified**: `PostPipeline` (`postActive=true`, `hdr=true`, `fps=53`) Selective Bloom + OkLab Painterly Grade, Fresnel-feathered volumetric sun-shafts, *Emerald Falls* animated GLSL waterfall (`16-emerald-falls.png`), *The Star-Seeker* shipwreck & coral reefs (`17-azure-shipwreck.png`), and *Echoing Crystal Grotto* subterranean cave interior (`18-crystal-grotto.png`).
 - [x] **01 — Title Screen (`01-title.png`)**: Anime watercolor panoramic backdrop, typography, and primary menu controls crisp.
 - [x] **02 — Crossroads Settlement + *Luma* + 4-Spell Hotbar (`02-crossroads.png`)**: Gouache terrain & foliage, Crossroads plaza, cottages, villagers, Waystone, glowing *Luma* familiar beside protagonist, circular minimap, and crisp `1–4` Spell + `H` Stag + `G` Fish hotbar.
 - [x] **03 — Wind Stag Mount & Sunfire Nova (`03-mount-and-magic.png`)**: Riding *Sylph* the Wind Stag with luminous cyan antlers, expanding golden Sunfire Nova shockwave ring, `≈ Wind Stag` status badge, and live spell cooldown overlay.
@@ -31,5 +33,5 @@ Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader We
 - [x] **12 — Mobile Landscape Touch Viewport (`12-mobile-touch.png`, 844×390)**: Non-overlapping compact top HUD, virtual joystick, action buttons (`Strike`, `Shield`, `Stealth`, `Heavy`, `Dodge`, `Jump/Glide`), spell/utility slots, and camera strip.
 
 ## Production Build & Manual Audio Check
-- [x] **Production Bundle (`npm run build`)**: 63 Vite modules built cleanly in ~2.2 s, 0 errors.
+- [x] **Production Bundle (`npm run build`)**: 72 Vite modules built cleanly in ~2.5 s, 0 errors.
 - [ ] **Live Speaker Audio Check**: Web Audio API adaptive 8-region soundtrack, boss battle pulse, and spell/parry/splash SFX initialize cleanly with zero console errors; listen interactively in browser preview after first click/tap to tune subjective mix preferences.

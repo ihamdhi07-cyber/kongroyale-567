@@ -46,6 +46,10 @@ export class SettingsUI {
               </select>
             </label>
             <label class="field-row">
+              <span>Painterly Selective Bloom (HDR)</span>
+              <input type="checkbox" id="set-bloom" />
+            </label>
+            <label class="field-row">
               <span>Camera FOV (<span id="lbl-fov">42°</span>)</span>
               <input type="range" id="set-fov" min="34" max="62" step="2" />
             </label>
@@ -105,6 +109,7 @@ export class SettingsUI {
       this.game.setManualVisuals({ renderScale: val });
     });
     bind('#set-shadows', 'change', (e) => this.game.setManualVisuals({ shadowOverride: e.target.value }));
+    bind('#set-bloom', 'change', (e) => this.game.setManualVisuals({ bloom: e.target.checked }));
     bind('#set-fov', 'input', (e) => {
       const val = Number(e.target.value);
       this.el.querySelector('#lbl-fov').textContent = `${val}°`;
@@ -136,6 +141,7 @@ export class SettingsUI {
     this.el.querySelector('#set-rscale').value = s.renderScale ?? 1.0;
     this.el.querySelector('#lbl-rscale').textContent = `${Math.round((s.renderScale ?? 1.0) * 100)}%`;
     this.el.querySelector('#set-shadows').value = s.shadowOverride || 'preset';
+    this.el.querySelector('#set-bloom').checked = s.bloom !== false;
     this.el.querySelector('#set-fov').value = s.fov ?? 42;
     this.el.querySelector('#lbl-fov').textContent = `${s.fov ?? 42}°`;
     this.el.querySelector('#set-inverty').checked = Boolean(s.invertY);

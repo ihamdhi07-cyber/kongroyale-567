@@ -9,6 +9,7 @@
 import { WORLD_CONFIG, REGIONS, LANDMARKS, ROADS, RIVERS, EXPANSION_ZONES } from '../world/WorldSpec.js';
 import { SHRINE_TRIALS } from '../world/ShrineTrialSystem.js';
 import { HOMESTEAD_POS } from '../world/HomesteadSystem.js';
+import { WATERFALLS, SHIPWRECK, CAVE_MOUTHS } from '../world/BiomeWonders.js';
 
 export class MapUI {
   constructor(game) {
@@ -314,7 +315,7 @@ export class MapUI {
         }
       }
 
-      // Moored Sailboats (navy diamond) & Solved/Active Puzzles
+      // Moored Sailboats (navy diamond), Biome Wonders (Waterfalls, Shipwreck, Caves) & Puzzles
       for (const b of this.game.world.boats?.boats || []) {
         const [bx, by] = this._worldToCanvas(b.group.position.x, b.group.position.z);
         ctx.fillStyle = '#235c88';
@@ -322,6 +323,43 @@ export class MapUI {
         ctx.strokeStyle = '#fff5dd';
         ctx.lineWidth = 1.2;
         ctx.strokeRect(bx - 4, by - 4, 8, 8);
+      }
+
+      // Cascading Waterfalls (aqua teardrops)
+      for (const wf of WATERFALLS) {
+        const [wx, wy] = this._worldToCanvas(wf.x, wf.z);
+        ctx.beginPath();
+        ctx.arc(wx, wy, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#5ee8f0';
+        ctx.fill();
+        ctx.strokeStyle = '#1b3a4b';
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+      }
+
+      // Azure Coast Shipwreck (warm anchor diamond)
+      {
+        const [sx, sy] = this._worldToCanvas(SHIPWRECK.x, SHIPWRECK.z);
+        ctx.fillStyle = '#d98c4a';
+        ctx.fillRect(sx - 4, sy - 4, 8, 8);
+        ctx.strokeStyle = '#2c1e14';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(sx - 4, sy - 4, 8, 8);
+      }
+
+      // Subterranean Cave Mouths (deep indigo triangles)
+      for (const cv of CAVE_MOUTHS) {
+        const [cx, cy] = this._worldToCanvas(cv.x, cv.z);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 5);
+        ctx.lineTo(cx + 4.8, cy + 4);
+        ctx.lineTo(cx - 4.8, cy + 4);
+        ctx.closePath();
+        ctx.fillStyle = '#4a3d73';
+        ctx.fill();
+        ctx.strokeStyle = '#a4ecff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
       }
 
       for (const pz of this.game.puzzles?.puzzles || []) {

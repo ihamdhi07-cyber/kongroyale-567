@@ -128,8 +128,9 @@ export class Game {
 
     this.refreshPlayerStats();
 
-    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, Trials, Homestead, World Events, River Fish)
+    // Register dynamic interaction providers (Sanctuaries, Biome Wonders, Boats & Pearls, NPCs, 8 Puzzles, Trials, Homestead, World Events, River Fish)
     this.interaction.registerProvider((pos) => this.world.interiors.getInteractables(pos));
+    this.interaction.registerProvider(() => this.world.wonders.getInteractables());
     this.interaction.registerProvider((pos) => this.world.boats.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.npcs.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.puzzles.getInteractables(pos));
@@ -184,6 +185,7 @@ export class Game {
     this.renderer.setManualOverrides({
       renderScale: this.settings.renderScale ?? 1.0,
       shadows: this.settings.shadowOverride || 'preset',
+      bloom: this.settings.bloom !== false,
     });
     this.cameraController.setFov(this.settings.fov ?? 42);
     this.cameraController.invertY = Boolean(this.settings.invertY);
@@ -316,6 +318,11 @@ export class Game {
     } else if (target.type === 'interior-chest') {
       if (this.world.interiors.openChest(target.interiorId, this.inventory, this.progression)) {
         this.audio.playDiscoveryFanfare();
+      }
+    } else if (target.type === 'shipwreck-chest') {
+      if (this.world.wonders.lootShipwreck(this.inventory, this.progression)) {
+        this.audio.playDiscoveryFanfare();
+        this.world.particles.emitBurst(this.player.root.position, { count: 22, color: 0xffd76a, speed: 5, spreadY: 5 });
       }
     } else if (target.type === 'gate-awaken') {
       this._handleUnknownGateAltar();
@@ -636,9 +643,10 @@ export class Game {
     this.saveManager.saveSettings(this.settings);
   }
 
-  setManualVisuals({ renderScale, shadowOverride, fov, invertY } = {}) {
+  setManualVisuals({ renderScale, shadowOverride, fov, invertY, bloom } = {}) {
     if (typeof renderScale === 'number') this.settings.renderScale = renderScale;
     if (shadowOverride) this.settings.shadowOverride = shadowOverride;
+    if (typeof bloom === 'boolean') this.settings.bloom = bloom;
     if (typeof fov === 'number') {
       this.settings.fov = fov;
       this.cameraController.setFov(fov);
@@ -650,6 +658,7 @@ export class Game {
     this.renderer.setManualOverrides({
       renderScale: this.settings.renderScale,
       shadows: this.settings.shadowOverride,
+      bloom: this.settings.bloom !== false,
     });
     this.saveManager.saveSettings(this.settings);
   }
@@ -703,6 +712,7 @@ export class Game {
       puzzles: this.puzzles.getSnapshot(),
       boats: this.world.boats.getSnapshot(),
       interiors: this.world.interiors.getSnapshot(),
+      wonders: this.world.wonders.getSnapshot(),
       magic: this.magic.serialize(),
       mount: this.mount.serialize(),
       fishing: this.fishing.serialize(),
@@ -746,6 +756,7 @@ export class Game {
     this.puzzles.loadSnapshot(data.puzzles);
     this.world.boats.loadSnapshot(data.boats);
     this.world.interiors.loadSnapshot(data.interiors);
+    this.world.wonders.loadSnapshot(data.wonders);
     this.magic.hydrate(data.magic);
     this.mount.hydrate(data.mount);
     this.fishing.hydrate(data.fishing);
@@ -774,7 +785,7 @@ export class Game {
     // Brief crisp hit-stop micro-freeze on heavy/ambush combat impacts
     if (this.combat.hitStopTimer > 0) {
       this.combat.hitStopTimer = Math.max(0, this.combat.hitStopTimer - dt);
-      this.renderer.render(this.sceneManager.scene, this.cameraController.camera);
+      this.renderer.render(this.sceneManager.scene, this.cameraController.camera, elapsed, dt);
       return;
     }
 
@@ -845,6 +856,6 @@ export class Game {
       this.hud.update(dt);
     }
 
-    this.renderer.render(this.sceneManager.scene, this.cameraController.camera);
+    this.renderer.render(this.sceneManager.scene, this.cameraController.camera, elapsed, dt);
   }
 }

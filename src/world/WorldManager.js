@@ -11,6 +11,7 @@ import { LandmarkBuilder } from './LandmarkBuilder.js';
 import { ParticleSystem } from './ParticleSystem.js';
 import { BoatSystem } from './BoatSystem.js';
 import { InteriorManager } from './InteriorManager.js';
+import { BiomeWonders } from './BiomeWonders.js';
 import { WORLD_CONFIG } from './WorldSpec.js';
 
 export class WorldManager {
@@ -29,6 +30,7 @@ export class WorldManager {
     this.particles = new ParticleSystem(sceneManager.scene, this.textures.softOrb);
     this.boats = new BoatSystem(sceneManager.scene, this.terrain, this.textures, this.particles, eventBus);
     this.interiors = new InteriorManager(sceneManager.scene, this.terrain, this.textures, eventBus);
+    this.wonders = new BiomeWonders(sceneManager.scene, this.terrain, this.textures, eventBus);
 
     this.currentRegion = this.terrain.biomes.getRegionAt(WORLD_CONFIG.SPAWN_POS.x, WORLD_CONFIG.SPAWN_POS.z);
   }
@@ -87,6 +89,7 @@ export class WorldManager {
     this.water.update(dt, elapsed, playerPos, envState);
     this.landmarks.update(dt, elapsed);
     this.interiors.update(dt, elapsed);
+    this.wonders.update(dt, elapsed, 1 - (envState?.nightFactor ?? 0));
     this.boats.update(dt, elapsed, player, input);
     this.particles.update(dt);
     this.sceneManager.updateShadowAnchor(playerPos);

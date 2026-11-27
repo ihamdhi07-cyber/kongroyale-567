@@ -1,6 +1,9 @@
 // WebGL2 Renderer wrapper with 4 scalable graphics presets (Low / Medium / High / Ultra),
-// adaptive DPR clamping for mobile & 4K desktop displays, and WebGL context-loss resilience.
+// Kong Royale-inspired Painterly Post-Processing (Selective Bloom + OkLab Color Grade),
+// adaptive hardware profiling, DPR clamping, and WebGL context-loss resilience.
 import * as THREE from 'three';
+import { PostPipeline } from './PostPipeline.js';
+import { FrameProfiler, detectHardwareProfile } from './GpuBenchmark.js';
 
 export const QUALITY_PRESETS = {
   low: {
@@ -14,6 +17,8 @@ export const QUALITY_PRESETS = {
     foliageScale: 0.35,
     particleScale: 0.3,
     waterDetail: 0,
+    postProcess: false,
+    bloomStrength: 0.0,
   },
   medium: {
     label: 'Medium (1080p Balanced)',
@@ -26,6 +31,8 @@ export const QUALITY_PRESETS = {
     foliageScale: 0.65,
     particleScale: 0.65,
     waterDetail: 1,
+    postProcess: true,
+    bloomStrength: 0.22,
   },
   high: {
     label: 'High (1440p Painterly)',
@@ -38,6 +45,8 @@ export const QUALITY_PRESETS = {
     foliageScale: 1.0,
     particleScale: 1.0,
     waterDetail: 2,
+    postProcess: true,
+    bloomStrength: 0.30,
   },
   ultra: {
     label: 'Ultra (4K HD+)',
@@ -50,6 +59,8 @@ export const QUALITY_PRESETS = {
     foliageScale: 1.25,
     particleScale: 1.25,
     waterDetail: 2,
+    postProcess: true,
+    bloomStrength: 0.34,
   },
 };
 
@@ -80,6 +91,10 @@ export class Renderer {
     this.webgl.toneMapping = THREE.ACESFilmicToneMapping;
     this.webgl.toneMappingExposure = 1.08;
     this.webgl.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.hardware = detectHardwareProfile(this.webgl.getContext());
+    this.profiler = new FrameProfiler(45);
+    this.post = new PostPipeline(this.webgl);
+    this.bloomEnabled = true;
 
     canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
@@ -99,19 +114,35 @@ export class Renderer {
     this.quality = key;
     this.preset = QUALITY_PRESETS[key];
     this._syncShadows();
+    this._syncPost();
     this.resize();
     return this.preset;
   }
 
-  setManualOverrides({ renderScale, shadows } = {}) {
+  setManualOverrides({ renderScale, shadows, bloom } = {}) {
     if (typeof renderScale === 'number' && Number.isFinite(renderScale)) {
       this.renderScale = Math.max(0.5, Math.min(1.5, renderScale));
     }
     if (shadows) {
       this.shadowOverride = shadows;
     }
+    if (typeof bloom === 'boolean') {
+      this.bloomEnabled = bloom;
+    }
     this._syncShadows();
+    this._syncPost();
     this.resize();
+  }
+
+  _syncPost() {
+    if (!this.post) return;
+    const enabled = !!this.preset.postProcess;
+    const bloomStrength = this.bloomEnabled ? (this.preset.bloomStrength || 0) : 0;
+    this.post.configure({
+      enabled,
+      bloomStrength,
+      exposure: this.webgl.toneMappingExposure || 1.08,
+    });
   }
 
   _syncShadows() {
@@ -128,11 +159,17 @@ export class Renderer {
     const dpr = Math.max(0.5, Math.min(2.25, baseDpr * this.renderScale));
     this.webgl.setPixelRatio(dpr);
     this.webgl.setSize(w, h, false);
+    if (this.post) this.post.resize(w, h, dpr);
   }
 
-  render(scene, camera) {
+  render(scene, camera, elapsed = 0, dt = 1 / 60) {
     if (this.contextLost) return;
-    this.webgl.render(scene, camera);
+    if (this.profiler && dt > 0) this.profiler.record(dt);
+    if (this.post && this.post.enabled) {
+      this.post.render(scene, camera, elapsed);
+    } else {
+      this.webgl.render(scene, camera);
+    }
   }
 
   getStats() {
@@ -142,6 +179,11 @@ export class Renderer {
       triangles: info.render.triangles,
       geometries: info.memory.geometries,
       textures: info.memory.textures,
+      fps: this.profiler ? this.profiler.fps : 60,
+      frameMs: this.profiler ? Math.round(this.profiler.avgMs * 10) / 10 : 16.6,
+      postActive: !!(this.post && this.post.enabled),
+      hdr: !!(this.post && this.post.isHDR),
+      gpu: this.hardware ? this.hardware.rendererName : 'WebGL2',
     };
   }
 }

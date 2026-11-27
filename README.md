@@ -1,8 +1,31 @@
 # THE UNKNOWN WORLD
 
-A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anime Watercolor & Gouache 3D** (stylized PBR + cel-ink rim highlights + sRGB-calibrated gouache terrain & foliage + procedural painterly textures + night Aurora Borealis), built with **Three.js (WebGL2)** and **Vite**.
+A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anime Watercolor & Gouache 3D** (custom HDR Painterly Selective Bloom + OkLab Color Grade post-processing, cel-ink rim highlights, sRGB-calibrated gouache terrain & foliage, animated GLSL waterfalls, volumetric Fresnel sun-shafts, procedural painterly textures, and night Aurora Borealis), built with **Three.js (WebGL2)** and **Vite**.
+
+## Live Gameplay Screenshots (Captured from Real WebGL2 Chromium)
+
+| Crossroads Village (HDR Bloom & Gouache) | Golden Hour Photo Studio |
+|---|---|
+| ![Crossroads Village](docs/screenshots/crossroads-village.png) | ![Golden Hour Photo Studio](docs/screenshots/golden-hour-photo-studio.png) |
+
+| Emerald Falls (Animated GLSL Waterfall) | Azure Coast Shipwreck & Coral Reefs |
+|---|---|
+| ![Emerald Falls Waterfall](docs/screenshots/emerald-falls-waterfall.png) | ![Azure Coast Shipwreck](docs/screenshots/azure-coast-shipwreck.png) |
+
+| Sylph Wind Stag & Sunfire Nova | Subterranean Echoing Crystal Grotto |
+|---|---|
+| ![Wind Stag & Magic](docs/screenshots/wind-stag-magic.png) | ![Echoing Crystal Grotto](docs/screenshots/crystal-grotto-cave.png) |
 
 ## World & Core Features
+
+- **AAA Painterly HDR Post-Processing & Adaptive GPU Profiler (Kong Royale-Inspired Engine Tech)**:
+  - Custom zero-dependency WebGL2 `PostPipeline`: HDR HalfFloat scene target, quarter-res multi-radius **Selective Bloom** (glowing lanterns, Sunfire Nova, *Luma*, Waystones, Crystal Grotto spires, and Aurora), **OkLab Painterly Split-Tone & Bright-Green Gamut Roll-Off** (warm golden sunlit highlights, cool slate-indigo watercolor shadows, zero neon clipping), storybook vignette, and Interleaved Gradient Noise anti-banding dither (live toggle in Settings; bypassed on `Low` preset for 30+ FPS mobile).
+  - Built-in rolling `FrameProfiler` & WebGL2 `detectHardwareProfile` for live FPS/frame-time telemetry and adaptive preset recommendations.
+- **Biome Wonders & 10 Enterable 3D Interiors (7 Sanctuaries + 3 Subterranean Caves)**:
+  - **2 Animated Custom GLSL Waterfalls**: *Emerald Falls* (Emerald Wilds) and *Silver-Crest Cascade* (Highland Reach) with flowing foam curtains, shimmering plunge pools, and rising mist puffs.
+  - **Azure Coast Beached Shipwreck (*The Star-Seeker*) & Coral Reef Garden**: tilted weathered galleon hull with broken mast, billowing sail, stern lantern, salvageable Captain's Chest, and 16 sculpted coral reef clusters.
+  - **Volumetric Fresnel Sun-Shaft God-Rays** & **Far-Horizon Landmark Beacons** across the 8×8 km world.
+  - **10 Enterable 3D Interiors**: 7 regional sanctuaries (*Crossroads Elder's Hall*, *The Crystal Vault*, *The Drowned Archive Chamber*, *Heart Tree Root Hollow*, *Skywatch Astrolabe Sanctum*, *Silent Citadel Crypt*, *The Astral Spire Chamber*) **PLUS 3 Subterranean Caves** (*Echoing Crystal Grotto*, *Highland Ice Cavern*, *Whispering Frontier Cave*) framed by carved outdoor rock arches and glowing cave crystals.
 
 - **Massive 8×8 km Playable Continent (inside a 15×15 km Expansion Architecture)**:
   - Seamless deterministic chunk streaming (`128 m` chunks, 3-tier LOD, zero loading screens) across **8 organic blended regions**: *Verdant Valley*, *Emerald Wilds*, *Highland Reach*, *Azure Coast*, *Forgotten Kingdom*, *Hollow Depths*, *Shattered Expanse*, and *Hidden Frontier*.
@@ -41,8 +64,8 @@ A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anim
 ```bash
 npm install
 npm run dev            # Start Vite dev server on http://0.0.0.0:5173
-npm test               # Run all 19 automated Node unit & integration tests
-npm run verify:browser # Run 16 real headless Chromium WebGL2 visual E2E checks
+npm test               # Run all 22 automated Node unit & integration tests
+npm run verify:browser # Run 19 real headless Chromium WebGL2 visual E2E checks
 npm run build          # Build optimized production bundle to dist/
 ```
 
