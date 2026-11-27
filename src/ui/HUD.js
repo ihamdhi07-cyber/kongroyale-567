@@ -1,0 +1,642 @@
+// Minimalist Painterly Adventure HUD:
+// Vital bars (Health, Stamina, Warmth, Underwater Breath), Sunshards Purse, Stealth Indicator,
+// Boss Health Bar, Regional Compass (+ Custom Waypoint Bearing), Time & Weather, Tracked Quest,
+// Quick Corner Menu Icons, Contextual Interact Prompt, 2.5D Camera Presets + Photo Mode,
+// 3D-Projected Floating Damage Popups, Discovery Banner & Toasts.
+import * as THREE from 'three';
+import { LANDMARKS, WORLD_CONFIG } from '../world/WorldSpec.js';
+
+export class HUD {
+  constructor(game) {
+    this.game = game;
+    this._bannerTimer = 0;
+    this.photoMode = false;
+    this._projTmp = new THREE.Vector3();
+    this._minimapAccum = 0;
+    this._buildDOM();
+  }
+
+  _buildDOM() {
+    this.root = document.createElement('div');
+    this.root.id = 'game-hud';
+    this.root.className = 'hud-root hidden';
+    this.root.innerHTML = `
+      <!-- Top Left: Wayfarer Vitals & Status Pills -->
+      <div class="hud-left-stack">
+        <div class="hud-vitals">
+          <div class="hud-level-badge" id="hud-level">Lv.1</div>
+          <div class="hud-bars">
+            <div class="bar-row"><span class="bar-lbl">HP</span><div class="bar-track"><div class="bar-fill bar-hp" id="bar-hp"></div></div><span class="bar-val" id="val-hp">100</span></div>
+            <div class="bar-row"><span class="bar-lbl">SP</span><div class="bar-track"><div class="bar-fill bar-sp" id="bar-sp"></div></div><span class="bar-val" id="val-sp">100</span></div>
+            <div class="bar-row"><span class="bar-lbl">Warm</span><div class="bar-track"><div class="bar-fill bar-wm" id="bar-wm"></div></div><span class="bar-val" id="val-wm">100</span></div>
+            <div class="bar-row hidden" id="row-breath"><span class="bar-lbl">Air</span><div class="bar-track"><div class="bar-fill bar-air" id="bar-air"></div></div><span class="bar-val" id="val-air">100</span></div>
+          </div>
+        </div>
+        <div class="hud-status-row">
+          <span class="hud-gold-pill" id="hud-gold">60 ✦</span>
+          <span class="hud-stealth-pill hidden" id="hud-stealth">◉ Stealth · 1.75× Ambush</span>
+          <span class="hud-buff-pill hidden" id="hud-ward">❀ Runic Ward</span>
+          <span class="hud-buff-pill hidden" id="hud-mount-pill">❖ Wind Stag</span>
+          <span class="hud-buff-pill hidden" id="hud-rune-pill">☀ Sunfire</span>
+          <span class="hud-buff-pill hidden" id="hud-rested-pill">✦ Well-Rested</span>
+          <span class="hud-secret-pill hidden" id="hud-luma">✦ Luma senses a secret nearby!</span>
+        </div>
+      </div>
+
+      <!-- Top Center: Region Compass, Atmospheric Clock, Shrine Trial Pill & Boss Bar -->
+      <div class="hud-center-stack">
+        <div class="hud-compass-wrap">
+          <div class="hud-region-line">
+            <span class="hud-region-name" id="hud-region">Verdant Valley</span>
+            <span class="hud-meta-pill" id="hud-time">09:24 · Clear</span>
+          </div>
+          <div class="hud-compass-bar" id="hud-compass">N · 0m, 332m</div>
+        </div>
+        <div class="hud-trial-pill hidden" id="hud-trial-pill">
+          <span id="trial-name">Shrine Trial</span>
+          <span id="trial-rings">0/5 Rings</span>
+          <span id="trial-timer">45.0s</span>
+          <button class="btn-mini" id="btn-trial-cancel" type="button">✕</button>
+        </div>
+        <div class="hud-boss-bar hidden" id="hud-boss-bar">
+          <div class="boss-name" id="boss-name">Elder Stone Warden</div>
+          <div class="bar-track boss-track"><div class="bar-fill bar-boss" id="bar-boss"></div></div>
+        </div>
+      </div>
+
+      <!-- Top Right: Navigation Buttons + Tracked Quest -->
+      <div class="hud-right">
+        <div class="hud-nav-row">
+          <button class="hud-icon-btn" data-modal="map" title="World Map [M]" type="button">Map</button>
+          <button class="hud-icon-btn" data-modal="inventory" title="Inventory &amp; Craft [I]" type="button">Bag</button>
+          <button class="hud-icon-btn" data-modal="quests" title="Quest Journal [T]" type="button">Quests</button>
+          <button class="hud-icon-btn" data-modal="progression" title="3-Branch Skill Tree [P]" type="button">Skills</button>
+          <button class="hud-icon-btn" data-modal="codex" title="Bestiary, Lore &amp; Achievements [B]" type="button">Codex</button>
+          <button class="hud-icon-btn" data-modal="pause" title="Pause / Save [Esc]" type="button">Menu</button>
+        </div>
+        <div class="hud-quest-box" id="hud-quest-box">
+          <div class="hud-quest-title" id="hud-quest-title">Echoes of the Unknown Gate</div>
+          <div class="hud-quest-obj" id="hud-quest-obj">Speak with Elder Maren</div>
+        </div>
+        <div class="hud-telemetry hidden" id="hud-telemetry">60 FPS · 25 chunks</div>
+      </div>
+
+      <!-- Bottom Left: Subtle Keybind Legend -->
+      <div class="hud-hints" id="hud-hints">
+        <span><b>WASD</b> Move</span>
+        <span><b>1–4</b> Spells</span>
+        <span><b>O</b> Home/Runes</span>
+        <span><b>N</b> Guild</span>
+        <span><b>U</b> Wind</span>
+        <span><b>E</b> Use</span>
+      </div>
+
+      <!-- Bottom Right: Live Circular Watercolor Minimap -->
+      <div class="hud-minimap-wrap" id="hud-minimap-wrap" title="Open Full World Map [M]">
+        <canvas id="hud-minimap" width="144" height="144"></canvas>
+        <span class="minimap-n">N</span>
+      </div>
+
+      <!-- Bottom Center: Fishing Mini-Game + Contextual Interact + 4-Spell Hotbar + Camera Switcher -->
+      <div class="hud-bottom">
+        <div class="fishing-overlay hidden" id="fishing-overlay">
+          <div class="fish-title" id="fish-title">Spirit Line Cast — Wait for a bite...</div>
+          <div class="fish-bar-wrap">
+            <div class="fish-zone" id="fish-zone"></div>
+            <div class="fish-cursor" id="fish-cursor"></div>
+          </div>
+          <div class="fish-progress-row">
+            <div class="bar-track fish-prog-track"><div class="bar-fill bar-air" id="fish-prog-fill"></div></div>
+            <button class="btn-mini btn-accent" id="btn-fish-reel" type="button">Reel! [G]</button>
+          </div>
+        </div>
+        <div class="hud-interact-pill hidden" id="hud-interact">
+          <span class="keycap">E</span>
+          <span id="hud-interact-text">Interact</span>
+        </div>
+        <div class="hud-spell-bar" id="hud-spell-bar">
+          <button class="spell-slot" data-spell-idx="0" type="button" title="Resonance Bolt [1]"><span class="sp-key">1</span><span class="sp-ico">✦</span><span class="sp-lbl">Bolt</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="1" type="button" title="Gale Updraft [2]"><span class="sp-key">2</span><span class="sp-ico">≋</span><span class="sp-lbl">Gale</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="2" type="button" title="Sunfire Nova [3]"><span class="sp-key">3</span><span class="sp-ico">☀</span><span class="sp-lbl">Nova</span><span class="sp-cd"></span></button>
+          <button class="spell-slot" data-spell-idx="3" type="button" title="Spirit Ward [4]"><span class="sp-key">4</span><span class="sp-ico">❀</span><span class="sp-lbl">Mend</span><span class="sp-cd"></span></button>
+          <button class="spell-slot spell-util" id="btn-hud-mount" type="button" title="Call Sylph Wind Stag [H]"><span class="sp-key">H</span><span class="sp-ico">❖</span><span class="sp-lbl">Stag</span></button>
+          <button class="spell-slot spell-util" id="btn-hud-fish" type="button" title="Spirit Fishing [G]"><span class="sp-key">G</span><span class="sp-ico">∿</span><span class="sp-lbl">Fish</span></button>
+        </div>
+        <div class="hud-cam-strip">
+          <button class="cam-pill" data-cam="close" type="button" title="Close Adventure View">Close</button>
+          <button class="cam-pill active" data-cam="default" type="button" title="Balanced 2.5D Adventure">2.5D</button>
+          <button class="cam-pill" data-cam="isometric" type="button" title="High Isometric 2.5D">Iso</button>
+          <button class="cam-pill" id="btn-photo-mode" type="button" title="Toggle Photo Framing [V]">Photo</button>
+          <button class="cam-pill" id="btn-cam-zoom-in" type="button" title="Zoom In">+</button>
+          <button class="cam-pill" id="btn-cam-zoom-out" type="button" title="Zoom Out">−</button>
+        </div>
+        <!-- Interactive Photo Studio Controls (visible only in Photo Mode [V]) -->
+        <div class="photo-studio-bar hidden" id="photo-studio-bar">
+          <span class="ps-tag">PHOTO STUDIO</span>
+          <button class="cam-pill" data-ps-tod="6.8" type="button">Dawn</button>
+          <button class="cam-pill" data-ps-tod="12.4" type="button">Noon</button>
+          <button class="cam-pill" data-ps-tod="17.8" type="button">Golden</button>
+          <button class="cam-pill" data-ps-tod="22.8" type="button">Aurora</button>
+          <span class="ps-sep">|</span>
+          <button class="cam-pill" data-ps-filter="none" type="button">Natural</button>
+          <button class="cam-pill" data-ps-filter="gouache" type="button">Gouache</button>
+          <button class="cam-pill" data-ps-filter="pastel" type="button">Pastel</button>
+          <button class="cam-pill" data-ps-filter="ink" type="button">Ink</button>
+          <span class="ps-sep">|</span>
+          <button class="cam-pill active" id="btn-ps-postcard" type="button">Save PNG</button>
+          <button class="cam-pill" id="btn-ps-exit" type="button">Exit [V]</button>
+        </div>
+      </div>
+
+      <!-- Floating Combat Damage Popups Layer -->
+      <div class="dmg-layer" id="dmg-layer"></div>
+
+      <!-- Discovery Banner -->
+      <div class="discovery-banner hidden" id="discovery-banner">
+        <div class="discovery-sub" id="discovery-sub">New Location Discovered</div>
+        <div class="discovery-title" id="discovery-title">The Ancient Heart Tree</div>
+      </div>
+
+      <!-- Toast Stack -->
+      <div class="toast-stack" id="toast-stack"></div>
+
+      <!-- Gentle Portrait Hint for narrow phones (dismissible, never breaks game) -->
+      <div class="portrait-hint" id="portrait-hint">
+        <span>Landscape orientation is recommended for the best 2.5D vista</span>
+        <button id="dismiss-portrait" type="button">OK</button>
+      </div>
+    `;
+    document.body.appendChild(this.root);
+
+    this.hpBar = this.root.querySelector('#bar-hp');
+    this.spBar = this.root.querySelector('#bar-sp');
+    this.wmBar = this.root.querySelector('#bar-wm');
+    this.airRow = this.root.querySelector('#row-breath');
+    this.airBar = this.root.querySelector('#bar-air');
+    this.hpVal = this.root.querySelector('#val-hp');
+    this.spVal = this.root.querySelector('#val-sp');
+    this.wmVal = this.root.querySelector('#val-wm');
+    this.airVal = this.root.querySelector('#val-air');
+    this.levelEl = this.root.querySelector('#hud-level');
+    this.goldEl = this.root.querySelector('#hud-gold');
+    this.stealthEl = this.root.querySelector('#hud-stealth');
+    this.wardEl = this.root.querySelector('#hud-ward');
+    this.mountPillEl = this.root.querySelector('#hud-mount-pill');
+    this.runePillEl = this.root.querySelector('#hud-rune-pill');
+    this.restedPillEl = this.root.querySelector('#hud-rested-pill');
+    this.lumaEl = this.root.querySelector('#hud-luma');
+    this.trialPillEl = this.root.querySelector('#hud-trial-pill');
+    this.trialNameEl = this.root.querySelector('#trial-name');
+    this.trialRingsEl = this.root.querySelector('#trial-rings');
+    this.trialTimerEl = this.root.querySelector('#trial-timer');
+    this.photoStudioBar = this.root.querySelector('#photo-studio-bar');
+    this.fishOverlay = this.root.querySelector('#fishing-overlay');
+    this.fishTitle = this.root.querySelector('#fish-title');
+    this.fishZone = this.root.querySelector('#fish-zone');
+    this.fishCursor = this.root.querySelector('#fish-cursor');
+    this.fishProgFill = this.root.querySelector('#fish-prog-fill');
+    this.spellSlots = [...this.root.querySelectorAll('.spell-slot[data-spell-idx]')];
+    this.regionEl = this.root.querySelector('#hud-region');
+    this.timeEl = this.root.querySelector('#hud-time');
+    this.compassEl = this.root.querySelector('#hud-compass');
+    this.bossBarWrap = this.root.querySelector('#hud-boss-bar');
+    this.bossNameEl = this.root.querySelector('#boss-name');
+    this.bossFillEl = this.root.querySelector('#bar-boss');
+    this.questBox = this.root.querySelector('#hud-quest-box');
+    this.questTitle = this.root.querySelector('#hud-quest-title');
+    this.questObj = this.root.querySelector('#hud-quest-obj');
+    this.interactEl = this.root.querySelector('#hud-interact');
+    this.interactText = this.root.querySelector('#hud-interact-text');
+    this.telemetryEl = this.root.querySelector('#hud-telemetry');
+    this.bannerEl = this.root.querySelector('#discovery-banner');
+    this.bannerSub = this.root.querySelector('#discovery-sub');
+    this.bannerTitle = this.root.querySelector('#discovery-title');
+    this.toastStack = this.root.querySelector('#toast-stack');
+    this.dmgLayer = this.root.querySelector('#dmg-layer');
+    this.minimapCanvas = this.root.querySelector('#hud-minimap');
+    this.minimapCtx = this.minimapCanvas.getContext('2d');
+    this.root.querySelector('#hud-minimap-wrap').addEventListener('click', () => this.game.openModal('map'));
+
+    for (const btn of this.root.querySelectorAll('.hud-icon-btn')) {
+      btn.addEventListener('click', () => this.game.openModal(btn.dataset.modal));
+    }
+    for (const pill of this.root.querySelectorAll('.cam-pill[data-cam]')) {
+      pill.addEventListener('click', () => {
+        for (const p of this.root.querySelectorAll('.cam-pill[data-cam]')) p.classList.remove('active');
+        pill.classList.add('active');
+        this.game.cameraController.setPreset(pill.dataset.cam);
+      });
+    }
+    this.root.querySelector('#btn-photo-mode').addEventListener('click', () => this.togglePhotoMode());
+    this.root.querySelector('#btn-cam-zoom-in').addEventListener('click', () => {
+      this.game.cameraController.targetDistance = Math.max(8.5, this.game.cameraController.targetDistance - 4);
+    });
+    this.root.querySelector('#btn-cam-zoom-out').addEventListener('click', () => {
+      this.game.cameraController.targetDistance = Math.min(38, this.game.cameraController.targetDistance + 4);
+    });
+    this.interactEl.addEventListener('click', () => this.game.interaction.interact());
+    for (const slot of this.spellSlots) {
+      slot.addEventListener('click', () => this.game.castSpellByIndex(Number(slot.dataset.spellIdx)));
+    }
+    this.root.querySelector('#btn-hud-mount').addEventListener('click', () => this.game.toggleMount());
+    this.root.querySelector('#btn-hud-fish').addEventListener('click', () => this.game.handleFishingAction());
+    this.root.querySelector('#btn-fish-reel').addEventListener('click', () => this.game.handleFishingAction());
+    this.root.querySelector('#btn-trial-cancel').addEventListener('click', () => this.game.shrineTrials?.cancelTrial?.());
+    this.root.querySelector('#btn-ps-exit').addEventListener('click', () => this.togglePhotoMode());
+    this.root.querySelector('#btn-ps-postcard').addEventListener('click', () => this._downloadPostcard());
+    this.root.querySelectorAll('[data-ps-tod]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (this.game.world?.weather) this.game.world.weather.timeOfDay = parseFloat(btn.dataset.psTod);
+      });
+    });
+    this.root.querySelectorAll('[data-ps-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => this._applyPhotoFilter(btn.dataset.psFilter));
+    });
+    this.root.querySelector('#dismiss-portrait').addEventListener('click', () => {
+      this.root.querySelector('#portrait-hint').style.display = 'none';
+    });
+  }
+
+  _applyPhotoFilter(mode) {
+    const c = this.game.canvas;
+    if (!c) return;
+    if (mode === 'gouache') c.style.filter = 'saturate(1.28) contrast(1.06) sepia(0.12)';
+    else if (mode === 'pastel') c.style.filter = 'brightness(1.08) saturate(1.14) contrast(0.92)';
+    else if (mode === 'ink') c.style.filter = 'contrast(1.22) saturate(0.55) sepia(0.22)';
+    else c.style.filter = '';
+  }
+
+  _downloadPostcard() {
+    try {
+      const a = document.createElement('a');
+      a.download = `the-unknown-world-${Date.now()}.png`;
+      a.href = this.game.canvas.toDataURL('image/png');
+      a.click();
+      this.showToast({ title: 'Postcard Captured!', text: 'Saved PNG snapshot from Photo Studio.' });
+    } catch {
+      this.showToast({ title: 'Photo Studio', text: 'Use browser screenshot to capture this vista.' });
+    }
+  }
+
+  togglePhotoMode() {
+    this.photoMode = !this.photoMode;
+    this.root.classList.toggle('photo-mode', this.photoMode);
+    if (this.photoStudioBar) this.photoStudioBar.classList.toggle('hidden', !this.photoMode);
+    if (this.photoMode) {
+      this.game.cameraController.setPreset('photo');
+      this.showToast({ title: 'Photo Studio Active', text: 'Adjust Time, Watercolor Filter, or Save PNG! [V] exits.' });
+    } else {
+      this._applyPhotoFilter('none');
+      this.game.cameraController.setPreset('default');
+    }
+  }
+
+  spawnDamagePopup(worldPos, dmg, { isHeavy = false, isAmbush = false, reactionLabel = null } = {}) {
+    if (!worldPos || !this.game.cameraController) return;
+    this._projTmp.copy(worldPos).project(this.game.cameraController.camera);
+    if (this._projTmp.z > 1) return;
+    const x = (this._projTmp.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-this._projTmp.y * 0.5 + 0.5) * window.innerHeight;
+
+    const el = document.createElement('div');
+    el.className = `dmg-pop ${reactionLabel ? 'dmg-reaction' : isAmbush ? 'dmg-ambush' : isHeavy ? 'dmg-heavy' : ''}`;
+    el.textContent = reactionLabel ? `${reactionLabel} ${dmg}` : isAmbush ? `AMBUSH ${dmg}!` : isHeavy ? `${dmg}!` : `${dmg}`;
+    el.style.left = `${Math.round(x)}px`;
+    el.style.top = `${Math.round(y)}px`;
+    this.dmgLayer.appendChild(el);
+    setTimeout(() => el.remove(), reactionLabel ? 1150 : 850);
+  }
+
+  setVisible(show) {
+    this.root.classList.toggle('hidden', !show);
+  }
+
+  setTelemetryVisible(show) {
+    this.telemetryEl.classList.toggle('hidden', !show);
+  }
+
+  showDiscovery({ subtitle, title }) {
+    this.bannerSub.textContent = subtitle || 'Discovery';
+    this.bannerTitle.textContent = title;
+    this.bannerEl.classList.remove('hidden');
+    this._bannerTimer = 3.8;
+  }
+
+  showToast({ title, text }) {
+    while (this.toastStack.children.length >= 3) {
+      this.toastStack.firstElementChild?.remove();
+    }
+    const el = document.createElement('div');
+    el.className = 'toast-item';
+    el.innerHTML = `<div class="toast-title">${title}</div><div class="toast-text">${text}</div>`;
+    this.toastStack.appendChild(el);
+    setTimeout(() => el.classList.add('fade-out'), 3600);
+    setTimeout(() => el.remove(), 4100);
+  }
+
+  update(dt) {
+    const p = this.game.player;
+    const w = this.game.world;
+
+    this.hpBar.style.width = `${Math.round((p.hp / p.maxHp) * 100)}%`;
+    this.spBar.style.width = `${Math.round((p.stamina / p.maxStamina) * 100)}%`;
+    this.wmBar.style.width = `${Math.round((p.warmth / p.maxWarmth) * 100)}%`;
+    this.hpVal.textContent = Math.round(p.hp);
+    this.spVal.textContent = Math.round(p.stamina);
+    this.wmVal.textContent = Math.round(p.warmth);
+    this.levelEl.textContent = `Lv.${this.game.progression.level}`;
+    this.goldEl.textContent = `${this.game.inventory.gold} ✦`;
+
+    // Underwater breath bar
+    const showBreath = p.diving || p.breath < 99;
+    this.airRow.classList.toggle('hidden', !showBreath);
+    if (showBreath) {
+      this.airBar.style.width = `${Math.round((p.breath / p.maxBreath) * 100)}%`;
+      this.airVal.textContent = Math.round(p.breath);
+    }
+
+    // Stealth, Ward, Mount, Active Rune Infusion, Well-Rested & Luma Indicators
+    this.stealthEl.classList.toggle('hidden', !p.stealth);
+    if (this.wardEl) this.wardEl.classList.toggle('hidden', !this.game.magic?.hasWard?.());
+    if (this.mountPillEl) this.mountPillEl.classList.toggle('hidden', !p.mounted);
+    const activeRune = this.game.enchanting?.getActiveRune?.();
+    if (this.runePillEl) {
+      this.runePillEl.classList.toggle('hidden', !activeRune);
+      if (activeRune) this.runePillEl.textContent = `${activeRune.icon} ${activeRune.shortName}`;
+    }
+    if (this.restedPillEl) this.restedPillEl.classList.toggle('hidden', !this.game.homestead?.wellRested);
+    if (this.lumaEl) this.lumaEl.classList.toggle('hidden', !this.game.companion?.alertSecret);
+
+    // Live Shrine Trial Countdown Pill
+    const trialHud = this.game.shrineTrials?.getHudState?.();
+    if (this.trialPillEl) {
+      if (trialHud) {
+        this.trialPillEl.classList.remove('hidden');
+        this.trialNameEl.textContent = `◎ ${trialHud.name}`;
+        this.trialRingsEl.textContent = `${trialHud.cleared}/${trialHud.total} Rings`;
+        this.trialTimerEl.textContent = `${trialHud.remaining.toFixed(1)}s`;
+      } else {
+        this.trialPillEl.classList.add('hidden');
+      }
+    }
+
+    // Update 4-Slot Spell Hotbar cooldowns & SP readiness
+    const spells = this.game.magic?.getSpells?.() || [];
+    for (let i = 0; i < this.spellSlots.length; i++) {
+      const sp = spells[i];
+      const slot = this.spellSlots[i];
+      if (!sp || !slot) continue;
+      const cdEl = slot.querySelector('.sp-cd');
+      const onCd = sp.remaining > 0.05;
+      const lowSp = p.stamina < sp.spCost;
+      slot.classList.toggle('on-cd', onCd);
+      slot.classList.toggle('low-sp', !onCd && lowSp);
+      if (cdEl) cdEl.textContent = onCd ? sp.remaining.toFixed(1) : '';
+    }
+
+    // Update Interactive Fishing Mini-Game Bar
+    const fishHud = this.game.fishing?.getHudState?.();
+    if (this.fishOverlay) {
+      if (fishHud) {
+        this.fishOverlay.classList.remove('hidden');
+        this.fishTitle.textContent =
+          fishHud.state === 'waiting'
+            ? 'Spirit Line Cast — Wait for the ripple bite...'
+            : 'FISH ON THE LINE! Hit [G] inside the golden zone!';
+        this.fishZone.style.left = `${Math.round(fishHud.zoneStart * 100)}%`;
+        this.fishZone.style.width = `${Math.round((fishHud.zoneEnd - fishHud.zoneStart) * 100)}%`;
+        this.fishCursor.style.left = `${Math.round(fishHud.cursor * 100)}%`;
+        this.fishProgFill.style.width = `${fishHud.progress}%`;
+      } else {
+        this.fishOverlay.classList.add('hidden');
+      }
+    }
+
+    // Region / Interior title + time & weather
+    const inside = w.interiors?.currentInterior;
+    this.regionEl.textContent = inside ? inside.name : w.currentRegion?.name || 'Verdant Valley';
+    const weatherLabel = inside ? 'Sanctuary' : w.weather.weather.charAt(0).toUpperCase() + w.weather.weather.slice(1);
+    this.timeEl.textContent = `${w.weather.getTimeString()} · ${weatherLabel}`;
+
+    // Compass heading + mode + Custom Waypoint Distance/Bearing
+    const deg = (((-this.game.cameraController.yaw * 180) / Math.PI) % 360 + 360) % 360;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const cardinal = dirs[Math.round(deg / 45) % 8];
+    const px = Math.round(p.root.position.x);
+    const pz = Math.round(p.root.position.z);
+    const alt = Math.round(p.root.position.y);
+    const modeTag = p.sailing
+      ? ' · Sailing'
+      : p.diving
+        ? ' · Diving'
+        : p.gliding
+          ? ' · Gliding'
+          : p.swimming
+            ? ' · Swimming'
+            : p.climbing
+              ? ' · Climbing'
+              : p.stealth
+                ? ' · Stealth'
+                : '';
+
+    let wpTag = '';
+    if (this.game.waypoint && !inside) {
+      const dx = this.game.waypoint.x - p.root.position.x;
+      const dz = this.game.waypoint.z - p.root.position.z;
+      const dist = Math.round(Math.hypot(dx, dz));
+      const ang = ((Math.atan2(dx, -dz) * 180) / Math.PI + 360) % 360;
+      const wpDir = dirs[Math.round(ang / 45) % 8];
+      wpTag = ` · ◎ Pin ${wpDir} ${dist}m`;
+    }
+    this.compassEl.textContent = `${cardinal} · ${px}m, ${pz}m · Elev ${alt}m${modeTag}${wpTag}`;
+
+    // Active Boss Health Bar with Phase Indicator & Subtitle
+    const boss = !inside ? this.game.enemies.getActiveBoss(p.root.position) : null;
+    if (boss) {
+      this.bossBarWrap.classList.remove('hidden');
+      const phaseTag = boss.phase === 2 ? ' · PHASE II' : '';
+      const subTag = boss.def.subtitle ? ` — ${boss.def.subtitle}` : '';
+      this.bossNameEl.textContent = `${boss.def.name}${phaseTag}${subTag} (${Math.ceil(boss.hp)}/${boss.def.maxHp})`;
+      this.bossFillEl.style.width = `${Math.max(2, Math.round((boss.hp / boss.def.maxHp) * 100))}%`;
+    } else {
+      this.bossBarWrap.classList.add('hidden');
+    }
+
+    // Active tracked quest summary
+    const tracked = this.game.quests.getTrackedQuest();
+    if (tracked) {
+      this.questBox.classList.remove('hidden');
+      this.questTitle.textContent = tracked.title;
+      const nextObj = tracked.objectives.find((o) => (tracked.progress[o.id] || 0) < o.target);
+      this.questObj.textContent = nextObj
+        ? `${nextObj.text} (${tracked.progress[nextObj.id] || 0}/${nextObj.target})`
+        : 'Completed!';
+    } else {
+      this.questBox.classList.add('hidden');
+    }
+
+    // Contextual Interact Prompt
+    const target = this.game.interaction.currentTarget;
+    if (target) {
+      this.interactEl.classList.remove('hidden');
+      this.interactText.textContent = target.label;
+    } else {
+      this.interactEl.classList.add('hidden');
+    }
+    this.game.input.touch.setInteractPrompt(target);
+
+    // Performance & Chunk Streaming Telemetry
+    if (!this.telemetryEl.classList.contains('hidden')) {
+      const cStats = w.chunks.getStats();
+      const rStats = this.game.renderer.getStats();
+      this.telemetryEl.textContent = `${this.game.loop.fps} FPS (${this.game.loop.frameMs}ms) · Chunks ${cStats.total} (L0:${cStats.lod0}/L1:${cStats.lod1}/L2:${cStats.lod2}) · Draws ${rStats.calls}`;
+    }
+
+    if (this._bannerTimer > 0) {
+      this._bannerTimer -= dt;
+      if (this._bannerTimer <= 0) {
+        this.bannerEl.classList.add('hidden');
+      }
+    }
+
+    // Refresh circular watercolor minimap at ~8 Hz for crisp zero-cost navigation
+    this._minimapAccum += dt;
+    if (this._minimapAccum >= 0.12 && !this.photoMode) {
+      this._minimapAccum = 0;
+      this._drawMinimap();
+    }
+  }
+
+  _drawMinimap() {
+    const ctx = this.minimapCtx;
+    if (!ctx) return;
+    const S = 144;
+    const half = S / 2;
+    const p = this.game.player.root.position;
+    const w = this.game.world;
+    const inside = w.interiors?.currentInterior;
+
+    ctx.clearRect(0, 0, S, S);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(half, half, half - 2, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (inside) {
+      ctx.fillStyle = '#2d241c';
+      ctx.fillRect(0, 0, S, S);
+      ctx.strokeStyle = '#f2cc72';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(half - 34, half - 28, 68, 56);
+      ctx.fillStyle = '#fff3d6';
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('SANCTUARY', half, half - 36);
+    } else {
+      // Sample 18x18 mini elevation/water/road grid covering 320m radius around player
+      const span = 320;
+      const cells = 18;
+      const step = S / cells;
+      for (let gy = 0; gy < cells; gy++) {
+        for (let gx = 0; gx < cells; gx++) {
+          const wx = p.x + ((gx + 0.5) / cells - 0.5) * span * 2;
+          const wz = p.z + ((gy + 0.5) / cells - 0.5) * span * 2;
+          const h = w.terrain.getHeight(wx, wz);
+          if (h < WORLD_CONFIG.SEA_LEVEL) {
+            ctx.fillStyle = h < -4 ? '#23789c' : '#40adc2';
+          } else if (w.terrain.roadDistance(wx, wz) < 8) {
+            ctx.fillStyle = '#c8ab72';
+          } else if (h > 64) {
+            ctx.fillStyle = '#d8e3ec';
+          } else {
+            const reg = w.terrain.biomes.getRegionAt(wx, wz);
+            const r = Math.round(reg.groundColor[0] * 185);
+            const g = Math.round(reg.groundColor[1] * 195);
+            const b = Math.round(reg.groundColor[2] * 175);
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+          }
+          ctx.fillRect(gx * step, gy * step, step + 0.6, step + 0.6);
+        }
+      }
+
+      const toMini = (wx, wz) => [half + ((wx - p.x) / span) * half, half + ((wz - p.z) / span) * half];
+
+      // Nearby Landmarks / Outposts
+      for (const lm of LANDMARKS) {
+        const [mx, my] = toMini(lm.x, lm.z);
+        if (Math.hypot(mx - half, my - half) > half - 6) continue;
+        ctx.beginPath();
+        ctx.arc(mx, my, lm.hasWaystone ? 4.2 : 3.0, 0, Math.PI * 2);
+        ctx.fillStyle = lm.hasWaystone ? '#6cf2ff' : '#f2c96c';
+        ctx.fill();
+      }
+
+      // Nearby NPCs (gold dots)
+      for (const n of this.game.npcs?.npcs || []) {
+        const [mx, my] = toMini(n.x, n.z);
+        if (Math.hypot(mx - half, my - half) > half - 6) continue;
+        ctx.beginPath();
+        ctx.arc(mx, my, 2.7, 0, Math.PI * 2);
+        ctx.fillStyle = n.def.shop ? '#ffcf5c' : '#fff5d4';
+        ctx.fill();
+      }
+
+      // Nearby Sailboats (azure square)
+      for (const b of w.boats?.boats || []) {
+        const [mx, my] = toMini(b.group.position.x, b.group.position.z);
+        if (Math.hypot(mx - half, my - half) > half - 6) continue;
+        ctx.fillStyle = '#1f5a87';
+        ctx.fillRect(mx - 3, my - 3, 6, 6);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(mx - 3, my - 3, 6, 6);
+      }
+
+      // Nearby Puzzles (violet dots)
+      for (const pz of this.game.puzzles?.puzzles || []) {
+        const [mx, my] = toMini(pz.cx, pz.cz);
+        if (Math.hypot(mx - half, my - half) > half - 6) continue;
+        ctx.beginPath();
+        ctx.arc(mx, my, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = this.game.puzzles.solved.has(pz.id) ? '#6ef092' : '#df9bff';
+        ctx.fill();
+      }
+
+      // Custom Waypoint Pin (clamped to rim chevron if farther than 320m)
+      if (this.game.waypoint) {
+        const dx = this.game.waypoint.x - p.x;
+        const dz = this.game.waypoint.z - p.z;
+        const d = Math.hypot(dx, dz) || 1;
+        const r = Math.min(half - 8, (d / span) * half);
+        const wx = half + (dx / d) * r;
+        const wy = half + (dz / d) * r;
+        ctx.beginPath();
+        ctx.arc(wx, wy, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff6b4a';
+        ctx.fill();
+        ctx.strokeStyle = '#ffe89c';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    // Center Player Facing Arrow (north-up canvas: +X east, +Y south)
+    ctx.save();
+    ctx.translate(half, half);
+    ctx.rotate(-this.game.player.facingYaw + Math.PI);
+    ctx.beginPath();
+    ctx.moveTo(0, -6.5);
+    ctx.lineTo(4.8, 5);
+    ctx.lineTo(0, 2.2);
+    ctx.lineTo(-4.8, 5);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#182436';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+  }
+}
