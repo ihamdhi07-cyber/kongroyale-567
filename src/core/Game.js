@@ -189,6 +189,11 @@ export class Game {
     });
     this.cameraController.setFov(this.settings.fov ?? 42);
     this.cameraController.invertY = Boolean(this.settings.invertY);
+    this.cameraController.reducedMotion = Boolean(this.settings.reducedMotion);
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--ui-scale', String(this.settings.uiScale ?? 1.0));
+      document.body.classList.toggle('high-contrast', Boolean(this.settings.highContrast));
+    }
     this.audio.setMixer({
       master: this.settings.masterVol,
       music: this.settings.musicVol,
@@ -643,7 +648,7 @@ export class Game {
     this.saveManager.saveSettings(this.settings);
   }
 
-  setManualVisuals({ renderScale, shadowOverride, fov, invertY, bloom } = {}) {
+  setManualVisuals({ renderScale, shadowOverride, fov, invertY, bloom, uiScale, reducedMotion, highContrast } = {}) {
     if (typeof renderScale === 'number') this.settings.renderScale = renderScale;
     if (shadowOverride) this.settings.shadowOverride = shadowOverride;
     if (typeof bloom === 'boolean') this.settings.bloom = bloom;
@@ -654,6 +659,22 @@ export class Game {
     if (typeof invertY === 'boolean') {
       this.settings.invertY = invertY;
       this.cameraController.invertY = invertY;
+    }
+    if (typeof uiScale === 'number') {
+      this.settings.uiScale = uiScale;
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--ui-scale', String(uiScale));
+      }
+    }
+    if (typeof reducedMotion === 'boolean') {
+      this.settings.reducedMotion = reducedMotion;
+      this.cameraController.reducedMotion = reducedMotion;
+    }
+    if (typeof highContrast === 'boolean') {
+      this.settings.highContrast = highContrast;
+      if (typeof document !== 'undefined') {
+        document.body.classList.toggle('high-contrast', highContrast);
+      }
     }
     this.renderer.setManualOverrides({
       renderScale: this.settings.renderScale,

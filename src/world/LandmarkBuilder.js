@@ -468,6 +468,69 @@ export class LandmarkBuilder {
       this.colliders.push({ x: lm.x + hc.x, z: lm.z + hc.z, r: Math.max(hc.w, hc.d) * 0.58 });
     }
 
+    // Sculpted Ghibli Timber Welcome Archway framing Elder's Hall & Northern Plaza Path
+    const arch = new THREE.Group();
+    arch.position.set(-2, 0.1, -17.8);
+    const archPostL = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 5.4, 8), this.woodMat);
+    archPostL.position.set(-3.4, 2.7, 0);
+    archPostL.castShadow = true;
+    const archPostR = archPostL.clone();
+    archPostR.position.x = 3.4;
+    const archBeam = new THREE.Mesh(new THREE.BoxGeometry(8.4, 0.52, 0.68), this.woodMat);
+    archBeam.position.set(0, 5.35, 0);
+    archBeam.castShadow = true;
+    const archRoof = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.32, 1.85), this.roofWarmMat);
+    archRoof.position.set(0, 5.85, 0);
+    archRoof.castShadow = true;
+    const archLanternMat = new THREE.MeshStandardMaterial({
+      color: 0xffeba8,
+      emissive: 0xffb340,
+      emissiveIntensity: 1.65,
+      roughness: 0.2,
+    });
+    for (const lx of [-2.3, 2.3]) {
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.75, 5), this.darkStoneMat);
+      cord.position.set(lx, 4.75, 0);
+      const bulb = new THREE.Mesh(new THREE.OctahedronGeometry(0.32, 0), archLanternMat);
+      bulb.position.set(lx, 4.25, 0);
+      arch.add(cord, bulb);
+    }
+    arch.add(archPostL, archPostR, archBeam, archRoof);
+    group.add(arch);
+
+    // Blooming Pastel Sakura Cherry-Blossom Trees framing Crossroads Village Square!
+    const sakuraMat = patchWatercolorMaterial(
+      new THREE.MeshStandardMaterial({ color: 0xf7b2c6, roughness: 0.82 }),
+      { wind: true, windAmp: 0.16, windHeightScale: 0.15, subsurface: 0.35 }
+    );
+    const sakuraLightMat = patchWatercolorMaterial(
+      new THREE.MeshStandardMaterial({ color: 0xffd6e3, roughness: 0.8 }),
+      { wind: true, windAmp: 0.18, windHeightScale: 0.15, subsurface: 0.4 }
+    );
+    for (const [sx, sz, sc] of [[-14.5, -21.5, 1.05], [14.8, -22.2, 1.15]]) {
+      const st = new THREE.Group();
+      st.position.set(sx, 0, sz);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * sc, 0.72 * sc, 4.8 * sc, 8), this.woodMat);
+      trunk.position.y = 2.4 * sc;
+      trunk.castShadow = true;
+      st.add(trunk);
+      const puffs = [
+        [0, 5.6, 0, 2.6, sakuraMat],
+        [-1.8, 4.8, 0.6, 1.9, sakuraLightMat],
+        [1.9, 5.0, -0.5, 2.0, sakuraMat],
+        [0.3, 6.8, 0.4, 1.75, sakuraLightMat],
+      ];
+      for (const [px, py, pz, pr, pm] of puffs) {
+        const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(pr * sc, 2), pm);
+        puff.position.set(px * sc, py * sc, pz * sc);
+        puff.scale.y = 0.78;
+        puff.castShadow = true;
+        st.add(puff);
+      }
+      group.add(st);
+      this.colliders.push({ x: lm.x + sx, z: lm.z + sz, r: 1.0 });
+    }
+
     // Iconic spinning Gouache Windmill overlooking the settlement
     const mill = new THREE.Group();
     mill.position.set(-34, 0, -4);

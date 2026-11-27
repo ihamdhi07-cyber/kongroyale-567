@@ -2,7 +2,8 @@
 
 Complete engineering & real headless Chromium WebGL2 verification across the full 7-Pillar Mega-Expansion (all legacy Kong Royale files removed; **THE UNKNOWN WORLD** is the sole project at repository root).
 
-## Automated Simulation & Unit Verification (`npm test` — 22/22 Passing)
+## Automated Simulation & Unit Verification (`npm test` — 25/25 Passing)
+- [x] **Expansion IV — Wind-Swaying 3D Meadow Grass, Gamepad Driver, Sculpted Aelira & Accessibility** (`tests/expansion4.test.js`): GPU-instanced `MeadowGrassSystem` populates wind-swaying 3-blade grass tufts & pastel wildflowers around the player while clearing plazas/beaches/waterfalls and scaling across Low–Ultra; `GamepadControls` handles standard analog sticks, edge-triggered buttons, and canonical EventBus hotkeys; sculpted Aelira twin scarf ribbons + `CameraController.reducedMotion` shake suppression verified.
 - [x] **Expansion III — HDR Painterly Post-Processing, FrameProfiler & Biome Wonders** (`tests/expansion3.test.js`): Quality presets configure Selective Bloom & OkLab Painterly Grade cleanly (`low` bypasses post for mobile FPS), rolling `FrameProfiler` tracks FPS & adaptive recommendations, 2 animated GLSL waterfalls + Azure Coast shipwreck & coral reefs + 3 subterranean caves connect cleanly to **10 total enterable 3D interiors**.
 - [x] **4 Flat Sculpted World Boss Arenas** (`tests/expansion2.test.js`): All 4 `BOSS_ARENAS` flatten terrain cleanly to exact `padY` with zero cliff occlusion, framed by etched stone daises & 4 glowing elemental obelisks.
 - [x] **Elemental Weapon Rune Infusions & 3 Elemental Combo Reactions** (`tests/expansion2.test.js`): 4 Elemental Runes (`Sunfire`, `Frostbite`, `Tempest`, `Astral`) + live 3D weapon aura + verified `2.2× THERMAL SHATTER`, `1.8× WILDFIRE GALE`, and `2.0× ASTRAL OVERLOAD` reactions.
@@ -33,5 +34,5 @@ Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader We
 - [x] **12 — Mobile Landscape Touch Viewport (`12-mobile-touch.png`, 844×390)**: Non-overlapping compact top HUD, virtual joystick, action buttons (`Strike`, `Shield`, `Stealth`, `Heavy`, `Dodge`, `Jump/Glide`), spell/utility slots, and camera strip.
 
 ## Production Build & Manual Audio Check
-- [x] **Production Bundle (`npm run build`)**: 72 Vite modules built cleanly in ~2.5 s, 0 errors.
+- [x] **Production Bundle (`npm run build`)**: 74 Vite modules built cleanly in ~2.3 s, 0 errors.
 - [ ] **Live Speaker Audio Check**: Web Audio API adaptive 8-region soundtrack, boss battle pulse, and spell/parry/splash SFX initialize cleanly with zero console errors; listen interactively in browser preview after first click/tap to tune subjective mix preferences.

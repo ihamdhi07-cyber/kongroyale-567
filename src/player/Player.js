@@ -139,37 +139,67 @@ export class Player {
     tunic.castShadow = true;
     torso.add(tunic);
 
-    const cloak = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.52, 0.78, 10, 1, true), cloakMat);
+    const cloak = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.54, 0.80, 12, 1, true), cloakMat);
     cloak.position.set(0, 0.34, -0.04);
     cloak.castShadow = true;
     torso.add(cloak);
     this.parts.cloak = cloak;
 
-    // Travel Satchel & Warm Hip Lantern
-    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.42, 0.22), bootMat);
-    pack.position.set(0, 0.44, -0.28);
+    // Gold embroidered cloak mantle & hem trim (crisp Ghibli heroine silhouette from behind!)
+    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xe6be63, roughness: 0.42, metalness: 0.35 });
+    const cloakHem = new THREE.Mesh(new THREE.TorusGeometry(0.53, 0.026, 6, 16), goldTrimMat);
+    cloakHem.rotation.x = Math.PI / 2;
+    cloakHem.position.set(0, -0.05, -0.04);
+    torso.add(cloakHem);
+
+    const mantle = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.43, 0.24, 12, 1, true), cloakMat);
+    mantle.position.set(0, 0.62, -0.02);
+    torso.add(mantle);
+
+    // Travel Satchel with Rolled Parchment Map Scroll, Brass Buckle & Warm Hip Lantern
+    const pack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.40, 0.20), bootMat);
+    pack.position.set(0, 0.42, -0.28);
     pack.castShadow = true;
     torso.add(pack);
 
+    const scrollMat = new THREE.MeshStandardMaterial({ color: 0xf4e6c6, roughness: 0.8 });
+    const scroll = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.44, 8), scrollMat);
+    scroll.rotation.z = Math.PI / 2;
+    scroll.position.set(0, 0.65, -0.28);
+    torso.add(scroll);
+
+    const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.09, 0.05), goldTrimMat);
+    buckle.position.set(0, 0.45, -0.39);
+    torso.add(buckle);
+
     const lantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), this.staffOrbMat);
-    lantern.position.set(-0.28, 0.12, 0.06);
+    lantern.position.set(-0.29, 0.10, 0.06);
     torso.add(lantern);
 
     this.lanternLight = new THREE.PointLight(0xffcb74, 1.35, 11);
     this.lanternLight.position.set(0, 1.3, 0.3);
     this.visual.add(this.lanternLight);
 
-    // Scarf & Flowing Scarf Tail
-    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.085, 8, 14), scarfMat);
+    // Scarf Collar & Twin Articulated Fluttering Scarf Ribbons
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.088, 8, 14), scarfMat);
     collar.rotation.x = Math.PI / 2;
     collar.position.y = 0.72;
     torso.add(collar);
 
-    const scarfTail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.55, 0.06), scarfMat);
-    scarfTail.position.set(0.06, 0.52, -0.34);
+    const scarfTail = new THREE.Group();
+    scarfTail.position.set(0.06, 0.68, -0.26);
+    const ribbonMain = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.62, 0.045), scarfMat);
+    ribbonMain.position.set(0, -0.30, -0.05);
+    const ribbonSub = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.48, 0.04), scarfMat);
+    ribbonSub.position.set(-0.14, -0.24, -0.07);
+    ribbonSub.rotation.z = -0.14;
+    const ribbonTip = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.07, 0.05), goldTrimMat);
+    ribbonTip.position.set(0, -0.59, -0.05);
+    scarfTail.add(ribbonMain, ribbonSub, ribbonTip);
     scarfTail.rotation.x = 0.38;
     torso.add(scarfTail);
     this.parts.scarfTail = scarfTail;
+    this.parts.scarfSub = ribbonSub;
 
     // Head, Hair & Hood Silhouette
     const headPivot = new THREE.Group();

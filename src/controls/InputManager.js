@@ -1,11 +1,13 @@
-// Unified InputManager combining Desktop Keyboard/Mouse, Mobile TouchControls, and optional Gamepad API.
+// Unified InputManager combining Desktop Keyboard/Mouse, Mobile TouchControls, and full HTML5 Gamepad API.
 import { KeyboardControls } from './KeyboardControls.js';
 import { TouchControls } from './TouchControls.js';
+import { GamepadControls } from './GamepadControls.js';
 
 export class InputManager {
   constructor(canvas, eventBus) {
     this.keyboard = new KeyboardControls(canvas, eventBus);
     this.touch = new TouchControls(canvas);
+    this.gamepad = new GamepadControls(eventBus);
     this.gameplayEnabled = false;
   }
 
@@ -21,6 +23,7 @@ export class InputManager {
   sample(dt) {
     const kb = this.keyboard.sample(dt);
     const tc = this.touch.sample();
+    const gp = this.gamepad.sample(dt);
 
     if (!this.gameplayEnabled) {
       return {
@@ -41,34 +44,21 @@ export class InputManager {
       };
     }
 
-    // Optional Gamepad support
-    let gx = 0, gy = 0, gSprint = false, gJump = false, gYaw = 0, gPitch = 0;
-    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
-    const pad = pads && pads[0];
-    if (pad) {
-      if (Math.abs(pad.axes[0]) > 0.16) gx = pad.axes[0];
-      if (Math.abs(pad.axes[1]) > 0.16) gy = -pad.axes[1];
-      if (Math.abs(pad.axes[2]) > 0.18) gYaw = pad.axes[2] * dt * 2.2;
-      if (Math.abs(pad.axes[3]) > 0.18) gPitch = pad.axes[3] * dt * 1.4;
-      gJump = Boolean(pad.buttons[0]?.pressed);
-      gSprint = Boolean(pad.buttons[10]?.pressed || pad.buttons[7]?.pressed);
-    }
-
     return {
-      moveX: kb.moveX || tc.moveX || gx,
-      moveY: kb.moveY || tc.moveY || gy,
-      sprint: kb.sprint || tc.sprint || gSprint,
-      jump: kb.jump || tc.jump || gJump,
-      guard: kb.guard || tc.guard,
-      dive: kb.dive || tc.dive,
-      stealthToggle: kb.stealthToggle || tc.stealthToggle,
-      attackPressed: kb.attackPressed || tc.attackPressed,
-      heavyPressed: kb.heavyPressed || tc.heavyPressed,
-      dodgePressed: kb.dodgePressed || tc.dodgePressed,
-      interactPressed: kb.interactPressed || tc.interactPressed,
-      camYawDelta: kb.camYawDelta + tc.camYawDelta + gYaw,
-      camPitchDelta: kb.camPitchDelta + tc.camPitchDelta + gPitch,
-      camZoomDelta: kb.camZoomDelta + tc.camZoomDelta,
+      moveX: kb.moveX || tc.moveX || gp.moveX,
+      moveY: kb.moveY || tc.moveY || gp.moveY,
+      sprint: kb.sprint || tc.sprint || gp.sprint,
+      jump: kb.jump || tc.jump || gp.jump,
+      guard: kb.guard || tc.guard || gp.guard,
+      dive: kb.dive || tc.dive || gp.dive,
+      stealthToggle: kb.stealthToggle || tc.stealthToggle || gp.stealthToggle,
+      attackPressed: kb.attackPressed || tc.attackPressed || gp.attackPressed,
+      heavyPressed: kb.heavyPressed || tc.heavyPressed || gp.heavyPressed,
+      dodgePressed: kb.dodgePressed || tc.dodgePressed || gp.dodgePressed,
+      interactPressed: kb.interactPressed || tc.interactPressed || gp.interactPressed,
+      camYawDelta: kb.camYawDelta + tc.camYawDelta + gp.camYawDelta,
+      camPitchDelta: kb.camPitchDelta + tc.camPitchDelta + gp.camPitchDelta,
+      camZoomDelta: kb.camZoomDelta + tc.camZoomDelta + gp.camZoomDelta,
     };
   }
 }

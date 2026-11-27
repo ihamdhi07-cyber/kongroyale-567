@@ -141,6 +141,10 @@ export class PlayerAnimation {
     parts.torso.rotation.y = state === 'heavy' ? torsoY : lerp(parts.torso.rotation.y, torsoY, blend);
     parts.hips.position.y = lerp(parts.hips.position.y, hipsY, blend);
     parts.scarfTail.rotation.x = lerp(parts.scarfTail.rotation.x, scarfX, blend);
+    parts.scarfTail.rotation.z = Math.sin(elapsed * 4.4) * (0.06 + Math.min(0.16, p.horizontalSpeed * 0.015));
+    if (parts.scarfSub) {
+      parts.scarfSub.rotation.x = Math.cos(elapsed * 5.6) * 0.16;
+    }
     p.visual.rotation.x = lerp(p.visual.rotation.x, visualSpinX, blend);
 
     // Toggle Spirit Glider, Shield Ward & Attack Slash Arc VFX

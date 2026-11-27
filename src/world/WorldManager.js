@@ -12,6 +12,7 @@ import { ParticleSystem } from './ParticleSystem.js';
 import { BoatSystem } from './BoatSystem.js';
 import { InteriorManager } from './InteriorManager.js';
 import { BiomeWonders } from './BiomeWonders.js';
+import { MeadowGrassSystem } from './MeadowGrassSystem.js';
 import { WORLD_CONFIG } from './WorldSpec.js';
 
 export class WorldManager {
@@ -31,17 +32,20 @@ export class WorldManager {
     this.boats = new BoatSystem(sceneManager.scene, this.terrain, this.textures, this.particles, eventBus);
     this.interiors = new InteriorManager(sceneManager.scene, this.terrain, this.textures, eventBus);
     this.wonders = new BiomeWonders(sceneManager.scene, this.terrain, this.textures, eventBus);
+    this.meadowGrass = new MeadowGrassSystem(sceneManager.scene, this.terrain, preset);
 
     this.currentRegion = this.terrain.biomes.getRegionAt(WORLD_CONFIG.SPAWN_POS.x, WORLD_CONFIG.SPAWN_POS.z);
   }
 
   prime(spawnPos) {
     this.chunks.primeAround(spawnPos.x, spawnPos.z);
+    if (this.meadowGrass) this.meadowGrass.update(0.016, 0, spawnPos, null, false);
   }
 
   applyQuality(preset) {
     this.chunks.applyQuality(preset);
     this.sceneManager.applyQuality(preset);
+    if (this.meadowGrass) this.meadowGrass.applyQuality(preset);
   }
 
   /** Combined static obstacle colliders (chunk trees/boulders + landmark buildings/waystones) */
@@ -90,6 +94,7 @@ export class WorldManager {
     this.landmarks.update(dt, elapsed);
     this.interiors.update(dt, elapsed);
     this.wonders.update(dt, elapsed, 1 - (envState?.nightFactor ?? 0));
+    if (this.meadowGrass) this.meadowGrass.update(dt, elapsed, playerPos, envState, inside);
     this.boats.update(dt, elapsed, player, input);
     this.particles.update(dt);
     this.sceneManager.updateShadowAnchor(playerPos);

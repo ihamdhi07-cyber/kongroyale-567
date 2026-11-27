@@ -47,6 +47,7 @@ export class CameraController {
   }
 
   addShake(intensity = 0.35) {
+    if (this.reducedMotion) return;
     this._shake = Math.min(0.85, this._shake + intensity);
   }
 

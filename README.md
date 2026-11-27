@@ -18,6 +18,11 @@ A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anim
 
 ## World & Core Features
 
+- **Living Wind-Swaying 3D Meadow Grass, Sculpted Hero *Aelira*, Full Gamepad & Accessibility (Expansion IV)**:
+  - **GPU-Instanced Meadow Grass & Wildflowers (`MeadowGrassSystem`)**: up to 4,200 3-blade organic grass tufts + 480 pastel wildflowers in 2 draw calls, recentering seamlessly around Aelira with rolling wind-wave animation, interactive footstep parting, biome color blending, and automatic clearing around cobblestone plazas, roads, sandy beaches, and waterfall plunge pools.
+  - **Sculpted Protagonist *Aelira* & Crossroads Village Archway**: gold-trimmed cloak mantle & hem, twin articulated fluttering terracotta scarf ribbons, leather travel satchel with rolled parchment map scroll, timber Crossroads Welcome Archway with twin hanging glowing lanterns, and blooming pastel Sakura cherry-blossom trees.
+  - **Full HTML5 Standard Gamepad Support (`GamepadControls`)**: plug-and-play Xbox / PlayStation / Switch Pro / Backbone mobile controller mapping (analog sticks, edge-triggered buttons, D-Pad Resonance Spells 1–4, `L3` Wind Stag, `R3` Guiding Wind, `LB` Shield/Parry, `RB` Heavy Strike, `Start`/`Select` menus) + live controller status in Settings.
+  - **Accessibility Controls**: UI Scale (`90%`–`125%`), Reduced Camera Motion (disables screen shake), and High-Contrast HUD toggle.
 - **AAA Painterly HDR Post-Processing & Adaptive GPU Profiler (Kong Royale-Inspired Engine Tech)**:
   - Custom zero-dependency WebGL2 `PostPipeline`: HDR HalfFloat scene target, quarter-res multi-radius **Selective Bloom** (glowing lanterns, Sunfire Nova, *Luma*, Waystones, Crystal Grotto spires, and Aurora), **OkLab Painterly Split-Tone & Bright-Green Gamut Roll-Off** (warm golden sunlit highlights, cool slate-indigo watercolor shadows, zero neon clipping), storybook vignette, and Interleaved Gradient Noise anti-banding dither (live toggle in Settings; bypassed on `Low` preset for 30+ FPS mobile).
   - Built-in rolling `FrameProfiler` & WebGL2 `detectHardwareProfile` for live FPS/frame-time telemetry and adaptive preset recommendations.
@@ -64,7 +69,7 @@ A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anim
 ```bash
 npm install
 npm run dev            # Start Vite dev server on http://0.0.0.0:5173
-npm test               # Run all 22 automated Node unit & integration tests
+npm test               # Run all 25 automated Node unit & integration tests
 npm run verify:browser # Run 19 real headless Chromium WebGL2 visual E2E checks
 npm run build          # Build optimized production bundle to dist/
 ```

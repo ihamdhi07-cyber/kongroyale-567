@@ -81,6 +81,29 @@ export class SettingsUI {
               <input type="checkbox" id="set-fps" />
             </label>
 
+            <h3>Accessibility &amp; Controller</h3>
+            <label class="field-row">
+              <span>UI Scale</span>
+              <select id="set-uiscale">
+                <option value="0.9">90% Compact</option>
+                <option value="1">100% Standard</option>
+                <option value="1.15">115% Large</option>
+                <option value="1.25">125% Extra Large</option>
+              </select>
+            </label>
+            <label class="field-row">
+              <span>Reduced Camera Motion (No Shake)</span>
+              <input type="checkbox" id="set-reduced-motion" />
+            </label>
+            <label class="field-row">
+              <span>High-Contrast HUD</span>
+              <input type="checkbox" id="set-high-contrast" />
+            </label>
+            <div class="field-row">
+              <span>Gamepad Status</span>
+              <span id="lbl-gamepad" class="slot-meta">No controller detected</span>
+            </div>
+
             <h3>Audio Mixer</h3>
             <label class="field-row"><span>Master Volume</span><input type="range" id="vol-master" min="0" max="1" step="0.05" /></label>
             <label class="field-row"><span>Regional Music</span><input type="range" id="vol-music" min="0" max="1" step="0.05" /></label>
@@ -119,6 +142,9 @@ export class SettingsUI {
     bind('#set-weather', 'change', (e) => this.game.world.weather.setWeather(e.target.value));
     bind('#set-touch', 'change', (e) => this.game.setTouchMode(e.target.value));
     bind('#set-fps', 'change', (e) => this.game.setTelemetry(e.target.checked));
+    bind('#set-uiscale', 'change', (e) => this.game.setManualVisuals({ uiScale: Number(e.target.value) }));
+    bind('#set-reduced-motion', 'change', (e) => this.game.setManualVisuals({ reducedMotion: e.target.checked }));
+    bind('#set-high-contrast', 'change', (e) => this.game.setManualVisuals({ highContrast: e.target.checked }));
 
     const syncAudio = () => {
       this.game.setAudioSettings({
@@ -147,6 +173,13 @@ export class SettingsUI {
     this.el.querySelector('#set-inverty').checked = Boolean(s.invertY);
     this.el.querySelector('#set-touch').value = s.touchControls || 'auto';
     this.el.querySelector('#set-fps').checked = Boolean(s.showFps);
+    this.el.querySelector('#set-uiscale').value = String(s.uiScale ?? 1);
+    this.el.querySelector('#set-reduced-motion').checked = Boolean(s.reducedMotion);
+    this.el.querySelector('#set-high-contrast').checked = Boolean(s.highContrast);
+    const gp = this.game.input?.gamepad;
+    this.el.querySelector('#lbl-gamepad').textContent = gp?.connected
+      ? `Connected: ${gp.controllerName.slice(0, 28)}`
+      : 'Ready (Plug in Xbox / PS / Pro)';
     this.el.querySelector('#vol-master').value = s.masterVol;
     this.el.querySelector('#vol-music').value = s.musicVol;
     this.el.querySelector('#vol-sfx').value = s.sfxVol;
