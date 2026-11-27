@@ -281,6 +281,36 @@ export class Player {
     this.slashMesh = new THREE.Mesh(slashGeo, this.slashMat);
     this.slashMesh.position.y = 1.15;
     this.visual.add(this.slashMesh);
+
+    // Live Elemental Rune Infusion Halo circling Aelira's staff/feet when infused
+    this.infusionAuraMat = new THREE.MeshBasicMaterial({
+      color: 0xff8a30,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.infusionAura = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.84, 24), this.infusionAuraMat);
+    this.infusionAura.rotation.x = -Math.PI / 2;
+    this.infusionAura.position.y = 0.14;
+    this.infusionAura.visible = false;
+    this.visual.add(this.infusionAura);
+    this.activeInfusion = null;
+  }
+
+  /** Visually reflects active Elemental Weapon Rune Infusion on staff crystal & ground aura */
+  setElementalInfusion(infusion) {
+    this.activeInfusion = infusion || null;
+    if (!infusion) {
+      this.infusionAura.visible = false;
+      return;
+    }
+    this.infusionAura.visible = true;
+    this.infusionAuraMat.color.setHex(infusion.color);
+    this.staffOrbMat.color.setHex(infusion.color);
+    this.staffOrbMat.emissive.setHex(infusion.color);
+    this.slashMat.color.setHex(infusion.color);
   }
 
   /** Visually updates staff & cloak colors when player crafts/equips upgraded gear */

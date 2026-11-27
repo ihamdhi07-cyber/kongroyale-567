@@ -36,12 +36,14 @@ export class HUD {
           <span class="hud-gold-pill" id="hud-gold">60 ✦</span>
           <span class="hud-stealth-pill hidden" id="hud-stealth">◉ Stealth · 1.75× Ambush</span>
           <span class="hud-buff-pill hidden" id="hud-ward">❀ Runic Ward</span>
-          <span class="hud-buff-pill hidden" id="hud-mount-pill">≋ Wind Stag</span>
+          <span class="hud-buff-pill hidden" id="hud-mount-pill">❖ Wind Stag</span>
+          <span class="hud-buff-pill hidden" id="hud-rune-pill">☀ Sunfire</span>
+          <span class="hud-buff-pill hidden" id="hud-rested-pill">✦ Well-Rested</span>
           <span class="hud-secret-pill hidden" id="hud-luma">✦ Luma senses a secret nearby!</span>
         </div>
       </div>
 
-      <!-- Top Center: Region Compass, Atmospheric Clock & Boss Bar -->
+      <!-- Top Center: Region Compass, Atmospheric Clock, Shrine Trial Pill & Boss Bar -->
       <div class="hud-center-stack">
         <div class="hud-compass-wrap">
           <div class="hud-region-line">
@@ -49,6 +51,12 @@ export class HUD {
             <span class="hud-meta-pill" id="hud-time">09:24 · Clear</span>
           </div>
           <div class="hud-compass-bar" id="hud-compass">N · 0m, 332m</div>
+        </div>
+        <div class="hud-trial-pill hidden" id="hud-trial-pill">
+          <span id="trial-name">Shrine Trial</span>
+          <span id="trial-rings">0/5 Rings</span>
+          <span id="trial-timer">45.0s</span>
+          <button class="btn-mini" id="btn-trial-cancel" type="button">✕</button>
         </div>
         <div class="hud-boss-bar hidden" id="hud-boss-bar">
           <div class="boss-name" id="boss-name">Elder Stone Warden</div>
@@ -77,10 +85,10 @@ export class HUD {
       <div class="hud-hints" id="hud-hints">
         <span><b>WASD</b> Move</span>
         <span><b>1–4</b> Spells</span>
-        <span><b>H</b> Wind Stag</span>
-        <span><b>G</b> Fish</span>
-        <span><b>B</b> Codex</span>
-        <span><b>E</b> Interact</span>
+        <span><b>O</b> Home/Runes</span>
+        <span><b>N</b> Guild</span>
+        <span><b>U</b> Wind</span>
+        <span><b>E</b> Use</span>
       </div>
 
       <!-- Bottom Right: Live Circular Watercolor Minimap -->
@@ -122,6 +130,22 @@ export class HUD {
           <button class="cam-pill" id="btn-cam-zoom-in" type="button" title="Zoom In">+</button>
           <button class="cam-pill" id="btn-cam-zoom-out" type="button" title="Zoom Out">−</button>
         </div>
+        <!-- Interactive Photo Studio Controls (visible only in Photo Mode [V]) -->
+        <div class="photo-studio-bar hidden" id="photo-studio-bar">
+          <span class="ps-tag">PHOTO STUDIO</span>
+          <button class="cam-pill" data-ps-tod="6.8" type="button">Dawn</button>
+          <button class="cam-pill" data-ps-tod="12.4" type="button">Noon</button>
+          <button class="cam-pill" data-ps-tod="17.8" type="button">Golden</button>
+          <button class="cam-pill" data-ps-tod="22.8" type="button">Aurora</button>
+          <span class="ps-sep">|</span>
+          <button class="cam-pill" data-ps-filter="none" type="button">Natural</button>
+          <button class="cam-pill" data-ps-filter="gouache" type="button">Gouache</button>
+          <button class="cam-pill" data-ps-filter="pastel" type="button">Pastel</button>
+          <button class="cam-pill" data-ps-filter="ink" type="button">Ink</button>
+          <span class="ps-sep">|</span>
+          <button class="cam-pill active" id="btn-ps-postcard" type="button">Save PNG</button>
+          <button class="cam-pill" id="btn-ps-exit" type="button">Exit [V]</button>
+        </div>
       </div>
 
       <!-- Floating Combat Damage Popups Layer -->
@@ -158,7 +182,14 @@ export class HUD {
     this.stealthEl = this.root.querySelector('#hud-stealth');
     this.wardEl = this.root.querySelector('#hud-ward');
     this.mountPillEl = this.root.querySelector('#hud-mount-pill');
+    this.runePillEl = this.root.querySelector('#hud-rune-pill');
+    this.restedPillEl = this.root.querySelector('#hud-rested-pill');
     this.lumaEl = this.root.querySelector('#hud-luma');
+    this.trialPillEl = this.root.querySelector('#hud-trial-pill');
+    this.trialNameEl = this.root.querySelector('#trial-name');
+    this.trialRingsEl = this.root.querySelector('#trial-rings');
+    this.trialTimerEl = this.root.querySelector('#trial-timer');
+    this.photoStudioBar = this.root.querySelector('#photo-studio-bar');
     this.fishOverlay = this.root.querySelector('#fishing-overlay');
     this.fishTitle = this.root.querySelector('#fish-title');
     this.fishZone = this.root.querySelector('#fish-zone');
@@ -210,23 +241,57 @@ export class HUD {
     this.root.querySelector('#btn-hud-mount').addEventListener('click', () => this.game.toggleMount());
     this.root.querySelector('#btn-hud-fish').addEventListener('click', () => this.game.handleFishingAction());
     this.root.querySelector('#btn-fish-reel').addEventListener('click', () => this.game.handleFishingAction());
+    this.root.querySelector('#btn-trial-cancel').addEventListener('click', () => this.game.shrineTrials?.cancelTrial?.());
+    this.root.querySelector('#btn-ps-exit').addEventListener('click', () => this.togglePhotoMode());
+    this.root.querySelector('#btn-ps-postcard').addEventListener('click', () => this._downloadPostcard());
+    this.root.querySelectorAll('[data-ps-tod]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (this.game.world?.weather) this.game.world.weather.timeOfDay = parseFloat(btn.dataset.psTod);
+      });
+    });
+    this.root.querySelectorAll('[data-ps-filter]').forEach((btn) => {
+      btn.addEventListener('click', () => this._applyPhotoFilter(btn.dataset.psFilter));
+    });
     this.root.querySelector('#dismiss-portrait').addEventListener('click', () => {
       this.root.querySelector('#portrait-hint').style.display = 'none';
     });
   }
 
+  _applyPhotoFilter(mode) {
+    const c = this.game.canvas;
+    if (!c) return;
+    if (mode === 'gouache') c.style.filter = 'saturate(1.28) contrast(1.06) sepia(0.12)';
+    else if (mode === 'pastel') c.style.filter = 'brightness(1.08) saturate(1.14) contrast(0.92)';
+    else if (mode === 'ink') c.style.filter = 'contrast(1.22) saturate(0.55) sepia(0.22)';
+    else c.style.filter = '';
+  }
+
+  _downloadPostcard() {
+    try {
+      const a = document.createElement('a');
+      a.download = `the-unknown-world-${Date.now()}.png`;
+      a.href = this.game.canvas.toDataURL('image/png');
+      a.click();
+      this.showToast({ title: 'Postcard Captured!', text: 'Saved PNG snapshot from Photo Studio.' });
+    } catch {
+      this.showToast({ title: 'Photo Studio', text: 'Use browser screenshot to capture this vista.' });
+    }
+  }
+
   togglePhotoMode() {
     this.photoMode = !this.photoMode;
     this.root.classList.toggle('photo-mode', this.photoMode);
+    if (this.photoStudioBar) this.photoStudioBar.classList.toggle('hidden', !this.photoMode);
     if (this.photoMode) {
       this.game.cameraController.setPreset('photo');
-      this.showToast({ title: 'Photo Framing Active', text: 'Press [V] or Photo again to restore full HUD.' });
+      this.showToast({ title: 'Photo Studio Active', text: 'Adjust Time, Watercolor Filter, or Save PNG! [V] exits.' });
     } else {
+      this._applyPhotoFilter('none');
       this.game.cameraController.setPreset('default');
     }
   }
 
-  spawnDamagePopup(worldPos, dmg, { isHeavy = false, isAmbush = false } = {}) {
+  spawnDamagePopup(worldPos, dmg, { isHeavy = false, isAmbush = false, reactionLabel = null } = {}) {
     if (!worldPos || !this.game.cameraController) return;
     this._projTmp.copy(worldPos).project(this.game.cameraController.camera);
     if (this._projTmp.z > 1) return;
@@ -234,12 +299,12 @@ export class HUD {
     const y = (-this._projTmp.y * 0.5 + 0.5) * window.innerHeight;
 
     const el = document.createElement('div');
-    el.className = `dmg-pop ${isAmbush ? 'dmg-ambush' : isHeavy ? 'dmg-heavy' : ''}`;
-    el.textContent = isAmbush ? `AMBUSH ${dmg}!` : isHeavy ? `${dmg}!` : `${dmg}`;
+    el.className = `dmg-pop ${reactionLabel ? 'dmg-reaction' : isAmbush ? 'dmg-ambush' : isHeavy ? 'dmg-heavy' : ''}`;
+    el.textContent = reactionLabel ? `${reactionLabel} ${dmg}` : isAmbush ? `AMBUSH ${dmg}!` : isHeavy ? `${dmg}!` : `${dmg}`;
     el.style.left = `${Math.round(x)}px`;
     el.style.top = `${Math.round(y)}px`;
     this.dmgLayer.appendChild(el);
-    setTimeout(() => el.remove(), 850);
+    setTimeout(() => el.remove(), reactionLabel ? 1150 : 850);
   }
 
   setVisible(show) {
@@ -290,11 +355,30 @@ export class HUD {
       this.airVal.textContent = Math.round(p.breath);
     }
 
-    // Stealth, Ward, Mount & Luma Secret Indicators
+    // Stealth, Ward, Mount, Active Rune Infusion, Well-Rested & Luma Indicators
     this.stealthEl.classList.toggle('hidden', !p.stealth);
     if (this.wardEl) this.wardEl.classList.toggle('hidden', !this.game.magic?.hasWard?.());
     if (this.mountPillEl) this.mountPillEl.classList.toggle('hidden', !p.mounted);
+    const activeRune = this.game.enchanting?.getActiveRune?.();
+    if (this.runePillEl) {
+      this.runePillEl.classList.toggle('hidden', !activeRune);
+      if (activeRune) this.runePillEl.textContent = `${activeRune.icon} ${activeRune.shortName}`;
+    }
+    if (this.restedPillEl) this.restedPillEl.classList.toggle('hidden', !this.game.homestead?.wellRested);
     if (this.lumaEl) this.lumaEl.classList.toggle('hidden', !this.game.companion?.alertSecret);
+
+    // Live Shrine Trial Countdown Pill
+    const trialHud = this.game.shrineTrials?.getHudState?.();
+    if (this.trialPillEl) {
+      if (trialHud) {
+        this.trialPillEl.classList.remove('hidden');
+        this.trialNameEl.textContent = `◎ ${trialHud.name}`;
+        this.trialRingsEl.textContent = `${trialHud.cleared}/${trialHud.total} Rings`;
+        this.trialTimerEl.textContent = `${trialHud.remaining.toFixed(1)}s`;
+      } else {
+        this.trialPillEl.classList.add('hidden');
+      }
+    }
 
     // Update 4-Slot Spell Hotbar cooldowns & SP readiness
     const spells = this.game.magic?.getSpells?.() || [];

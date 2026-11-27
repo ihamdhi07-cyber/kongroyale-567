@@ -285,40 +285,118 @@ export class NPCManager {
     const g = new THREE.Group();
     const robeMat = patchWatercolorMaterial(
       new THREE.MeshStandardMaterial({ color: def.robeColor, roughness: 0.8 }),
-      { rimStrength: 0.3, inkEdge: 0.22 }
+      { rimStrength: 0.32, inkEdge: 0.24 }
+    );
+    const mantleMat = patchWatercolorMaterial(
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(def.robeColor).offsetHSL(0, 0.05, 0.14), roughness: 0.78 }),
+      { rimStrength: 0.3, inkEdge: 0.2 }
+    );
+    const sashMat = patchWatercolorMaterial(
+      new THREE.MeshStandardMaterial({ color: def.hatColor, roughness: 0.76 })
     );
     const hatMat = patchWatercolorMaterial(
       new THREE.MeshStandardMaterial({ color: def.hatColor, roughness: 0.78 })
     );
     const skinMat = patchWatercolorMaterial(
-      new THREE.MeshStandardMaterial({ color: 0xf0c9ab, roughness: 0.75 })
+      new THREE.MeshStandardMaterial({ color: 0xf2ccb0, roughness: 0.74 })
     );
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1e1a24 });
+    const woodMat = new THREE.MeshStandardMaterial({ color: 0x6f4a2e, roughness: 0.85 });
 
-    const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.48, 1.38, 9), robeMat);
-    robe.position.y = 0.7;
+    // Layered villager tunic + flared shoulder cloak mantle + waist sash
+    const robe = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.46, 1.32, 10), robeMat);
+    robe.position.y = 0.68;
     robe.castShadow = true;
+
+    const mantle = new THREE.Mesh(new THREE.ConeGeometry(0.46, 0.56, 10), mantleMat);
+    mantle.position.y = 1.2;
+    mantle.castShadow = true;
+
+    const sash = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.35, 0.16, 10), sashMat);
+    sash.position.y = 0.88;
+
+    // Articulated sleeves / arms with hands
+    const armL = new THREE.Group();
+    armL.position.set(-0.34, 1.24, 0);
+    const sleeveL = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.36, 4, 6), robeMat);
+    sleeveL.position.y = -0.22;
+    const handL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 6, 6), skinMat);
+    handL.position.y = -0.44;
+    armL.add(sleeveL, handL);
+
+    const armR = new THREE.Group();
+    armR.position.set(0.34, 1.24, 0);
+    const sleeveR = sleeveL.clone();
+    const handR = handL.clone();
+    armR.add(sleeveR, handR);
+
+    // Role-specific charming 3D villager prop!
+    if (def.id === 'elder-maren' || def.id === 'mystic-veyra') {
+      const staff = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.04, 1.9, 6), woodMat);
+      staff.position.set(0.05, -0.05, 0.14);
+      const orb = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.11, 0),
+        new THREE.MeshStandardMaterial({ color: 0xffdf7a, emissive: 0xffa834, emissiveIntensity: 1.2 })
+      );
+      orb.position.set(0.05, 0.96, 0.14);
+      armR.add(staff, orb);
+    } else if (def.id === 'merchant-rowan') {
+      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.58, 0.32), woodMat);
+      pack.position.set(0, 1.05, -0.34);
+      pack.castShadow = true;
+      g.add(pack);
+    } else if (def.id === 'herbalist-lyra') {
+      const basket = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.22, 8), woodMat);
+      basket.position.set(0.04, -0.44, 0.16);
+      const herbs = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.16, 0),
+        new THREE.MeshStandardMaterial({ color: 0x52b86a, roughness: 0.75 })
+      );
+      herbs.position.set(0.04, -0.32, 0.16);
+      armL.add(basket, herbs);
+    } else if (def.id === 'smith-torin') {
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.65, 6), woodMat);
+      handle.position.set(0, -0.42, 0.18);
+      handle.rotation.x = 0.6;
+      const headMetal = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.18, 0.34),
+        new THREE.MeshStandardMaterial({ color: 0x5f6874, metalness: 0.5, roughness: 0.4 })
+      );
+      headMetal.position.set(0, -0.2, 0.38);
+      armR.add(handle, headMetal);
+    }
+
+    // Expressive Head, Dark Eyes & Sculpted Hat
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 10), skinMat);
     head.position.y = 1.62;
     head.castShadow = true;
-    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.36, 8), hatMat);
-    hat.position.y = 1.94;
+
+    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.032, 6, 6), eyeMat);
+    eyeL.position.set(-0.08, 1.64, 0.21);
+    const eyeR = eyeL.clone();
+    eyeR.position.x = 0.08;
+
+    const hat = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.38, 9), hatMat);
+    hat.position.y = 1.96;
     hat.castShadow = true;
-    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.44, 0.06, 10), hatMat);
-    brim.position.y = 1.78;
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.47, 0.06, 12), hatMat);
+    brim.position.y = 1.79;
 
     // Subtle floating conversation / quest beacon above NPC
-    const badgeMat = new THREE.MeshBasicMaterial({ color: def.questId ? 0xffd966 : 0x8beeff });
-    const badge = new THREE.Mesh(new THREE.OctahedronGeometry(0.14, 0), badgeMat);
-    badge.position.y = 2.48;
+    const badgeMat = new THREE.MeshBasicMaterial({ color: def.shop ? 0xffc84a : def.questId ? 0xffd966 : 0x8beeff });
+    const badge = new THREE.Mesh(new THREE.OctahedronGeometry(0.13, 0), badgeMat);
+    badge.position.y = 2.52;
 
     const shadowDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(0.62, 14),
+      new THREE.CircleGeometry(0.64, 14),
       new THREE.MeshBasicMaterial({ color: 0x182236, transparent: true, opacity: 0.32, depthWrite: false })
     );
     shadowDisc.rotation.x = -Math.PI / 2;
     shadowDisc.position.y = 0.04;
 
-    g.add(shadowDisc, robe, head, hat, brim, badge);
+    g.add(shadowDisc, robe, mantle, sash, armL, armR, head, eyeL, eyeR, hat, brim, badge);
+    g.userData.armL = armL;
+    g.userData.armR = armR;
     return { group: g, badge };
   }
 
@@ -381,9 +459,12 @@ export class NPCManager {
       }
 
       n.y = this.terrain.getHeight(n.x, n.z);
+      const walkSwing = dist > 0.25 ? Math.sin(elapsed * 5.2 + n.wanderPhase) * 0.32 : Math.sin(elapsed * 1.4 + n.wanderPhase) * 0.06;
+      if (n.group.userData.armL) n.group.userData.armL.rotation.x = walkSwing;
+      if (n.group.userData.armR) n.group.userData.armR.rotation.x = -walkSwing;
       n.group.position.set(n.x, n.y + Math.abs(Math.sin(elapsed * 2 + n.wanderPhase)) * 0.03, n.z);
       n.badge.rotation.y += dt * 1.6;
-      n.badge.position.y = 2.48 + Math.sin(elapsed * 3 + n.wanderPhase) * 0.08;
+      n.badge.position.y = 2.52 + Math.sin(elapsed * 3 + n.wanderPhase) * 0.08;
     }
   }
 }

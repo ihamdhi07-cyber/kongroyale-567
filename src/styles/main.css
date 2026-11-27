@@ -341,10 +341,12 @@ body {
 .hud-root.photo-mode .hud-right,
 .hud-root.photo-mode .hud-interact-pill,
 .hud-root.photo-mode .hud-minimap-wrap,
+.hud-root.photo-mode .hud-spell-bar,
+.hud-root.photo-mode .hud-cam-strip,
 .hud-root.photo-mode .hud-hints {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  visibility: hidden;
 }
 
 .hud-hints {
@@ -1530,3 +1532,94 @@ body {
     display: flex;
   }
 }
+
+/* ---- Expansion II: Shrine Trial Pill, Homestead, Runes, Photo Studio & Elemental Reactions ---- */
+.hud-trial-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: linear-gradient(135deg, rgba(28, 42, 64, 0.92), rgba(18, 30, 48, 0.94));
+  border: 1.5px solid #ffd96a;
+  color: #fff6dc;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.42);
+}
+#trial-timer {
+  color: #7ef2ff;
+  font-variant-numeric: tabular-nums;
+}
+.home-quick-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.home-purse {
+  margin-left: auto;
+  color: #ffd96a;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+.rune-reaction-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(126, 242, 255, 0.1);
+  border: 1px solid rgba(126, 242, 255, 0.34);
+  font-size: 0.78rem;
+  color: #e9f9ff;
+}
+.rune-reaction-guide b {
+  color: #ffe388;
+}
+.badge-ok {
+  color: #76ef9a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.dmg-reaction {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #7ef5ff;
+  text-shadow: 0 0 12px rgba(126, 245, 255, 0.9), 0 2px 6px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.04em;
+}
+.photo-studio-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(18, 26, 40, 0.9);
+  border: 1px solid var(--border-gold);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.photo-mode .photo-studio-bar {
+  display: flex !important;
+  opacity: 1 !important;
+}
+.ps-tag {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  font-weight: 700;
+  margin-right: 4px;
+}
+.ps-sep {
+  color: rgba(255, 255, 255, 0.25);
+}
+

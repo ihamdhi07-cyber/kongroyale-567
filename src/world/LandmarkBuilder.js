@@ -9,7 +9,7 @@
 //   - The Unknown Gate (monumental ancient ringed portal at the frontier)
 //   - Fast-Travel Waystones, Lore Tablets, and Campfires!
 import * as THREE from 'three';
-import { LANDMARKS } from './WorldSpec.js';
+import { LANDMARKS, BOSS_ARENAS } from './WorldSpec.js';
 import { patchWatercolorMaterial } from './WatercolorShader.js';
 
 export class LandmarkBuilder {
@@ -109,6 +109,63 @@ export class LandmarkBuilder {
       this.root.add(group);
     }
     this._buildFrontierMonuments();
+    this._buildBossArenas();
+  }
+
+  /** Builds 4 dramatic Runic Stone Boss Arena Circles & Glowing Elemental Obelisks */
+  _buildBossArenas() {
+    for (const arena of BOSS_ARENAS) {
+      const y = this.terrain.getHeight(arena.x, arena.z);
+      const g = new THREE.Group();
+      g.position.set(arena.x, y, arena.z);
+
+      const dais = new THREE.Mesh(
+        new THREE.CylinderGeometry(16.5, 18.2, 0.36, 28),
+        this.darkStoneMat
+      );
+      dais.position.y = 0.08;
+      dais.receiveShadow = true;
+      g.add(dais);
+
+      const glowMat = new THREE.MeshStandardMaterial({
+        color: arena.color,
+        emissive: arena.color,
+        emissiveIntensity: 1.3,
+        roughness: 0.2,
+      });
+      const ring = new THREE.Mesh(new THREE.RingGeometry(13.2, 14.3, 36), glowMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.3;
+      g.add(ring);
+
+      const innerRing = new THREE.Mesh(
+        new THREE.RingGeometry(5.2, 5.7, 28),
+        new THREE.MeshBasicMaterial({ color: arena.color, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+      );
+      innerRing.rotation.x = -Math.PI / 2;
+      innerRing.position.y = 0.31;
+      g.add(innerRing);
+
+      // 4 Towering Elemental Corner Obelisks framing the boss arena
+      for (let i = 0; i < 4; i++) {
+        const ang = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const ox = Math.cos(ang) * 16.5;
+        const oz = Math.sin(ang) * 16.5;
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 1.05, 6.2, 6), this.stoneMat);
+        pillar.position.set(ox, 3.1, oz);
+        pillar.castShadow = true;
+        const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), glowMat);
+        crystal.position.set(ox, 7.1, oz);
+        g.add(pillar, crystal);
+        this.colliders.push({ x: arena.x + ox, z: arena.z + oz, r: 1.15 });
+        this.animated.push((dt, t) => {
+          crystal.rotation.y += dt * 1.1;
+          crystal.position.y = 7.1 + Math.sin(t * 2.1 + i * 1.6) * 0.35;
+        });
+      }
+
+      this.root.add(g);
+    }
   }
 
   /** Builds 4 dramatic 3D Frontier Border Gates marking the 15x15 km outer expansion realm */
@@ -195,7 +252,7 @@ export class LandmarkBuilder {
     beamF.position.set(0, 0.7 + h * 0.94, d * 0.5);
     g.add(beamF);
 
-    // Warm glowing mullioned windows (front + side)
+    // Warm glowing mullioned windows (front + side) with shutters & blooming flower box!
     const winMat = new THREE.MeshStandardMaterial({
       color: 0xffe6a3,
       emissive: 0xffb347,
@@ -203,17 +260,55 @@ export class LandmarkBuilder {
     });
     const win = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.25, 0.16), winMat);
     win.position.set(-w * 0.18, 2.45, d * 0.5 + 0.05);
+    const shutterMat = patchWatercolorMaterial(new THREE.MeshStandardMaterial({ color: 0x3b6e5c, roughness: 0.8 }));
+    const shL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.28, 0.12), shutterMat);
+    shL.position.set(-w * 0.18 - 0.78, 2.45, d * 0.5 + 0.07);
+    const shR = shL.clone();
+    shR.position.x = -w * 0.18 + 0.78;
+    const flowerBox = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.3, 0.38), this.woodMat);
+    flowerBox.position.set(-w * 0.18, 1.72, d * 0.5 + 0.22);
+    const bloomCols = [0xf27d8b, 0xffd75e, 0x7ccbf2];
+    for (let bi = 0; bi < 3; bi++) {
+      const bloom = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(0.18, 0),
+        new THREE.MeshStandardMaterial({ color: bloomCols[bi], roughness: 0.7 })
+      );
+      bloom.position.set(-w * 0.18 + (bi - 1) * 0.42, 1.94, d * 0.5 + 0.24);
+      g.add(bloom);
+    }
+
     const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.15, 1.15), winMat);
     sideWin.position.set(w * 0.5 + 0.05, 2.45, 0);
-    g.add(win, sideWin);
+    g.add(win, shL, shR, flowerBox, sideWin);
 
-    // Door & wooden porch awning
+    // Gentle animated hearth chimney smoke puff curling upward
+    const smokeMat = new THREE.MeshBasicMaterial({ color: 0xf6efe6, transparent: true, opacity: 0.42, depthWrite: false });
+    const smokePuffs = [];
+    for (let si = 0; si < 3; si++) {
+      const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(0.34 + si * 0.12, 0), smokeMat);
+      puff.position.set(-w * 0.26, 0.7 + h + h * 0.92 + si * 0.85, -d * 0.18);
+      g.add(puff);
+      smokePuffs.push(puff);
+    }
+    const smokeBaseY = 0.7 + h + h * 0.88;
+    this.animated.push((dt, t) => {
+      for (let si = 0; si < smokePuffs.length; si++) {
+        const phase = (t * 0.45 + si * 0.33) % 1;
+        smokePuffs[si].position.y = smokeBaseY + phase * 3.1;
+        smokePuffs[si].position.x = -w * 0.26 + Math.sin(t * 1.1 + si) * 0.32 * phase;
+        smokePuffs[si].scale.setScalar(0.55 + phase * 0.95);
+      }
+    });
+
+    // Door, stone threshold step & wooden porch awning
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.25, 2.25, 0.22), this.woodMat);
     door.position.set(w * 0.22, 1.82, d * 0.5 + 0.06);
+    const step = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.3, 0.75), this.stoneMat);
+    step.position.set(w * 0.22, 0.35, d * 0.5 + 0.38);
     const awning = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.16, 1.25), roofMat);
     awning.position.set(w * 0.22, 3.05, d * 0.5 + 0.52);
     awning.rotation.x = 0.25;
-    g.add(door, awning);
+    g.add(door, step, awning);
 
     return g;
   }
@@ -404,19 +499,105 @@ export class LandmarkBuilder {
       sails.rotation.z -= dt * 0.55;
     });
 
-    // Central Campfire Hearth (Rest, Cook & Advance Time!)
+    // Central Campfire Hearth (Rest, Cook & Advance Time!) with crossed logs & animated dual flame tongues
     const fireRing = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.35, 7, 14), this.darkStoneMat);
     fireRing.rotation.x = Math.PI / 2;
     fireRing.position.y = 0.28;
     group.add(fireRing);
 
+    for (let li = 0; li < 3; li++) {
+      const log = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 1.85, 6), this.woodMat);
+      log.position.set(0, 0.38, 0);
+      log.rotation.z = Math.PI / 2 - 0.18;
+      log.rotation.y = (li / 3) * Math.PI;
+      group.add(log);
+    }
+
+    const emberMat = new THREE.MeshBasicMaterial({ color: 0xff5a1a });
+    const emberBed = new THREE.Mesh(new THREE.CircleGeometry(1.05, 12), emberMat);
+    emberBed.rotation.x = -Math.PI / 2;
+    emberBed.position.y = 0.22;
+    group.add(emberBed);
+
     const flameMat = new THREE.MeshStandardMaterial({
       color: 0xffa834,
       emissive: 0xff6b1a,
-      emissiveIntensity: 1.6,
+      emissiveIntensity: 1.65,
       roughness: 0.4,
     });
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.7, 1.8, 7), flameMat);
+    const flameCoreMat = new THREE.MeshBasicMaterial({ color: 0xfff0a3 });
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.68, 1.85, 7), flameMat);
+    const flameInner = new THREE.Mesh(new THREE.ConeGeometry(0.36, 1.25, 6), flameCoreMat);
+    flameInner.position.y = -0.15;
+    flame.add(flameInner);
+
+    // Cheerful Watercolor Festival Bunting Pennant Strings overhead between Village Lanterns!
+    const buntingColors = [0xd95648, 0xf2c254, 0x4ca6ba, 0x6cb868, 0xe88b55];
+    const buntingSpans = [
+      [[14, 4.0, 15], [15, 4.0, -3]],
+      [[15, 4.0, -3], [4, 4.0, -15]],
+      [[-14, 4.0, -12], [-15, 4.0, 10]],
+      [[-15, 4.0, 10], [4, 4.0, 16]],
+    ];
+    for (const [a, b] of buntingSpans) {
+      const flagCount = 7;
+      for (let fi = 1; fi <= flagCount; fi++) {
+        const t = fi / (flagCount + 1);
+        const sag = Math.sin(t * Math.PI) * 0.85;
+        const fx = a[0] + (b[0] - a[0]) * t;
+        const fy = a[1] - sag;
+        const fz = a[2] + (b[2] - a[2]) * t;
+        const flag = new THREE.Mesh(
+          new THREE.ConeGeometry(0.28, 0.56, 3),
+          new THREE.MeshStandardMaterial({ color: buntingColors[(fi + Math.abs(Math.round(a[0]))) % buntingColors.length], roughness: 0.72 })
+        );
+        flag.rotation.x = Math.PI;
+        flag.position.set(fx, fy, fz);
+        group.add(flag);
+        this.animated.push((dt, elapsed) => {
+          flag.rotation.z = Math.sin(elapsed * 2.6 + fi * 0.8) * 0.16;
+        });
+      }
+    }
+
+    // Physical Crossroads Guild Bounty & Shrine Trial Notice Board at (-11.2, 11.2)
+    const board = new THREE.Group();
+    board.position.set(-11.2, 0.12, 11.2);
+    board.rotation.y = 0.58;
+    for (const px of [-1.25, 1.25]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.8, 0.22), this.woodMat);
+      post.position.set(px, 1.4, 0);
+      post.castShadow = true;
+      board.add(post);
+    }
+    const backing = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.55, 0.14), this.woodMat);
+    backing.position.set(0, 1.95, 0);
+    backing.castShadow = true;
+    const roofCap = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.18, 0.85), this.roofWarmMat);
+    roofCap.position.set(0, 2.86, 0);
+    roofCap.rotation.x = 0.18;
+    const paperMat = new THREE.MeshStandardMaterial({ color: 0xfbf2d6, roughness: 0.9 });
+    const sealMat = new THREE.MeshStandardMaterial({ color: 0xd9483b, emissive: 0x7a1a12, emissiveIntensity: 0.35 });
+    for (const [nx, ny, rot] of [[-0.68, 2.15, 0.08], [0.04, 2.05, -0.06], [0.72, 2.1, 0.05], [-0.25, 1.55, 0.04]]) {
+      const note = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.56, 0.04), paperMat);
+      note.position.set(nx, ny, 0.09);
+      note.rotation.z = rot;
+      const seal = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), sealMat);
+      seal.position.set(nx, ny + 0.2, 0.12);
+      board.add(note, seal);
+    }
+    board.add(backing, roofCap);
+    group.add(board);
+    this.colliders.push({ x: lm.x - 11.2, z: lm.z + 11.2, r: 1.4 });
+    this.interactables.push({
+      id: 'bounty-board-crossroads',
+      type: 'bounty-board',
+      label: 'Read Crossroads Guild Bounty Board',
+      x: lm.x - 11.2,
+      y: baseY + 1.5,
+      z: lm.z + 11.2,
+      radius: 4.5,
+    });
     flame.position.y = 1.05;
     group.add(flame);
 

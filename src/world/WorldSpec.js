@@ -453,6 +453,14 @@ export const RIVERS = [
   },
 ];
 
+// 4 Sculpted Elemental World Boss Arenas (flat architectural terraces with glowing runic rings)
+export const BOSS_ARENAS = [
+  { id: 'mossback-colossus', name: 'Citadel Mossback Courtyard', x: 1695, z: -185, padY: 36, padRadius: 24, blendRadius: 26, color: 0x7be884 },
+  { id: 'glacier-sovereign', name: 'Borealis Glacier Terrace', x: -1525, z: -1895, padY: 88, padRadius: 38, blendRadius: 34, color: 0x79f7d6 },
+  { id: 'astral-leviathan', name: 'Shattered Astral Dais', x: 1815, z: -1855, padY: 44, padRadius: 26, blendRadius: 30, color: 0xd092ff },
+  { id: 'elder-warden', name: 'Frontier Warden Sanctum Ring', x: -1585, z: 1585, padY: 28, padRadius: 24, blendRadius: 28, color: 0xffc766 },
+];
+
 // Planned 161 km² expansion perimeter metadata (charted on World Map)
 export const EXPANSION_ZONES = [
   { id: 'frostpeak-expanse', name: 'Frostpeak Expanse', areaKm2: 42, x: 0, z: -5750 },

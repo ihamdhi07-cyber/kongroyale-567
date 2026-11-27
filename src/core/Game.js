@@ -26,10 +26,14 @@ import { CombatSystem } from '../gameplay/CombatSystem.js';
 import { PuzzleSystem } from '../gameplay/PuzzleSystem.js';
 import { MagicSystem, SPELLS } from '../gameplay/MagicSystem.js';
 import { JournalSystem } from '../gameplay/JournalSystem.js';
+import { EnchantingSystem } from '../gameplay/EnchantingSystem.js';
+import { BountySystem } from '../gameplay/BountySystem.js';
 
 import { MountSystem } from '../world/MountSystem.js';
 import { FishingSystem } from '../world/FishingSystem.js';
 import { WorldEventsManager } from '../world/WorldEventsManager.js';
+import { ShrineTrialSystem, SHRINE_TRIALS } from '../world/ShrineTrialSystem.js';
+import { HomesteadSystem } from '../world/HomesteadSystem.js';
 
 import { NPCManager } from '../entities/NPCManager.js';
 import { WildlifeManager } from '../entities/WildlifeManager.js';
@@ -50,6 +54,8 @@ import { DialogueUI } from '../ui/DialogueUI.js';
 import { SettingsUI } from '../ui/SettingsUI.js';
 import { CodexUI } from '../ui/CodexUI.js';
 import { CampfireUI } from '../ui/CampfireUI.js';
+import { HomesteadUI } from '../ui/HomesteadUI.js';
+import { BountyUI } from '../ui/BountyUI.js';
 
 export class Game {
   constructor(canvas) {
@@ -109,20 +115,27 @@ export class Game {
     this.combat = new CombatSystem(this.player, this.enemies, this.inventory, this.progression, this.events);
     this.magic = new MagicSystem(this.sceneManager.scene, this.world.terrain, this.events);
     this.combat.attachMagic(this.magic);
+    this.enchanting = new EnchantingSystem(this.inventory, this.events);
+    this.combat.attachEnchanting(this.enchanting);
     this.mount = new MountSystem(this.sceneManager.scene, this.world.terrain, this.events);
     this.fishing = new FishingSystem(this.sceneManager.scene, this.world.terrain, this.world.biomes, this.events);
     this.companion = new CompanionSystem(this.sceneManager.scene);
     this.worldEvents = new WorldEventsManager(this.sceneManager.scene, this.world.terrain, this.events);
     this.journal = new JournalSystem(this.events, { creatures: this.data.creatures }, this.inventory, this.progression);
+    this.shrineTrials = new ShrineTrialSystem(this.sceneManager.scene, this.world.terrain, this.events);
+    this.homestead = new HomesteadSystem(this.sceneManager.scene, this.world.terrain, this.events);
+    this.bounties = new BountySystem(this.events, this.inventory, this.progression, this.journal);
 
-    this.inventory.applyStatsToPlayer(this.player, this.progression.getBonuses());
+    this.refreshPlayerStats();
 
-    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, World Events, River Fish)
+    // Register dynamic interaction providers (Sanctuaries, Boats & Pearls, NPCs, 8 Puzzles, Trials, Homestead, World Events, River Fish)
     this.interaction.registerProvider((pos) => this.world.interiors.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.world.boats.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.npcs.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.puzzles.getInteractables(pos));
     this.interaction.registerProvider((pos) => this.wildlife.getInteractables(pos));
+    this.interaction.registerProvider((pos) => this.shrineTrials.getInteractables(pos));
+    this.interaction.registerProvider((pos) => this.homestead.getInteractables(pos));
     this.interaction.registerProvider((pos) => {
       const ev = this.worldEvents.getNearbyInteraction(pos);
       if (!ev) return [];
@@ -141,6 +154,8 @@ export class Game {
     this.settingsUI = new SettingsUI(this);
     this.codexUI = new CodexUI(this);
     this.campfireUI = new CampfireUI(this);
+    this.homesteadUI = new HomesteadUI(this);
+    this.bountyUI = new BountyUI(this);
 
     this._applySettings();
     this._bindEvents();
@@ -202,15 +217,21 @@ export class Game {
     this.events.on('player:step', ({ surface }) => this.audio.playFootstep(surface));
     this.events.on('player:jump', () => this.audio.playFootstep('grass'));
     this.events.on('combat:attack', ({ isHeavy }) => this.audio.playAttack(isHeavy));
-    this.events.on('combat:hit', ({ pos, dmg, isHeavy, isAmbush, killed }) => {
+    this.events.on('combat:hit', ({ pos, dmg, isHeavy, isAmbush, reactionLabel, killed }) => {
       this.world.particles.emitBurst(pos, {
-        count: killed ? 26 : isHeavy || isAmbush ? 18 : 11,
-        color: isAmbush ? 0xff9ef0 : isHeavy ? 0x7ef5ff : 0xffe28a,
-        speed: killed ? 7 : 5,
-        spreadY: 4,
+        count: reactionLabel ? 32 : killed ? 26 : isHeavy || isAmbush ? 18 : 11,
+        color: reactionLabel ? 0x7ef5ff : isAmbush ? 0xff9ef0 : isHeavy ? 0x7ef5ff : 0xffe28a,
+        speed: reactionLabel ? 8 : killed ? 7 : 5,
+        spreadY: 4.5,
       });
-      this.cameraController.addShake(killed ? 0.42 : isHeavy || isAmbush ? 0.28 : 0.14);
-      this.hud.spawnDamagePopup(pos, dmg, { isHeavy, isAmbush });
+      this.cameraController.addShake(reactionLabel ? 0.46 : killed ? 0.42 : isHeavy || isAmbush ? 0.28 : 0.14);
+      this.hud.spawnDamagePopup(pos, dmg, { isHeavy, isAmbush, reactionLabel });
+    });
+    this.events.on('boss:defeat', (def) => {
+      if (def?.id) this.homestead.recordBossTrophy(def.id);
+    });
+    this.events.on('world:guidingWind', () => {
+      if (this.started && !this.activeModal) this.triggerGuidingWind();
     });
     this.events.on('combat:playerHit', ({ blocked }) => {
       this.audio.playHit(blocked);
@@ -324,9 +345,77 @@ export class Game {
     } else if (target.type === 'npc') {
       this.events.emit(`npc:talk:${target.npc.id}`, target.npc);
       this.openModal('dialogue', target.npc);
+    } else if (target.type === 'bounty-board') {
+      this.openModal('bounties');
+    } else if (target.type === 'homestead') {
+      this.openModal('homestead');
+    } else if (target.type === 'shrine-trial') {
+      this.shrineTrials.startTrial(target.trialId);
     } else if (target.type === 'puzzle') {
       this.puzzles.handleInteract(target, this.player.root.position);
     }
+  }
+
+  refreshPlayerStats() {
+    const bonuses = this.progression.getBonuses();
+    this.inventory.applyStatsToPlayer(this.player, bonuses);
+    const hb = this.homestead?.getBonuses?.();
+    if (hb) {
+      if (hb.attackMult > 0) this.player.attackPower = Math.round(this.player.attackPower * (1 + hb.attackMult));
+      if (hb.wellRestedHp > 0) this.player.maxHp += hb.wellRestedHp;
+      if (hb.wellRestedSp > 0) this.player.maxStamina += hb.wellRestedSp;
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp);
+      this.player.stamina = Math.min(this.player.maxStamina, this.player.stamina);
+    }
+    const activeRune = this.enchanting?.getActiveRune?.();
+    if (activeRune) this.player.setElementalInfusion(activeRune);
+  }
+
+  teleportAndStartTrial(trialId) {
+    const def = SHRINE_TRIALS.find((t) => t.id === trialId);
+    if (!def) return;
+    this.playerController.teleport(def.startX, def.startZ);
+    this.world.chunks.primeAround(def.startX, def.startZ);
+    this.shrineTrials.startTrial(def.id);
+    if (def.mode.includes('Mount') && !this.mount.mounted) this.toggleMount();
+  }
+
+  /** Emits a graceful curved stream of Golden Guiding Wind particles toward the active Map Pin or nearest Goal */
+  triggerGuidingWind() {
+    const p = this.player.root.position;
+    let tx = -1620;
+    let tz = 1620;
+    let label = 'The Unknown Gate';
+    if (this.waypoint) {
+      tx = this.waypoint.x;
+      tz = this.waypoint.z;
+      label = this.waypoint.regionName || 'Custom Map Pin';
+    } else if (this.shrineTrials.activeTrial) {
+      const ring = this.shrineTrials.activeRingMeshes[this.shrineTrials.nextRingIndex];
+      if (ring) { tx = ring.x; tz = ring.z; label = 'Next Golden Trial Ring'; }
+    } else {
+      const tracked = this.quests.getTrackedQuest();
+      if (tracked) label = tracked.title;
+    }
+
+    const dx = tx - p.x;
+    const dz = tz - p.z;
+    const dist = Math.hypot(dx, dz) || 1;
+    const nx = dx / dist;
+    const nz = dz / dist;
+
+    for (let i = 1; i <= 7; i++) {
+      const pt = p.clone();
+      pt.x += nx * (i * 2.2) + Math.sin(i * 0.9) * 0.4;
+      pt.z += nz * (i * 2.2) + Math.cos(i * 0.9) * 0.4;
+      pt.y += 1.2 + Math.sin(i * 0.5) * 0.7;
+      this.world.particles.emitBurst(pt, { count: 4, color: 0xffe688, speed: 2.4, spreadY: 1.2 });
+    }
+    this.audio.playSpell('gale');
+    this.hud.showToast({
+      title: '≋ Guiding Wind Beckons',
+      text: `Breeze streams toward ${label} (${Math.round(dist)}m away).`,
+    });
   }
 
   castSpellByIndex(idx) {
@@ -504,6 +593,8 @@ export class Game {
     else if (name === 'caravan') this.dialogueUI.openCaravanShop();
     else if (name === 'lore') this.dialogueUI.openLore(payload.title, payload.lore);
     else if (name === 'campfire') this.campfireUI.open();
+    else if (name === 'homestead') this.homesteadUI.open(payload || 'homestead');
+    else if (name === 'bounties') this.bountyUI.open(payload || 'bounties');
     else if (name === 'gate-climax') this.dialogueUI.openGateClimax();
   }
 
@@ -515,6 +606,8 @@ export class Game {
     this.progressionUI.close();
     this.codexUI.close();
     this.campfireUI.close();
+    this.homesteadUI.close();
+    this.bountyUI.close();
     this.dialogueUI.close();
     this.settingsUI.close();
   }
@@ -615,6 +708,10 @@ export class Game {
       fishing: this.fishing.serialize(),
       worldEvents: this.worldEvents.serialize(),
       journal: this.journal.serialize(),
+      enchanting: this.enchanting.serialize(),
+      shrineTrials: this.shrineTrials.serialize(),
+      homestead: this.homestead.serialize(),
+      bounties: this.bounties.serialize(),
       gathered: [...this.world.chunks.collectedGatherables],
     };
     await this.saveManager.saveSlot(slotId, payload);
@@ -654,6 +751,11 @@ export class Game {
     this.fishing.hydrate(data.fishing);
     this.worldEvents.hydrate(data.worldEvents);
     this.journal.hydrate(data.journal);
+    this.enchanting.deserialize(data.enchanting, this.player);
+    this.shrineTrials.deserialize(data.shrineTrials);
+    this.homestead.deserialize(data.homestead);
+    this.bounties.deserialize(data.bounties);
+    this.refreshPlayerStats();
     this.waypoint = data.waypoint || null;
     if (data.unknownGateAwakened) {
       this.unknownGateAwakened = true;
@@ -728,6 +830,13 @@ export class Game {
         particles: this.world.particles,
         audio: this.audio,
       });
+      this.shrineTrials.update(dt, elapsed, this.player.root.position, {
+        inventory: this.inventory,
+        progression: this.progression,
+        particles: this.world.particles,
+        audio: this.audio,
+      });
+      this.homestead.update(dt, elapsed);
     }
     const activeBoss = !inside ? this.enemies.getActiveBoss(this.player.root.position) : null;
     this.audio.update(dt, this.world.currentRegion, this.world.weather.weather, Boolean(activeBoss));

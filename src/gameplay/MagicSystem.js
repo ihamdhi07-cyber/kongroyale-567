@@ -205,9 +205,11 @@ export class MagicSystem {
       if (!e.alive) continue;
       const d = e.mesh.position.distanceTo(player.root.position);
       if (d <= radius) {
-        const dmg = Math.round(20 + spellPower * 0.75);
+        let dmg = Math.round(20 + spellPower * 0.75);
+        const rx = combat?.enchanting?.resolveHit?.(e, 'wind', dmg);
+        if (rx && rx.multiplier > 1.0) dmg = Math.round(dmg * rx.multiplier);
         const killed = enemies.damageEnemy(e, dmg, player.root.position, { element: 'wind', knockback: 11.5 });
-        this.events?.emit('combat:hit', { pos: e.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)), dmg, isHeavy: true, killed });
+        this.events?.emit('combat:hit', { pos: e.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)), dmg, isHeavy: true, reactionLabel: rx?.reactionLabel || null, killed });
         if (killed) combat?.handleEnemyKill?.(e);
       }
     }
@@ -234,9 +236,11 @@ export class MagicSystem {
       const d = e.mesh.position.distanceTo(player.root.position);
       if (d <= radius) {
         const weaknessMult = e.def?.weakness === 'sunfire' ? 1.45 : 1.0;
-        const dmg = Math.round((42 + spellPower * 1.15) * weaknessMult);
+        let dmg = Math.round((42 + spellPower * 1.15) * weaknessMult);
+        const rx = combat?.enchanting?.resolveHit?.(e, 'sunfire', dmg);
+        if (rx && rx.multiplier > 1.0) dmg = Math.round(dmg * rx.multiplier);
         const killed = enemies.damageEnemy(e, dmg, player.root.position, { element: 'sunfire', burn: 4.5, knockback: 9.0 });
-        this.events?.emit('combat:hit', { pos: e.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)), dmg, isHeavy: true, killed });
+        this.events?.emit('combat:hit', { pos: e.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)), dmg, isHeavy: true, reactionLabel: rx?.reactionLabel || null, killed });
         if (killed) combat?.handleEnemyKill?.(e);
       }
     }

@@ -2,7 +2,10 @@
 
 Complete engineering & real headless Chromium WebGL2 verification across the full 7-Pillar Mega-Expansion (all legacy Kong Royale files removed; **THE UNKNOWN WORLD** is the sole project at repository root).
 
-## Automated Simulation & Unit Verification (`npm test` — 16/16 Passing)
+## Automated Simulation & Unit Verification (`npm test` — 19/19 Passing)
+- [x] **4 Flat Sculpted World Boss Arenas** (`tests/expansion2.test.js`): All 4 `BOSS_ARENAS` flatten terrain cleanly to exact `padY` with zero cliff occlusion, framed by etched stone daises & 4 glowing elemental obelisks.
+- [x] **Elemental Weapon Rune Infusions & 3 Elemental Combo Reactions** (`tests/expansion2.test.js`): 4 Elemental Runes (`Sunfire`, `Frostbite`, `Tempest`, `Astral`) + live 3D weapon aura + verified `2.2× THERMAL SHATTER`, `1.8× WILDFIRE GALE`, and `2.0× ASTRAL OVERLOAD` reactions.
+- [x] **5 Timed Shrine Trials, 8-Upgrade Wayfarer's Homestead & Guild Bounty Board** (`tests/expansion2.test.js`): Golden Sky Ring trial completion & Gold Medal payout, 8 Homestead upgrades + Herb Garden harvest + Well-Rested +25 HP/SP + Boss Trophy pedestals, and canonical EventBus auto-tracking Guild Bounties.
 - [x] **15×15 km Ultimate Architecture & 8×8 km Playable Continent** (`tests/world.test.js`): deterministic heightfield, 8 organic weighted biomes, flat landmark pads, Silver River channel & bridge deck.
 - [x] **Expanded Data Catalog Integrity** (`tests/mega-expansion.test.js`, `tests/fullgame.test.js`): **54 items**, **24 recipes**, **18 quests**, **14 creatures** (including **4 multi-phase bosses** with Phase II enrages & unique drops), and **8 enriched regions** cross-validated with zero broken IDs.
 - [x] **4-Spell Resonance Magic & Upgraded Combat** (`tests/mega-expansion.test.js`, `tests/simulation.test.js`): Resonance Bolt, Gale Updraft, Sunfire Nova (+ burn DoT), Spirit Ward (heal + barrier), 3-hit combo finishers, Golden Perfect Parry stagger window, stealth crouch (`0.38×` aggro, `1.75×` Ambush), hit-stop, camera shake, and floating damage popups.
@@ -12,8 +15,8 @@ Complete engineering & real headless Chromium WebGL2 verification across the ful
 - [x] **Sailing, Underwater Diving & 8 Regional Puzzles** (`tests/fullgame.test.js`): 3 sailboats moored in deep navigable water (`h < -0.5 m`), 5 sunken seabed treasures (`h < -2.5 m`), and all 8 environmental puzzles verified end-to-end.
 - [x] **Persistent Multi-Slot Save System** (`tests/save.test.js`): IndexedDB + `localStorage`/memory fallback preserving v1 schema + backward-compatible `magic`, `mount`, `fishing`, `worldEvents`, and `journal` state.
 
-## Real Headless Chromium WebGL2 Visual & E2E Verification (`npm run verify:browser` — 12/12 Passing)
-Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader WebGL 2.0), capturing and visually inspecting all 12 screenshots with **0 console errors** and **0 uncaught page errors**:
+## Real Headless Chromium WebGL2 Visual & E2E Verification (`npm run verify:browser` — 16/16 Passing)
+Executed in real Chromium via Playwright + `@sparticuz/chromium` (SwiftShader WebGL 2.0), capturing and visually inspecting all 16 screenshots with **0 console errors** and **0 uncaught page errors** (including Ghibli-upgraded Crossroads Village w/ shutters, flower boxes, chimney smoke, festival bunting, Bounty Board & articulated villagers; Glacier Sovereign on its flat Runic Borealis Terrace; active Timed Shrine Trial Golden Sky Rings; Homestead Builder & Rune Anvil UI; Crossroads Guild Bounty Board; Golden Hour Interactive Photo Studio; and `844×390` Mobile Landscape Touch layout).
 - [x] **01 — Title Screen (`01-title.png`)**: Anime watercolor panoramic backdrop, typography, and primary menu controls crisp.
 - [x] **02 — Crossroads Settlement + *Luma* + 4-Spell Hotbar (`02-crossroads.png`)**: Gouache terrain & foliage, Crossroads plaza, cottages, villagers, Waystone, glowing *Luma* familiar beside protagonist, circular minimap, and crisp `1–4` Spell + `H` Stag + `G` Fish hotbar.
 - [x] **03 — Wind Stag Mount & Sunfire Nova (`03-mount-and-magic.png`)**: Riding *Sylph* the Wind Stag with luminous cyan antlers, expanding golden Sunfire Nova shockwave ring, `≈ Wind Stag` status badge, and live spell cooldown overlay.

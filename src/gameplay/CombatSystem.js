@@ -23,10 +23,15 @@ export class CombatSystem {
     this._wasGuarding = false;
     this.parryWindowTimer = 0;
     this.magicSystem = null; // linked optionally by Game
+    this.enchanting = null; // linked optionally by Game
   }
 
   attachMagic(magicSystem) {
     this.magicSystem = magicSystem;
+  }
+
+  attachEnchanting(enchantingSystem) {
+    this.enchanting = enchantingSystem;
   }
 
   update(dt, input) {
@@ -92,10 +97,13 @@ export class CombatSystem {
     }
 
     const pos = p.root.position;
+    const runeBonus = this.enchanting?.getCombatBonuses?.() || { atkBonus: 0, speedBonus: 0, bossBonus: 0, element: null };
+    const speedDiv = 1 + (runeBonus.speedBonus || 0);
     const isFinisher = comboStep === 3 || isPlunge;
-    const range = isHeavy || isPlunge ? 5.6 : isFinisher ? 4.5 : 3.9;
+    const range = (isHeavy || isPlunge ? 5.6 : isFinisher ? 4.5 : 3.9) + (runeBonus.element === 'wind' ? 1.2 : 0);
     const bonuses = this.progression?.getBonuses?.() || {};
-    const baseDmg = Math.round(p.attackPower * (isHeavy ? p.heavyMultiplier : comboMult));
+    const baseDmg = Math.round((p.attackPower + (runeBonus.atkBonus || 0)) * (isHeavy ? p.heavyMultiplier : comboMult));
+    if (!isHeavy) this.attackCooldown /= speedDiv;
 
     // Soft lock-on toward nearest enemy within 7.5m
     const nearest = this.enemies.findNearestAlive(pos, 7.5);
@@ -121,14 +129,20 @@ export class CombatSystem {
       const isAmbush = wasStealth && !enemy.provoked;
       const isRiposte = (enemy.staggerTimer || 0) > 0;
       const ambushMult = 1.75 + (bonuses.ambushBonus || 0);
-      const bossMult = enemy.def.category === 'boss' ? 1 + (bonuses.bossBonus || 0) : 1.0;
+      const bossMult = enemy.def.category === 'boss' ? 1 + (bonuses.bossBonus || 0) + (runeBonus.bossBonus || 0) : 1.0;
       let dmg = Math.round(baseDmg * bossMult);
       if (isAmbush) dmg = Math.round(dmg * ambushMult);
       else if (isRiposte) dmg = Math.round(dmg * 1.9);
 
+      // Elemental Weapon Infusion & Elemental Combo Reactions!
+      const rx = this.enchanting?.resolveHit?.(enemy, runeBonus.element, dmg);
+      if (rx && rx.multiplier > 1.0) {
+        dmg = Math.round(dmg * rx.multiplier);
+      }
+
       const killed = this.enemies.damageEnemy(enemy, dmg, pos);
       hits++;
-      this.hitStopTimer = isHeavy || isAmbush || isFinisher || isRiposte ? 0.055 : 0.032;
+      this.hitStopTimer = isHeavy || isAmbush || isFinisher || isRiposte || rx?.reactionLabel ? 0.055 : 0.032;
 
       if (isAmbush || isRiposte) {
         this.events.emit('combat:style', { type: isAmbush ? 'ambush' : 'riposte', dmg });
@@ -137,14 +151,27 @@ export class CombatSystem {
       this.events.emit('combat:hit', {
         pos: enemy.mesh.position.clone().add(new THREE.Vector3(0, 1.3, 0)),
         dmg,
-        isHeavy: isHeavy || isFinisher,
+        isHeavy: isHeavy || isFinisher || Boolean(rx?.reactionLabel),
         isAmbush: isAmbush || isRiposte,
+        reactionLabel: rx?.reactionLabel || null,
         comboStep: isHeavy ? 0 : comboStep,
         killed,
       });
 
       if (killed) {
         this.handleEnemyKill(enemy);
+      }
+
+      // Splash Elemental Combo Reaction AoE onto nearby foes!
+      if (rx && rx.aoeRadius > 0 && rx.aoeDamage > 0) {
+        for (const other of this.enemies.enemies) {
+          if (!other.alive || other === enemy) continue;
+          if (other.mesh.position.distanceTo(enemy.mesh.position) <= rx.aoeRadius) {
+            if (rx.reactionLabel === 'WILDFIRE GALE!') other.burnTimer = Math.max(other.burnTimer || 0, 3.5);
+            const okilled = this.enemies.damageEnemy(other, rx.aoeDamage, enemy.mesh.position);
+            if (okilled) this.handleEnemyKill(other);
+          }
+        }
       }
     }
 

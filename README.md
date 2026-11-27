@@ -25,7 +25,15 @@ A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anim
   - **Wayfarer's Codex (`B`)**: Bestiary for all **14 creatures** (incl. elemental weaknesses & kill counters), **24 Achievements** with XP/Sunshard rewards, **8 Ancient Lore Chronicles**, **4 Regional Factions** granting up to **-25% merchant trust discounts**, and overall **World Completion %**.
   - **Campfire Rest & Cooking Pot (`E` at hearths)**: pass time smoothly to Dawn / Midday / Dusk / Starlight, restore 100% HP/SP/Warmth, autosave, and cook hearty meals.
   - **18 Quests** chaining through regional story arcs into **Awakening the Unknown Gate** and the **Astral Leviathan** post-climax frontier challenge.
-- **Studio-Grade Controls, Live Minimap, Map Pins, Photo Mode & Performance Tuning**:
+- **5 Timed Ancient Resonance Shrine Trials & Crossroads Guild Bounty Board (`[N]`)**:
+  - **5 Timed Shrine Trials** across Verdant Valley, Emerald Wilds, Azure Coast, Highland Reach, and Shattered Expanse with glowing floating 3D golden Sky Rings, live HUD countdown timers, Bronze / Silver / Gold medals, and Sunshards/XP payouts.
+  - **Crossroads Guild Bounty Board**: physical notice board in Crossroads Plaza (`E` or `[N]`) offering rotating Regional Contracts (Monster Hunts, Fishing, Shrine Trials, Elemental Reactions, Starfalls, Sanctuaries) that auto-track via EventBus and pay instant Sunshards, XP, and Regional Faction Trust.
+- **Wayfarer's Homestead Sanctuary, Elemental Rune Anvil (`[O]`) & Elemental Combo Reactions**:
+  - **Personal 3D Wayfarer's Cottage** overlooking Crossroads Settlement with **8 buildable 3D upgrades** (*Herb & Moonpetal Garden*, *Arcane Rune Anvil*, *Sylph Wind Stag Pavilion*, *Alchemist's Bench*, *Cartographer's Globe*, *Starlight Hearth* granting **Well-Rested +25 Max HP/SP**, *Spirit Lantern Porch*, and **Golden World Boss Trophy Pedestals** displaying trophies for all 4 World Bosses).
+  - **4 Elemental Weapon Rune Infusions** (*Sunfire Ember*, *Frostbite Glacier*, *Tempest Gale*, *Astral Resonance*) adding glowing 3D weapon auras and triggering **3 Explosive Elemental Combo Reactions**: **2.2× THERMAL SHATTER** (Sunfire on Frosted foe), **1.8× WILDFIRE GALE** (Wind on Burning foe), and **2.0× ASTRAL OVERLOAD** (Resonance on Parried/Staggered foe).
+- **Ghibli-Grade Visual Craftsmanship, Flat Runic Boss Arenas, Guiding Wind (`[U]`) & Photo Studio (`[V]`)**:
+  - Sculpted articulated villagers with layered cloaks, sleeves, eyes & role props; cottages with shutters, blooming flower boxes & rising chimney smoke; festival plaza bunting; crossed-log hearth campfire; **4 Flat Runic World Boss Arenas** with glowing crystal obelisks; **Golden Guiding Wind (`[U]`)** directional breeze; and **Interactive Photo Studio (`[V]`)** with live Time-of-Day, Watercolor Filter presets (`Natural`, `Gouache`, `Pastel`, `Ink`), and one-click PNG postcard capture.
+- **Studio-Grade Controls, Live Minimap, Map Pins & Performance Tuning**:
   - Live **Circular Watercolor Minimap**, interactive **World Map (`M`)** with fast travel, **Custom Compass Waypoint Pins**, and live **4 World Boss / Wandering Caravan / Active Starfall** markers; adjustable 2.5D camera presets (`Close`, `2.5D`, `Iso`, **`Photo` `[V]`**); 4 Graphics Presets (`Low`–`Ultra`) plus Render Scale, Shadow Override, FOV & Invert-Y controls; full desktop + mobile touch UI; adaptive 8-region Web Audio soundtrack & boss/spell/parry/splash SFX; and persistent multi-slot IndexedDB saves.
 
 ## Quick Start
@@ -33,8 +41,8 @@ A complete, original **2.5D Open-World Action-Exploration RPG** styled in **Anim
 ```bash
 npm install
 npm run dev            # Start Vite dev server on http://0.0.0.0:5173
-npm test               # Run all 16 automated Node unit & integration tests
-npm run verify:browser # Run 12 real headless Chromium WebGL2 visual E2E checks
+npm test               # Run all 19 automated Node unit & integration tests
+npm run verify:browser # Run 16 real headless Chromium WebGL2 visual E2E checks
 npm run build          # Build optimized production bundle to dist/
 ```
 
@@ -54,7 +62,9 @@ npm run build          # Build optimized production bundle to dist/
 | Light / Combo / Heavy Staff Attack | Left Click / `J` (`Shift`+Click Heavy) | Strike / Heavy Buttons |
 | Shield Guard / Golden Perfect Parry | Right Click / `L` | Shield Button |
 | Rotate & Zoom 2.5D Camera | Right-Drag / Scroll / `Q X R F` | HUD Presets & Zoom |
-| Photo Framing Mode | `V` | HUD `Photo` Button |
+| Photo Studio (Time / Filters / Save PNG) | `V` | HUD `Photo` Button |
+| Guiding Wind Directional Breeze | `U` | — |
+| Homestead & Rune Anvil · Guild Bounties | `O` · `N` | World Boards & Cottage |
 | Map · Bag/Craft · Quests · Skills · Codex · Pause | `M` · `I` · `T` · `P` · `B` · `Esc` | Top-Right HUD Buttons |
 
 ## Project Structure

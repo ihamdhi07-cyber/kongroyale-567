@@ -443,6 +443,7 @@ export class EnemyManager {
       }
 
       if (e.staggerTimer > 0) e.staggerTimer = Math.max(0, e.staggerTimer - dt);
+      if (e.frostTimer > 0) e.frostTimer = Math.max(0, e.frostTimer - dt);
 
       if (e.hitFlash > 0) {
         e.hitFlash -= dt;
@@ -454,7 +455,8 @@ export class EnemyManager {
       const distHome = Math.hypot(e.mesh.position.x - e.homeX, e.mesh.position.z - e.homeZ);
       const stealthMult = playerStealth ? 0.38 : 1.0;
       const aggro = e.provoked ? Math.max(e.def.aggroRange, 20) : e.def.aggroRange * stealthMult;
-      const phaseScale = e.phase === 2 ? 1.35 : 1.0;
+      const frostSlow = (e.frostTimer || 0) > 0 ? 0.55 : 1.0;
+      const phaseScale = (e.phase === 2 ? 1.35 : 1.0) * frostSlow;
       const attackReach = (e.radius + 1.85) * (e.phase === 2 ? 1.3 : 1.0);
 
       e.teleMat.opacity = 0;

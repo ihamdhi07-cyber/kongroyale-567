@@ -1,7 +1,7 @@
 // Deterministic world terrain evaluator: height, surface normal, road distance, river carving, landmark pads,
 // and painterly vertex color lookup. Pure math (no WebGL/DOM required), shared identically by chunk rendering,
 // physics collision, vegetation scatter, map cartography, and automated unit tests.
-import { WORLD_CONFIG, REGIONS, LANDMARKS, ROADS, RIVERS } from './WorldSpec.js';
+import { WORLD_CONFIG, REGIONS, LANDMARKS, ROADS, RIVERS, BOSS_ARENAS } from './WorldSpec.js';
 import { Simplex2D, clamp, lerp, smoothstep } from './Noise.js';
 import { BiomeManager } from './BiomeManager.js';
 
@@ -135,6 +135,20 @@ export class TerrainManager {
       if (d < maxR) {
         const t = 1 - smoothstep(lm.padRadius, maxR, d);
         h = lerp(h, lm.padY, t);
+      }
+    }
+
+    // Honour the 4 Sculpted Runic World Boss Arena Pads (guarantees flat cinematic combat terraces!)
+    for (let i = 0; i < BOSS_ARENAS.length; i++) {
+      const ba = BOSS_ARENAS[i];
+      const dx = x - ba.x;
+      const dz = z - ba.z;
+      const maxR = ba.padRadius + ba.blendRadius;
+      if (Math.abs(dx) > maxR || Math.abs(dz) > maxR) continue;
+      const d = Math.hypot(dx, dz);
+      if (d < maxR) {
+        const t = 1 - smoothstep(ba.padRadius, maxR, d);
+        h = lerp(h, ba.padY, t);
       }
     }
 

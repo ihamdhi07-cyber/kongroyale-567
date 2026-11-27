@@ -7,6 +7,8 @@
 //   - 15 x 15 km Ultimate Expansion Blueprint Overlay (showing 64 km² core + 161 km² planned frontier)
 //   - Click any attuned Waystone to Fast Travel seamlessly across the continent!
 import { WORLD_CONFIG, REGIONS, LANDMARKS, ROADS, RIVERS, EXPANSION_ZONES } from '../world/WorldSpec.js';
+import { SHRINE_TRIALS } from '../world/ShrineTrialSystem.js';
+import { HOMESTEAD_POS } from '../world/HomesteadSystem.js';
 
 export class MapUI {
   constructor(game) {
@@ -341,6 +343,33 @@ export class MapUI {
         ctx.fill();
         ctx.strokeStyle = '#ffdf78';
         ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+
+      // 5 Timed Shrine Trials (gold ring circles)
+      for (const tr of SHRINE_TRIALS) {
+        const [tx, ty] = this._worldToCanvas(tr.startX, tr.startZ);
+        const rec = this.game.shrineTrials?.records?.[tr.id];
+        ctx.beginPath();
+        ctx.arc(tx, ty, 4.6, 0, Math.PI * 2);
+        ctx.strokeStyle = rec?.medal === 'gold' ? '#ffe47c' : '#6cf2ff';
+        ctx.lineWidth = 2.0;
+        ctx.stroke();
+      }
+
+      // Wayfarer's Homestead Sanctuary Marker (emerald roof diamond)
+      {
+        const [hx, hy] = this._worldToCanvas(HOMESTEAD_POS.x, HOMESTEAD_POS.z);
+        ctx.beginPath();
+        ctx.moveTo(hx, hy - 5.5);
+        ctx.lineTo(hx + 5, hy);
+        ctx.lineTo(hx, hy + 5.5);
+        ctx.lineTo(hx - 5, hy);
+        ctx.closePath();
+        ctx.fillStyle = '#5ee8a2';
+        ctx.fill();
+        ctx.strokeStyle = '#142a22';
+        ctx.lineWidth = 1.3;
         ctx.stroke();
       }
 

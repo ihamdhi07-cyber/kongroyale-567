@@ -167,29 +167,31 @@ async function run() {
     await snap(page, '09-fishing-azure.png');
     await page.evaluate(() => window.__tuw.game.fishing.cancel());
 
-    console.log('10/12 Verifying Glacier Sovereign Multi-Phase World Boss & Boss Health Bar...');
+    console.log('10/16 Verifying Glacier Sovereign Boss on Flat Runic Borealis Arena Terrace...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
       const boss = g.enemies.enemies.find((e) => e.def.id === 'glacier-sovereign');
-      g.playerController.teleport(boss.homeX, boss.homeZ + 11);
+      const by = g.world.terrain.getHeight(boss.homeX, boss.homeZ);
+      boss.mesh.position.set(boss.homeX, by, boss.homeZ);
+      g.playerController.teleport(boss.homeX, boss.homeZ + 10);
       g.player.facingYaw = Math.PI;
       g.world.chunks.primeAround(boss.homeX, boss.homeZ);
       g.enemies.damageEnemy(boss, Math.floor(boss.def.maxHp * 0.55), g.player.root.position);
       boss.state = 'telegraph';
       boss.stateTimer = 0.5;
-      g.cameraController.yaw = 0.35;
-      g.cameraController.targetYaw = 0.35;
-      g.cameraController.pitch = 0.36;
-      g.cameraController.targetPitch = 0.36;
-      g.cameraController.distance = 13.5;
-      g.cameraController.targetDistance = 13.5;
+      g.cameraController.yaw = 0.22;
+      g.cameraController.targetYaw = 0.22;
+      g.cameraController.pitch = 0.26;
+      g.cameraController.targetPitch = 0.26;
+      g.cameraController.distance = 15.5;
+      g.cameraController.targetDistance = 15.5;
       g.hud._bannerTimer = 0;
       g.hud.bannerEl.classList.add('hidden');
       g.hud.toastStack.innerHTML = '';
     });
     await snap(page, '10-glacier-boss.png');
 
-    console.log('11/12 Awakening The Unknown Gate in Hidden Frontier...');
+    console.log('11/16 Awakening The Unknown Gate in Hidden Frontier...');
     await page.evaluate(() => {
       const g = window.__tuw.game;
       g.playerController.teleport(-1620, 1636);
@@ -208,7 +210,71 @@ async function run() {
     });
     await snap(page, '11-unknown-gate.png');
 
-    console.log('12/12 Verifying Mobile Landscape Touch Viewport (844x390)...');
+    console.log('12/16 Verifying Timed Ancient Shrine Trial & Golden 3D Sky Rings...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.teleportAndStartTrial('trial-crossroads-dash');
+      g.player.facingYaw = Math.PI * 0.42;
+      g.cameraController.yaw = -1.25;
+      g.cameraController.targetYaw = -1.25;
+      g.cameraController.pitch = 0.28;
+      g.cameraController.targetPitch = 0.28;
+      g.cameraController.distance = 15.5;
+      g.cameraController.targetDistance = 15.5;
+      g.hud._bannerTimer = 0;
+      g.hud.bannerEl.classList.add('hidden');
+      g.hud.toastStack.innerHTML = '';
+    });
+    await snap(page, '12-shrine-trial.png');
+    await page.evaluate(() => window.__tuw.game.shrineTrials.cancelTrial(false));
+
+    console.log("13/16 Verifying Wayfarer's Homestead Builder & Elemental Rune Anvil UI...");
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.inventory.addGold(350);
+      g.inventory.addItem('sunberry', 4, true);
+      g.inventory.addItem('crystal-shard', 4, true);
+      g.enchanting.unlockAndEquip('sunfire-rune', g.player);
+      g.homestead.buildUpgrade('herb-garden', g.inventory);
+      g.homestead.buildUpgrade('trophy-hall', g.inventory);
+      g.homestead.recordBossTrophy('glacier-sovereign');
+      g.openModal('homestead', 'runes');
+    });
+    await page.waitForTimeout(140);
+    await snap(page, '13-homestead-runes.png');
+    await page.evaluate(() => window.__tuw.game.closeAllModals());
+
+    console.log('14/16 Verifying Crossroads Guild Bounty Board & Shrine Trials Leaderboard...');
+    await page.evaluate(() => window.__tuw.game.openModal('bounties', 'bounties'));
+    await page.waitForTimeout(140);
+    await snap(page, '14-bounty-board.png');
+    await page.evaluate(() => window.__tuw.game.closeAllModals());
+
+    console.log('15/16 Verifying Interactive Photo Studio Mode (Golden Hour Gouache)...');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.playerController.teleport(4, 398);
+      g.player.facingYaw = Math.PI;
+      g.world.chunks.primeAround(4, 398);
+      g.world.weather.timeOfDay = 17.8;
+      g.hud.togglePhotoMode();
+      g.hud._applyPhotoFilter('gouache');
+      g.hud.toastStack.innerHTML = '';
+      g.cameraController.yaw = 0.22;
+      g.cameraController.targetYaw = 0.22;
+      g.cameraController.pitch = 0.24;
+      g.cameraController.targetPitch = 0.24;
+      g.cameraController.distance = 14.5;
+      g.cameraController.targetDistance = 14.5;
+    });
+    await snap(page, '15-photo-studio.png');
+    await page.evaluate(() => {
+      const g = window.__tuw.game;
+      g.hud.togglePhotoMode();
+      g.world.weather.timeOfDay = 9.4;
+    });
+
+    console.log('16/16 Verifying Mobile Landscape Touch Viewport (844x390)...');
     await page.setViewportSize({ width: 844, height: 390 });
     await page.evaluate(() => {
       const g = window.__tuw.game;
@@ -228,12 +294,12 @@ async function run() {
       g.hud.toastStack.innerHTML = '';
       g.setTouchMode('on');
     });
-    await snap(page, '12-mobile-touch.png');
+    await snap(page, '16-mobile-touch.png');
 
     if (errors.length > 0) {
       throw new Error(`Console/page errors detected:\n${errors.join('\n')}`);
     }
-    console.log('\n✅ ALL 12 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
+    console.log('\n✅ ALL 16 REAL CHROMIUM WEBGL2 CHECKS PASSED WITH ZERO CONSOLE/PAGE ERRORS!');
   } catch (err) {
     failed = true;
     console.error('❌ E2E Verification Failed:', err);

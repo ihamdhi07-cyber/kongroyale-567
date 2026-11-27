@@ -44,7 +44,10 @@ export class KeyboardControls {
         if (code === 'KeyV') this.events.emit('camera:photoToggle');
         if (code === 'KeyM') this.events.emit('ui:toggle', 'map');
         if (code === 'KeyI') this.events.emit('ui:toggle', 'inventory');
-        if (code === 'KeyT' || code === 'KeyU') this.events.emit('ui:toggle', 'quests');
+        if (code === 'KeyT') this.events.emit('ui:toggle', 'quests');
+        if (code === 'KeyU') this.events.emit('world:guidingWind');
+        if (code === 'KeyO') this.events.emit('ui:toggle', 'homestead');
+        if (code === 'KeyN') this.events.emit('ui:toggle', 'bounties');
         if (code === 'KeyP') this.events.emit('ui:toggle', 'progression');
         if (code === 'KeyB') this.events.emit('ui:toggle', 'codex');
         if (code === 'Escape') this.events.emit('ui:escape');
